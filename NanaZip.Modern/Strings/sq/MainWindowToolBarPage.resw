@@ -126,8 +126,8 @@
     <comment>More</comment>
   </data>
   <data name="SponsorButton.AcquireText" xml:space="preserve">
-    <value>Mbështet NanaZip</value>
-    <comment>Sponsor NanaZip</comment>
+    <value>Mbështet CuinZip</value>
+    <comment>Sponsor CuinZip</comment>
   </data>
   <data name="SponsorButton.SponsoredText" xml:space="preserve">
     <value>E vlerësoj mbështetjen tënde</value>

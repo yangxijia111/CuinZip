@@ -1293,7 +1293,7 @@ HRESULT CZipContextMenu::InvokeCommandCommon(const CCommandMapItem &cmi)
   }
   catch(...)
   {
-    ::MessageBoxW(0, L"Error", L"NanaZip", MB_ICONERROR);
+    ::MessageBoxW(0, L"Error", L"CuinZip", MB_ICONERROR);
   }
   return S_OK;
 }

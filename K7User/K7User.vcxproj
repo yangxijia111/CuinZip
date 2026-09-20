@@ -6,12 +6,12 @@
     <MileProjectType>DynamicLibrary</MileProjectType>
     <WindowsTargetPlatformMinVersion>10.0.19041.0</WindowsTargetPlatformMinVersion>
     <MileProjectUseProjectProperties>true</MileProjectUseProjectProperties>
-    <MileProjectCompanyName>M2-Team</MileProjectCompanyName>
-    <MileProjectFileDescription>NanaZip Platform User Library</MileProjectFileDescription>
+    <MileProjectCompanyName>CuinZip Project</MileProjectCompanyName>
+    <MileProjectFileDescription>CuinZip Platform User Library</MileProjectFileDescription>
     <MileProjectInternalName>K7User</MileProjectInternalName>
-    <MileProjectLegalCopyright>© M2-Team and Contributors. All rights reserved.</MileProjectLegalCopyright>
+    <MileProjectLegalCopyright>© CuinZip Project and Contributors. Based on NanaZip (M2-Team) and 7-Zip (Igor Pavlov). All rights reserved.</MileProjectLegalCopyright>
     <MileProjectOriginalFilename>K7User.dll</MileProjectOriginalFilename>
-    <MileProjectProductName>NanaZip</MileProjectProductName>
+    <MileProjectProductName>CuinZip</MileProjectProductName>
     <K7BaseDisableRedirector>true</K7BaseDisableRedirector>
     <K7UserDisableRedirector>true</K7UserDisableRedirector>
   </PropertyGroup>

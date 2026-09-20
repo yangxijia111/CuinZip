@@ -119,23 +119,23 @@
   </resheader>
   <data name="BuySponsorEditionButton.AutomationProperties.Name" xml:space="preserve">
     <value>Comprar edição patrocinada</value>
-    <comment>Buy NanaZip Sponsor Edition</comment>
+    <comment>Buy CuinZip Sponsor Edition</comment>
   </data>
   <data name="BuySponsorEditionButtonTextBlock.Text" xml:space="preserve">
     <value>Comprar edição patrocinada</value>
-    <comment>Buy NanaZip Sponsor Edition</comment>
+    <comment>Buy CuinZip Sponsor Edition</comment>
   </data>
   <data name="ContributeButton.AutomationProperties.Name" xml:space="preserve">
-    <value>Contribua com o NanaZip</value>
-    <comment>Become a contributor of NanaZip</comment>
+    <value>Contribua com o CuinZip</value>
+    <comment>Become a contributor of CuinZip</comment>
   </data>
   <data name="ContributeButtonTextBlock.Text" xml:space="preserve">
-    <value>Contribua com o NanaZip</value>
-    <comment>Become a contributor of NanaZip</comment>
+    <value>Contribua com o CuinZip</value>
+    <comment>Become a contributor of CuinZip</comment>
   </data>
   <data name="GridTitleTextBlock.Text" xml:space="preserve">
-    <value>Patrocine o NanaZip</value>
-    <comment>Sponsor NanaZip</comment>
+    <value>Patrocine o CuinZip</value>
+    <comment>Sponsor CuinZip</comment>
   </data>
   <data name="SponsorEditionPolicyButton.AutomationProperties.Name" xml:space="preserve">
     <value>Política da edição patrocinada</value>

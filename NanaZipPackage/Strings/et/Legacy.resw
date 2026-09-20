@@ -40,7 +40,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="Resource0" xml:space="preserve">
-    <value>NanaZip</value>
+    <value>CuinZip</value>
   </data>
   <data name="Resource1" xml:space="preserve">
     <value>Estonian</value>
@@ -259,7 +259,7 @@
     <value>&amp;Sisukord...</value>
   </data>
   <data name="Resource961" xml:space="preserve">
-    <value>Teave NanaZipi kohta...</value>
+    <value>Teave CuinZipi kohta...</value>
   </data>
   <data name="Resource1003" xml:space="preserve">
     <value>Tee</value>
@@ -457,10 +457,10 @@
     <value>Süsteem</value>
   </data>
   <data name="Resource2201" xml:space="preserve">
-    <value>Seosta NanaZip laienditega:</value>
+    <value>Seosta CuinZip laienditega:</value>
   </data>
   <data name="Resource2301" xml:space="preserve">
-    <value>Integreeri NanaZip kesta hüpikmenüüsse</value>
+    <value>Integreeri CuinZip kesta hüpikmenüüsse</value>
   </data>
   <data name="Resource2302" xml:space="preserve">
     <value>Kaskaad-hüpikmenüü</value>
@@ -550,12 +550,12 @@
     <value>Kasuta &amp;suuri mälulehekülgi</value>
   </data>
   <data name="Resource2900" xml:space="preserve">
-    <value>Teave NanaZipi kohta</value>
+    <value>Teave CuinZipi kohta</value>
   </data>
   <data name="Resource2901" xml:space="preserve">
-    <value>NanaZip on vaba tarkvara. Kuid kui soovite toetada NanaZipi arendamist, siis saate programmi registreerida.
+    <value>CuinZip on vaba tarkvara. Kuid kui soovite toetada CuinZipi arendamist, siis saate programmi registreerida.
 
-NanaZipi Eesti koduleht:
+CuinZipi Eesti koduleht:
 http://www.hot.ee/somberg/7zip.html</value>
   </data>
   <data name="Resource3000" xml:space="preserve">

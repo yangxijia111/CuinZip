@@ -46,7 +46,7 @@ EXTERN_C HRESULT WINAPI K7ModernInitialize();
 EXTERN_C HRESULT WINAPI K7ModernUninitialize();
 
 /**
- * @brief Show the "Sponsor NanaZip" dialog.
+ * @brief Show the "Sponsor CuinZip" dialog.
  * @param ParentWindowHandle A handle to the owner window of the dialog to be
  *                           created. If this parameter is nullptr, the dialog
  *                           has no owner window.
@@ -56,7 +56,7 @@ EXTERN_C INT WINAPI K7ModernShowSponsorDialog(
     _In_opt_ HWND ParentWindowHandle);
 
 /**
- * @brief Show the "About NanaZip" dialog.
+ * @brief Show the "About CuinZip" dialog.
  * @param ParentWindowHandle A handle to the owner window of the dialog to be
  *                           created. If this parameter is nullptr, the dialog
  *                           has no owner window.

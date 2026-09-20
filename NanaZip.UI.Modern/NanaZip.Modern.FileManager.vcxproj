@@ -9,12 +9,12 @@
     <MileProjectEnableCppWinRTSupport>true</MileProjectEnableCppWinRTSupport>
     <CppWinRTGenerateWindowsMetadata>false</CppWinRTGenerateWindowsMetadata>
     <MileProjectUseProjectProperties>true</MileProjectUseProjectProperties>
-    <MileProjectCompanyName>M2-Team</MileProjectCompanyName>
-    <MileProjectFileDescription>NanaZip Modern Graphical User Interface</MileProjectFileDescription>
+    <MileProjectCompanyName>CuinZip Project</MileProjectCompanyName>
+    <MileProjectFileDescription>CuinZip Modern Graphical User Interface</MileProjectFileDescription>
     <MileProjectInternalName>NanaZip.Modern.FileManager</MileProjectInternalName>
-    <MileProjectLegalCopyright>© M2-Team and Contributors. All rights reserved.</MileProjectLegalCopyright>
+    <MileProjectLegalCopyright>© CuinZip Project and Contributors. Based on NanaZip (M2-Team) and 7-Zip (Igor Pavlov). All rights reserved.</MileProjectLegalCopyright>
     <MileProjectOriginalFilename>NanaZip.Modern.FileManager.exe</MileProjectOriginalFilename>
-    <MileProjectProductName>NanaZip</MileProjectProductName>
+    <MileProjectProductName>CuinZip</MileProjectProductName>
   </PropertyGroup>
   <Import Project="..\NanaZip.Project\NanaZip.Project.props" />
   <Import Sdk="Mile.Project.Configurations" Project="Mile.Project.Platform.x64.props" />

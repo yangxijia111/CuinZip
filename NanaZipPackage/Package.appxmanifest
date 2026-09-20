@@ -19,13 +19,13 @@
   IgnorableNamespaces="uap rescap desktop uap2 uap3 com desktop4 desktop5 desktop6 desktop10 uap8 uap10 uap16 uap17">
 
   <Identity
-    Name="40174MouriNaruto.NanaZipPreview"
-    Publisher="CN=E310A153-74A9-4D81-800B-857A8D58408A"
+    Name="Cuin.CuinZipPreview"
+    Publisher="CN=D4DFD125-41D0-4903-95E0-896394D6DD55"
     Version="7.0.1845.0" />
 
   <Properties>
-    <DisplayName>NanaZip Preview</DisplayName>
-    <PublisherDisplayName>Kenji Mouri</PublisherDisplayName>
+    <DisplayName>CuinZip Preview</DisplayName>
+    <PublisherDisplayName>CuinZip Project</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
     <uap10:PackageIntegrity>
       <uap10:Content Enforcement="on" />
@@ -54,13 +54,13 @@
       Executable="NanaZip.Modern.FileManager.exe"
       EntryPoint="Windows.FullTrustApplication">
       <uap:VisualElements
-        DisplayName="NanaZip Preview"
-        Description="NanaZip"
+        DisplayName="CuinZip Preview"
+        Description="CuinZip"
         BackgroundColor="transparent"
         Square150x150Logo="Assets\Square150x150Logo.png"
         Square44x44Logo="Assets\Square44x44Logo.png">
         <uap:DefaultTile
-          ShortName="NanaZip"
+          ShortName="CuinZip"
           Wide310x150Logo="Assets\Wide310x150Logo.png"
           Square310x310Logo="Assets\LargeTile.png"
           Square71x71Logo="Assets\SmallTile.png">
@@ -77,7 +77,7 @@
             Executable="NanaZip.Modern.FileManager.exe"
             EntryPoint="Windows.FullTrustApplication">
           <uap3:AppExecutionAlias>
-            <desktop:ExecutionAlias Alias="NanaZip.exe" />
+            <desktop:ExecutionAlias Alias="CuinZip.exe" />
             <desktop:ExecutionAlias Alias="K7.exe" />
             <desktop:ExecutionAlias Alias="7zFM.exe" uap8:AllowOverride="true"/>
           </uap3:AppExecutionAlias>
@@ -159,20 +159,20 @@
               (https://github.com/MediaArea/MediaInfo/pull/998)
             -->
             <desktop4:ItemType Type="*">
-              <desktop4:Verb Id="0000NanaZipShellExtension" Clsid="469D94E9-6AF4-4395-B396-99B1308F8CE5" />
+              <desktop4:Verb Id="0000CuinZipShellExtension" Clsid="788F8FA7-178F-40BE-BAF5-5D5D1335C0F9" />
             </desktop4:ItemType>
             <desktop5:ItemType Type="Directory">
-              <desktop5:Verb Id="0000NanaZipShellExtension" Clsid="469D94E9-6AF4-4395-B396-99B1308F8CE5" />
+              <desktop5:Verb Id="0000CuinZipShellExtension" Clsid="788F8FA7-178F-40BE-BAF5-5D5D1335C0F9" />
             </desktop5:ItemType>
             <desktop10:ItemType Type="Drive">
-              <desktop10:Verb Id="0000NanaZipShellExtension" Clsid="469D94E9-6AF4-4395-B396-99B1308F8CE5" />
+              <desktop10:Verb Id="0000CuinZipShellExtension" Clsid="788F8FA7-178F-40BE-BAF5-5D5D1335C0F9" />
             </desktop10:ItemType>
           </desktop4:FileExplorerContextMenus>
         </desktop4:Extension>
         <com:Extension Category="windows.comServer">
           <com:ComServer>
-            <com:SurrogateServer DisplayName="NanaZip Shell Extension">
-              <com:Class Id="469D94E9-6AF4-4395-B396-99B1308F8CE5" Path="NanaZip.ShellExtension.dll" ThreadingModel="STA"/>
+            <com:SurrogateServer DisplayName="CuinZip Shell Extension">
+              <com:Class Id="788F8FA7-178F-40BE-BAF5-5D5D1335C0F9" Path="NanaZip.ShellExtension.dll" ThreadingModel="STA"/>
             </com:SurrogateServer>
           </com:ComServer>
         </com:Extension>
@@ -184,8 +184,8 @@
       EntryPoint="Windows.FullTrustApplication">
       <uap:VisualElements
         AppListEntry="none"
-        DisplayName="NanaZip Preview"
-        Description="NanaZip"
+        DisplayName="CuinZip Preview"
+        Description="CuinZip"
         BackgroundColor="transparent"
         Square150x150Logo="Assets\Square150x150Logo.png"
         Square44x44Logo="Assets\Square44x44Logo.png" />
@@ -195,7 +195,7 @@
           Executable="NanaZip.Universal.Console.exe"
           EntryPoint="Windows.FullTrustApplication">
           <uap3:AppExecutionAlias>
-            <desktop:ExecutionAlias Alias="NanaZipC.exe" />
+            <desktop:ExecutionAlias Alias="CuinZipC.exe" />
             <desktop:ExecutionAlias Alias="K7C.exe" />
             <desktop:ExecutionAlias Alias="7z.exe" uap8:AllowOverride="true"/>
           </uap3:AppExecutionAlias>
@@ -208,8 +208,8 @@
       EntryPoint="Windows.FullTrustApplication">
       <uap:VisualElements
         AppListEntry="none"
-        DisplayName="NanaZip Preview"
-        Description="NanaZip"
+        DisplayName="CuinZip Preview"
+        Description="CuinZip"
         BackgroundColor="transparent"
         Square150x150Logo="Assets\Square150x150Logo.png"
         Square44x44Logo="Assets\Square44x44Logo.png" />
@@ -219,7 +219,7 @@
           Executable="NanaZip.Universal.Windows.exe"
           EntryPoint="Windows.FullTrustApplication">
           <uap3:AppExecutionAlias>
-            <desktop:ExecutionAlias Alias="NanaZipG.exe" />
+            <desktop:ExecutionAlias Alias="CuinZipG.exe" />
             <desktop:ExecutionAlias Alias="K7G.exe" />
             <desktop:ExecutionAlias Alias="7zG.exe" uap8:AllowOverride="true"/>
           </uap3:AppExecutionAlias>

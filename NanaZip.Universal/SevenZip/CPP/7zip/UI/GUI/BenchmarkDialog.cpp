@@ -378,7 +378,7 @@ public:
   {
     // **************** NanaZip Modification Start ****************
     //MessageBoxW(*this, message, L"7-Zip", MB_ICONERROR);
-    MessageBoxW(*this, message, L"NanaZip", MB_ICONERROR);
+    MessageBoxW(*this, message, L"CuinZip", MB_ICONERROR);
     // **************** NanaZip Modification End ****************
   }
   void MessageBoxError_Status(LPCWSTR message)

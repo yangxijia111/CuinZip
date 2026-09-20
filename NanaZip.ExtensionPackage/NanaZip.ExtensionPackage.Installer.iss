@@ -1,14 +1,14 @@
-﻿#define AppName "NanaZip Extension Package"
-#define AppPublisher "M2-Team"
-#define AppCopyright "© M2-Team and Contributors. All rights reserved."
-#define AppURL "https://github.com/M2Team/NanaZip"
+﻿#define AppName "CuinZip Extension Package"
+#define AppPublisher "CuinZip Project"
+#define AppCopyright "© CuinZip Project and Contributors. Based on NanaZip (M2-Team) and 7-Zip (Igor Pavlov). All rights reserved."
+#define AppURL "https://github.com/yangxijia111/CuinZip"
 
 #ifndef AppVersion
 #define AppVersion "5.1.0.0"
 #endif
 
 [Setup]
-AppId={{42795434-AB1A-4197-A724-F13E08953DFC}
+AppId={{9BBA69D3-509F-4EA5-A78D-86BD39492F37}
 AppName={#AppName}
 AppCopyright={#AppCopyright}
 AppVersion={#AppVersion}
@@ -24,7 +24,7 @@ VersionInfoVersion={#AppVersion}
 
 PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
-OutputBaseFilename=NanaZip.ExtensionPackage_{#AppVersion}
+OutputBaseFilename=CuinZip.ExtensionPackage_{#AppVersion}
 SolidCompression=yes
 WizardStyle=modern
 

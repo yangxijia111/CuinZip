@@ -88,7 +88,7 @@ void NanaZip::FileManager::AboutDialog::Show(
         ::LangString(IDT_ABOUT_INFO));
     if (WindowContent.empty())
     {
-        WindowContent = L"NanaZip is free software";
+        WindowContent = L"CuinZip is free software";
     }
 #ifdef EXTERNAL_CODECS
     if (g_CodecsObj)

@@ -24,7 +24,7 @@ static const TCHAR * const kDefaultIconKeyName = TEXT("DefaultIcon");
 static const TCHAR * const kShellKeyName = TEXT("shell");
 static const TCHAR * const kOpenKeyName = TEXT("open");
 static const TCHAR * const kCommandKeyName = TEXT("command");
-static const char * const k7zipPrefix = "NanaZip.";
+static const char * const k7zipPrefix = "CuinZip.";
 
 static CSysString GetExtProgramKeyName(const CSysString &ext)
 {

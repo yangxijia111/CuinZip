@@ -118,24 +118,24 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="BuySponsorEditionButton.AutomationProperties.Name" xml:space="preserve">
-    <value>Αγοράστε την Έκδοση Χορηγού NanaZip</value>
-    <comment>Buy NanaZip Sponsor Edition</comment>
+    <value>Αγοράστε την Έκδοση Χορηγού CuinZip</value>
+    <comment>Buy CuinZip Sponsor Edition</comment>
   </data>
   <data name="BuySponsorEditionButtonTextBlock.Text" xml:space="preserve">
-    <value>Αγοράστε την Έκδοση Χορηγού NanaZip</value>
-    <comment>Buy NanaZip Sponsor Edition</comment>
+    <value>Αγοράστε την Έκδοση Χορηγού CuinZip</value>
+    <comment>Buy CuinZip Sponsor Edition</comment>
   </data>
   <data name="ContributeButton.AutomationProperties.Name" xml:space="preserve">
-    <value>Γίνετε συνεισφέρων στο NanaZip</value>
-    <comment>Become a contributor of NanaZip</comment>
+    <value>Γίνετε συνεισφέρων στο CuinZip</value>
+    <comment>Become a contributor of CuinZip</comment>
   </data>
   <data name="ContributeButtonTextBlock.Text" xml:space="preserve">
-    <value>Γίνετε συνεισφέρων στο NanaZip</value>
-    <comment>Become a contributor of NanaZip</comment>
+    <value>Γίνετε συνεισφέρων στο CuinZip</value>
+    <comment>Become a contributor of CuinZip</comment>
   </data>
   <data name="GridTitleTextBlock.Text" xml:space="preserve">
-    <value>Δωρεά στο NanaZip</value>
-    <comment>Sponsor NanaZip</comment>
+    <value>Δωρεά στο CuinZip</value>
+    <comment>Sponsor CuinZip</comment>
   </data>
   <data name="SponsorEditionPolicyButton.AutomationProperties.Name" xml:space="preserve">
     <value>Πολιτική Έκδοσης Χορηγού</value>

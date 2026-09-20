@@ -705,7 +705,7 @@ static const char *ParseMapWithPaths(
     {
       // **************** NanaZip Modification Start ****************
       // // MessageBoxW(0, name, L"7-Zip", 0);
-      // MessageBoxW(0, name, L"NanaZip", 0);
+      // MessageBoxW(0, name, L"CuinZip", 0);
       // **************** NanaZip Modification End ****************
       AddNameToCensor(censor, nop, name);
       name.Empty();

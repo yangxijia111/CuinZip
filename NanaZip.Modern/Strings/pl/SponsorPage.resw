@@ -118,24 +118,24 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="BuySponsorEditionButton.AutomationProperties.Name" xml:space="preserve">
-    <value>Kup edycję programu NanaZip dla sponsorów</value>
-    <comment>Buy NanaZip Sponsor Edition</comment>
+    <value>Kup edycję programu CuinZip dla sponsorów</value>
+    <comment>Buy CuinZip Sponsor Edition</comment>
   </data>
   <data name="BuySponsorEditionButtonTextBlock.Text" xml:space="preserve">
-    <value>Kup edycję programu NanaZip dla sponsorów</value>
-    <comment>Buy NanaZip Sponsor Edition</comment>
+    <value>Kup edycję programu CuinZip dla sponsorów</value>
+    <comment>Buy CuinZip Sponsor Edition</comment>
   </data>
   <data name="ContributeButton.AutomationProperties.Name" xml:space="preserve">
-    <value>Zostań współtwórcą NanaZip</value>
-    <comment>Become a contributor of NanaZip</comment>
+    <value>Zostań współtwórcą CuinZip</value>
+    <comment>Become a contributor of CuinZip</comment>
   </data>
   <data name="ContributeButtonTextBlock.Text" xml:space="preserve">
-    <value>Zostań współtwórcą NanaZip</value>
-    <comment>Become a contributor of NanaZip</comment>
+    <value>Zostań współtwórcą CuinZip</value>
+    <comment>Become a contributor of CuinZip</comment>
   </data>
   <data name="GridTitleTextBlock.Text" xml:space="preserve">
-    <value>Zostań sponsorem NanaZip</value>
-    <comment>Sponsor NanaZip</comment>
+    <value>Zostań sponsorem CuinZip</value>
+    <comment>Sponsor CuinZip</comment>
   </data>
   <data name="SponsorEditionPolicyButton.AutomationProperties.Name" xml:space="preserve">
     <value>Zasady edycji dla sponsorów</value>

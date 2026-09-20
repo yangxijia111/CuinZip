@@ -126,8 +126,8 @@
     <comment>More</comment>
   </data>
   <data name="SponsorButton.AcquireText" xml:space="preserve">
-    <value>Sponsor NanaZip</value>
-    <comment>Sponsor NanaZip</comment>
+    <value>Sponsor CuinZip</value>
+    <comment>Sponsor CuinZip</comment>
   </data>
   <data name="SponsorButton.SponsoredText" xml:space="preserve">
     <value>Waardering voor uw sponsoring</value>

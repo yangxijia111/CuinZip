@@ -938,14 +938,14 @@ bool CPanel::OnCommand(int code, int itemID, LPARAM lParam, LRESULT &result)
 void CPanel::MessageBox_Info(LPCWSTR message, LPCWSTR caption) const
   { ::MessageBoxW((HWND)*this, message, caption, MB_OK); }
 void CPanel::MessageBox_Warning(LPCWSTR message) const
-  { ::MessageBoxW((HWND)*this, message, L"NanaZip", MB_OK | MB_ICONWARNING); }
+  { ::MessageBoxW((HWND)*this, message, L"CuinZip", MB_OK | MB_ICONWARNING); }
 */
 
 void CPanel::MessageBox_Error_Caption(LPCWSTR message, LPCWSTR caption) const
   { ::MessageBoxW((HWND)*this, message, caption, MB_OK | MB_ICONSTOP); }
 
 void CPanel::MessageBox_Error(LPCWSTR message) const
-  { MessageBox_Error_Caption(message, L"NanaZip"); }
+  { MessageBox_Error_Caption(message, L"CuinZip"); }
 
 static UString ErrorHResult_To_Message(HRESULT errorCode)
 {
@@ -960,7 +960,7 @@ void CPanel::MessageBox_Error_HRESULT_Caption(HRESULT errorCode, LPCWSTR caption
 }
 
 void CPanel::MessageBox_Error_HRESULT(HRESULT errorCode) const
-  { MessageBox_Error_HRESULT_Caption(errorCode, L"NanaZip"); }
+  { MessageBox_Error_HRESULT_Caption(errorCode, L"CuinZip"); }
 
 void CPanel::MessageBox_Error_2Lines_Message_HRESULT(LPCWSTR message, HRESULT errorCode) const
 {
@@ -974,7 +974,7 @@ void CPanel::MessageBox_LastError(LPCWSTR caption) const
   { MessageBox_Error_HRESULT_Caption(::GetLastError(), caption); }
 
 void CPanel::MessageBox_LastError() const
-  { MessageBox_LastError(L"NanaZip"); }
+  { MessageBox_LastError(L"CuinZip"); }
 
 void CPanel::MessageBox_Error_LangID(UINT resourceID) const
   { MessageBox_Error(LangString(resourceID)); }
@@ -1024,7 +1024,7 @@ bool CPanel::IsFSDrivesFolder() const { return IsFolderTypeEqTo("FSDrives"); }
 bool CPanel::IsAltStreamsFolder() const { return IsFolderTypeEqTo("AltStreamsFolder"); }
 bool CPanel::IsArcFolder() const
 {
-  return GetFolderTypeID().IsPrefixedBy_Ascii_NoCase("NanaZip");
+  return GetFolderTypeID().IsPrefixedBy_Ascii_NoCase("CuinZip");
 }
 
 bool CPanel::IsHashFolder() const
@@ -1465,7 +1465,7 @@ void CPanel::TestArchives()
 
     extracter.ProgressDialog.CompressingMode = false;
     extracter.ProgressDialog.MainWindow = GetParent();
-    extracter.ProgressDialog.MainTitle = "NanaZip"; // LangString(IDS_APP_TITLE);
+    extracter.ProgressDialog.MainTitle = "CuinZip"; // LangString(IDS_APP_TITLE);
     extracter.ProgressDialog.MainAddTitle = title + L' ';
 
     extracter.ExtractCallbackSpec->OverwriteMode = NExtract::NOverwriteMode::kAskBefore;

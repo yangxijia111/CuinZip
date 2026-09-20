@@ -6,12 +6,12 @@
     <MileProjectType>WindowsApplication</MileProjectType>
     <MileProjectManifestFile>NanaZip.Core.Sfx.Setup.manifest</MileProjectManifestFile>
     <MileProjectUseProjectProperties>true</MileProjectUseProjectProperties>
-    <MileProjectCompanyName>M2-Team</MileProjectCompanyName>
-    <MileProjectFileDescription>NanaZip Self Extracting Executable (Setup)</MileProjectFileDescription>
+    <MileProjectCompanyName>CuinZip Project</MileProjectCompanyName>
+    <MileProjectFileDescription>CuinZip Self Extracting Executable (Setup)</MileProjectFileDescription>
     <MileProjectInternalName>NanaZip.Core.Sfx.Setup</MileProjectInternalName>
-    <MileProjectLegalCopyright>© M2-Team and Contributors. All rights reserved.</MileProjectLegalCopyright>
+    <MileProjectLegalCopyright>© CuinZip Project and Contributors. Based on NanaZip (M2-Team) and 7-Zip (Igor Pavlov). All rights reserved.</MileProjectLegalCopyright>
     <MileProjectOriginalFilename>NanaZip.Core.Setup.sfx</MileProjectOriginalFilename>
-    <MileProjectProductName>NanaZip</MileProjectProductName>
+    <MileProjectProductName>CuinZip</MileProjectProductName>
     <MileWindowsHelpersNoCppWinRTHelpers>true</MileWindowsHelpersNoCppWinRTHelpers>
   </PropertyGroup>
   <Import Project="..\NanaZip.Project\NanaZip.Project.props" />

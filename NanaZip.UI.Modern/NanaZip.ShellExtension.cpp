@@ -938,7 +938,7 @@ namespace NanaZip::ShellExtension
                 return E_NOTIMPL;
             }
 
-            return ::SHStrDupW(L"NanaZip Preview", ppszName);
+            return ::SHStrDupW(L"CuinZip Preview", ppszName);
         }
 
         HRESULT STDMETHODCALLTYPE GetIcon(
@@ -1063,7 +1063,7 @@ namespace NanaZip::ShellExtension
 #pragma endregion
     };
 
-    struct DECLSPEC_UUID("469D94E9-6AF4-4395-B396-99B1308F8CE5")
+    struct DECLSPEC_UUID("788F8FA7-178F-40BE-BAF5-5D5D1335C0F9")
         ClassFactory : public winrt::implements<
         ClassFactory, IClassFactory>
     {

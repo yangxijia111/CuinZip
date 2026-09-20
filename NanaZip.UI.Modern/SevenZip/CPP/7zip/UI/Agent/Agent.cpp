@@ -1259,7 +1259,7 @@ STDMETHODIMP CAgentFolder::GetFolderProperty(PROPID propID, PROPVARIANT *value)
       case kpidNumSubFiles:  prop = dir.NumSubFiles; break;
         // case kpidName:         prop = dir.Name; break;
       // case kpidPath:         prop = _proxy2->GetFullPathPrefix(_proxyDirIndex); break;
-      case kpidType: prop = UString("NanaZip.") + _agentSpec->ArchiveType; break;
+      case kpidType: prop = UString("CuinZip.") + _agentSpec->ArchiveType; break;
       case kpidCRC: if (dir.CrcIsDefined) { prop = dir.Crc; } break;
     }
 
@@ -1275,7 +1275,7 @@ STDMETHODIMP CAgentFolder::GetFolderProperty(PROPID propID, PROPVARIANT *value)
     case kpidNumSubFiles:  prop = dir.NumSubFiles; break;
     case kpidName:         prop = dir.Name; break;
     case kpidPath:         prop = _proxy->GetDirPath_as_Prefix(_proxyDirIndex); break;
-    case kpidType: prop = UString("NanaZip.") + _agentSpec->ArchiveType; break;
+    case kpidType: prop = UString("CuinZip.") + _agentSpec->ArchiveType; break;
     case kpidCRC: if (dir.CrcIsDefined) prop = dir.Crc; break;
   }
   }

@@ -118,7 +118,7 @@ namespace
 
         if (!::CreateProcessW(
             ApplicationName.c_str(),
-            const_cast<LPWSTR>(L"NanaZip --AcquireSponsorEdition"),
+            const_cast<LPWSTR>(L"CuinZip --AcquireSponsorEdition"),
             nullptr,
             nullptr,
             TRUE,
@@ -356,7 +356,7 @@ namespace winrt::NanaZip::Modern::implementation
         std::wstring sponsorButtonLabel = L"[";
         sponsorButtonLabel += Mile::WinRT::GetLocalizedString(
             L"NanaZip.Modern/MainWindowToolBarPage/SponsorButton/AcquireText",
-            L"Sponsor NanaZip");
+            L"Sponsor CuinZip");
         sponsorButtonLabel += L"]";
 
         this->SponsorButton().Content(winrt::box_value(sponsorButtonLabel));

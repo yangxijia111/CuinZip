@@ -43,28 +43,32 @@ namespace NanaZip.Build.Tasks
             }
         }
 
+        // CuinZip (Rebrand 2026-09):列表在 CuinZip 正式版与 CuinZip Preview 两个品牌状态间切换。
+        // 与上游的差异:Identity/CLSID/资产名均为 CuinZip 自有值,不再包含任何 NanaZip 品牌串,
+        // 因此构建不会再把品牌回滚成 NanaZip。
+        // CLSID Release=C8F7BD19-04D0-4086-820C-AD2F35AB89B0,Preview=788F8FA7-178F-40BE-BAF5-5D5D1335C0F9。
         static List<string> ReleaseStringList = new List<string>
         {
-            "DisplayName=\"NanaZip\"",
-            "Name=\"40174MouriNaruto.NanaZip\"",
-            "<DisplayName>NanaZip</DisplayName>",
-            "CAE3F1D4-7765-4D98-A060-52CD14D56EAB",
-            "return ::SHStrDupW(L\"NanaZip\", ppszName);",
-            "<Content Include=\"..\\Assets\\PackageAssets\\**\\*\">",
-            "Assets/NanaZip.ico",
-            "Assets/NanaZipSfx.ico",
+            "DisplayName=\"CuinZip\"",
+            "Name=\"Cuin.CuinZip\"",
+            "<DisplayName>CuinZip</DisplayName>",
+            "C8F7BD19-04D0-4086-820C-AD2F35AB89B0",
+            "return ::SHStrDupW(L\"CuinZip\", ppszName);",
+            "<Content Include=\"..\\Assets\\CuinZipPackageAssets\\**\\*\">",
+            "Assets/CuinZip.ico",
+            "Assets/CuinZipSfx.ico",
         };
 
         static List<string> PreviewStringList = new List<string>
         {
-            "DisplayName=\"NanaZip Preview\"",
-            "Name=\"40174MouriNaruto.NanaZipPreview\"",
-            "<DisplayName>NanaZip Preview</DisplayName>",
-            "469D94E9-6AF4-4395-B396-99B1308F8CE5",
-            "return ::SHStrDupW(L\"NanaZip Preview\", ppszName);",
-            "<Content Include=\"..\\Assets\\PreviewPackageAssets\\**\\*\">",
-            "Assets/NanaZipPreview.ico",
-            "Assets/NanaZipPreviewSfx.ico",
+            "DisplayName=\"CuinZip Preview\"",
+            "Name=\"Cuin.CuinZipPreview\"",
+            "<DisplayName>CuinZip Preview</DisplayName>",
+            "788F8FA7-178F-40BE-BAF5-5D5D1335C0F9",
+            "return ::SHStrDupW(L\"CuinZip Preview\", ppszName);",
+            "<Content Include=\"..\\Assets\\CuinZipPreviewPackageAssets\\**\\*\">",
+            "Assets/CuinZipPreview.ico",
+            "Assets/CuinZipPreviewSfx.ico",
         };
 
         static List<string> FileList = new List<string>
