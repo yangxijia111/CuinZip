@@ -6,9 +6,10 @@ Upstream Commit:
 CuinZip Init Commit:
 `35c5504a`
 
-> 阶段：P0-2A（x64 基线构建验证）
+> 阶段：P0-2B（x64 全链路构建验证，含 UWP/MSIX 环境补齐）
 > 日期：2026-09-20
 > 分支：`cuinzip-dev`（已推送 origin）
+> **结果：全链路 PASS（Restore / 8 项目 Debug 构建 / Classic 冒烟 / BuildAllTargets 完整构建 0 错误）**
 
 ## Environment
 
@@ -116,3 +117,69 @@ ARM64 工具链按本阶段规则**未安装、未测试**。
 
 - x64 命令行功能链（Core/Codecs/K7/Console + 压缩解压）**完整可用**，可支撑后续开发与 CI。
 - Classic/Modern/MSIX 属 ENVIRONMENT BLOCKED，补装上述两个组件后应可解除（解除后建议重跑：官方 Restore → Classic → Modern → wapproj → 最后按需 BuildAllTargets.cmd）。
+
+---
+
+# P0-2B：x64 全链路构建验证（2026-09-20）
+
+## Installed Components
+
+在 BuildTools 17.14.37（17.14.37516.0）上补装：
+
+1. `Microsoft.VisualStudio.ComponentGroup.UWP.VC.BuildTools` — 成功。安装器强制带入 ARM64/ARM 传递依赖（官方组件组硬依赖，不可取消）。
+2. `Microsoft.VisualStudio.ComponentGroup.MSIX.Packaging` — **对 BuildTools SKU 不可安装**：该组不在 BuildTools 产品图内（依赖 `Windows.Tools.Ide` 等 IDE 专用组件），`--add` 后被安装器静默跳过（退出码仍为 0）。
+3. 等价替代：`Microsoft.VisualStudio.ComponentGroup.UWP.BuildTools` — 成功。这是 BuildTools 产品图内唯一同时提供以下两件缺失文件的最小组件：
+   - `MSBuild\Microsoft\VC\v170\Application Type\Windows Store\10.0\Platforms\{x64,x86,Win32,ARM,ARM64,ARM64EC}\Platform.props`（定义 `PlatformToolsetVersion`，解 MSB4086）
+   - `MSBuild\Microsoft\DesktopBridge\Microsoft.DesktopBridge.props`（解 wapproj MSB4019）
+   - 注：直接 `--add Microsoft.VisualStudio.DesktopBridge.Build`（底层 Vsix 包）不可行——安装器报 "Cannot find package in product graph"。
+
+安装验证：`Platforms\x64\Platform.props` 与 `Microsoft.DesktopBridge.props` 均存在。
+
+## Restore
+
+**官方 `RestoreNuGetPackages.cmd`：PASS**（0 错误；30 警告 = 上游已知 NU1701/NU1504 噪音，见 P0-2A 记录）。
+
+## Build Matrix（x64 Debug，逐项目）
+
+| 项目 | 结果 | 产物 |
+|---|---|---|
+| NanaZip.Core | **PASS** | `Output\Binaries\Debug\x64\NanaZip.Core.dll` |
+| NanaZip.Codecs | **PASS** | `NanaZip.Codecs.dll` |
+| Universal Console | **PASS** | `NanaZip.Universal.Console.exe`（+ Core.Console.sfx） |
+| NanaZip.Modern | **PASS** | `NanaZip.Modern.dll` |
+| NanaZip.UI.Modern (FileManager) | **PASS** | `NanaZip.Modern.FileManager.exe` |
+| NanaZip.UI.Classic | **PASS** | `NanaZip.exe` |
+| NanaZip.ShellExtension | **PASS** | `NanaZip.ShellExtension.dll` |
+| NanaZipPackage (wapproj/MSIX) | **PASS** | `NanaZipPackage_7.0.1845.0_x64_arm64_Debug.msixbundle`（未签名） |
+
+## Smoke Test
+
+- 压缩→解压→SHA-256：**PASS**（Console，测试目录 %TEMP%，测后清理）
+- Classic UI（`NanaZip.exe`）：**PASS** — 启动成功、主窗口出现（标题即所开压缩包路径）、打开测试 `.7z` 正常、8 秒后仍响应、无崩溃
+
+## BuildAllTargets.cmd（官方完整构建）
+
+**PASS：42 警告 / 0 错误 / 23 分 42 秒**（RefreshVersion → Restore → Build → Packaging 全目标）
+
+产物：Debug+Release × x64+arm64 全矩阵、`Output\Binaries\AppPackages\NanaZipPackage_7.0.1846.0_{Debug_Test,Test}\`（未签名 msixbundle）、`Output\Binaries\Root\` 分发目录（Binaries/Symbols/License 等）、`Output\BuildAllTargets.binlog`。
+
+签名：wapproj 未配置证书，包为 **unsigned**（`Add-AppDevPackage.ps1` 随包生成）；无 SIGNING BLOCKED（未发生因签名导致的失败）。
+
+## 本机构建环境要点（重要，后续阶段必读）
+
+1. **中文路径问题（根因一）**：仓库真实路径含中文（`实用项目`）。CppWinRT 目标以 UTF-8 无 BOM 写 mdmerge.rsp，而 mdmerge 按 ANSI(GBK) 读取 → 路径乱码（MDM2025）；MIDL 对非 ASCII 路径会访问冲突（MIDL9008/0xC0000005）。
+   **解决：`subst X: <仓库真实路径>`，一切构建从 `X:\` 进行**（subst 驱动器不会被 MSBuild/.NET GetFullPath 解析回真实路径；junction 会被解析，不可用）。辅助脚本：仓库父目录 `build_x64.cmd`（自举 subst + vcvarsall amd64 + 从 X:\ 调 MSBuild）。
+2. **MIDL 需要 cl.exe 在 PATH（根因二）**：裸 MSBuild 下 MIDL 内部找不到 C 预处理器 → 报 MIDL9008。**必须在 vcvarsall 环境下构建**（build_x64.cmd 已封装）。
+3. **勿删工程 obj 目录（根因三）**：NuGet 对 vcxproj 的 props 注入文件 `nuget.g.props` 位于 `Output\Objects\<Cfg>\<Project>\obj\`（`MSBuildProjectExtensionsPath` 被 Mile.Project 重定向）。删除该目录 = CppWinRT 现代 IDL 链失效 → midl 退回旧形态并崩溃。清理中间产物后必须重跑 `-t:Restore`。
+4. **BuildAllTargets.cmd 的 `cd "%~dp0"` 缺陷**：路径结尾 `\` + 引号导致 cd 失败（上游 CI 因调用时 cwd 已在仓库根而从未暴露）。**必须从 X:\ 根调用**（`cd /x && cmd //c X:\BuildAllTargets.cmd`）。
+5. midl 的 `/metadata_dir` 重复给出只认第一个（MIDL1007）；多目录需分号拼接单参数。平台 XAML 元数据经 CppWinRT `midlrt.rsp`（`/nomidl @rsp` 形态）注入，勿手工干预。
+
+## Git Changes Caused By Build
+
+- `RefreshVersion` 修改了 `NanaZip.Project/NanaZip.Project.Version.props`（日期 09-19→09-20）与 `NanaZipPackage/Package.appxmanifest`（版本号）——**已按规则 `git checkout --` 回滚，不提交**。
+- 提交内容仅 `Docs/`：CUINZIP_BASELINE.md（本文件）+ CUINZIP_PROGRESS.md。
+
+## P0-2B 结论
+
+- NanaZip 原版 x64 **Classic / Modern / Shell / MSIX / 完整官方构建全部正常**，五项 P0-2A 的 ENVIRONMENT BLOCKED 全部解除。
+- **P0-3 Readiness：READY**（Rebrand 可启动；构建一律走 `X:\` + `build_x64.cmd`）。
