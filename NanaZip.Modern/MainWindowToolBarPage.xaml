@@ -19,6 +19,13 @@
         <ColumnDefinition Width="*" />
         <ColumnDefinition Width="auto" />
       </Grid.ColumnDefinitions>
+      <!--
+        CuinZip P1-1: Reorganized main actions into two focused groups
+        (Add / Extract / Test / Delete / Info and Options / More).
+        Copy, Move, Benchmark and About remain available through the
+        More menu (the full File Manager menu); the F5/F6 shortcuts
+        of Copy/Move are unchanged.
+      -->
       <CommandBar
         Grid.Column="0"
         HorizontalAlignment="Left"
@@ -47,24 +54,6 @@
           Click="TestButtonClick"
           Icon="Accept"
           ToolTipService.ToolTip="[Test]" />
-        <AppBarSeparator />
-        <AppBarButton
-          x:Name="CopyButton"
-          Width="48"
-          AutomationProperties.Name="[Copy]"
-          Click="CopyButtonClick"
-          Icon="Copy"
-          ToolTipService.ToolTip="[Copy]" />
-        <AppBarButton
-          x:Name="MoveButton"
-          Width="48"
-          AutomationProperties.Name="[Move]"
-          Click="MoveButtonClick"
-          ToolTipService.ToolTip="[Move]">
-          <AppBarButton.Content>
-            <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE8C6;" />
-          </AppBarButton.Content>
-        </AppBarButton>
         <AppBarButton
           x:Name="DeleteButton"
           Width="48"
@@ -79,7 +68,7 @@
           Click="InfoButtonClick"
           ToolTipService.ToolTip="[Info]">
           <AppBarButton.Content>
-            <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE946;" />
+            <TextBlock FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets" Text="&#xE946;" />
           </AppBarButton.Content>
         </AppBarButton>
         <AppBarSeparator />
@@ -91,21 +80,7 @@
           Icon="Setting"
           ToolTipService.ToolTip="[Options]" />
         <AppBarButton
-          x:Name="BenchmarkButton"
-          Width="48"
-          AutomationProperties.Name="[Benchmark]"
-          Click="BenchmarkButtonClick"
-          Icon="Play"
-          ToolTipService.ToolTip="[Benchmark]" />
-        <AppBarButton
-          x:Name="AboutButton"
-          Width="48"
-          AutomationProperties.Name="[About]"
-          Click="AboutButtonClick"
-          Icon="Help"
-          ToolTipService.ToolTip="[About]" />
-        <AppBarSeparator />
-        <AppBarButton
+          x:Name="MoreButton"
           x:Uid="/NanaZip.Modern/MainWindowToolBarPage/MoreButton"
           Width="48"
           AutomationProperties.Name="[More]"
@@ -114,13 +89,28 @@
           ToolTipService.ToolTip="[More]" />
       </CommandBar>
       <Button
-        x:Name="SponsorButton"
+        x:Name="OpenSourceButton"
         Grid.Column="2"
         Margin="0,0,6,0"
         VerticalAlignment="Center"
         Background="Transparent"
-        Click="SponsorButtonClick"
-        Content="[Sponsor NanaZip]" />
+        Click="OpenSourceButtonClick"
+        Content="[Open Source]">
+        <Button.Resources>
+          <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+              <ResourceDictionary x:Key="Default">
+                <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="#6CB8F6" />
+                <SolidColorBrush x:Key="ButtonForegroundPressed" Color="#4CA2E8" />
+              </ResourceDictionary>
+              <ResourceDictionary x:Key="Light">
+                <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="#0067C0" />
+                <SolidColorBrush x:Key="ButtonForegroundPressed" Color="#005BA6" />
+              </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+          </ResourceDictionary>
+        </Button.Resources>
+      </Button>
     </Grid>
   </Grid>
 </Page>

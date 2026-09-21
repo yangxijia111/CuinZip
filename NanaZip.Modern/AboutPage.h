@@ -30,6 +30,10 @@ namespace winrt::NanaZip::Modern::implementation
             winrt::IInspectable const& sender,
             winrt::RoutedEventArgs const& e);
 
+        void SevenZipWebsiteButtonClick(
+            winrt::IInspectable const& sender,
+            winrt::RoutedEventArgs const& e);
+
         void CancelButtonClick(
             winrt::IInspectable const& sender,
             winrt::RoutedEventArgs const& e);

@@ -9,24 +9,10 @@
 #include <Mile.Helpers.CppBase.h>
 #include <Mile.Helpers.CppWinRT.h>
 
-namespace winrt::Mile
-{
-    using namespace ::Mile;
-}
-
 #include <ShObjIdl_core.h>
-
-#include <winrt/Windows.Services.Store.h>
 
 // Defined in SevenZip/CPP/7zip/UI/FileManager/resourceGui.h
 #define IDI_ICON 1
-
-namespace winrt
-{
-    using Windows::Services::Store::StoreContext;
-    using Windows::Services::Store::StoreProduct;
-    using Windows::Services::Store::StoreProductQueryResult;
-}
 
 namespace winrt::NanaZip::Modern::implementation
 {
@@ -34,9 +20,9 @@ namespace winrt::NanaZip::Modern::implementation
         _In_opt_ HWND WindowHandle) :
         m_WindowHandle(WindowHandle)
     {
-        winrt::hstring WindowTitle = Mile::WinRT::GetLocalizedString(
-            L"NanaZip.Modern/SponsorPage/GridTitleTextBlock/Text");
-        ::SetWindowTextW(this->m_WindowHandle, WindowTitle.c_str());
+        // CuinZip P1-1: the window title is set directly instead of loading
+        // the legacy sponsor string resource from the resw files.
+        ::SetWindowTextW(this->m_WindowHandle, L"Open Source Projects");
 
         HICON ApplicationIconHandle = reinterpret_cast<HICON>(::LoadImageW(
             ::GetModuleHandleW(nullptr),
@@ -65,7 +51,7 @@ namespace winrt::NanaZip::Modern::implementation
         SponsorPageT::InitializeComponent();
     }
 
-    void SponsorPage::ContributeButtonClick(
+    void SponsorPage::CuinZipGitHubButtonClick(
         winrt::IInspectable const& sender,
         winrt::RoutedEventArgs const& e)
     {
@@ -75,41 +61,12 @@ namespace winrt::NanaZip::Modern::implementation
         SHELLEXECUTEINFOW ExecInfo = {};
         ExecInfo.cbSize = sizeof(SHELLEXECUTEINFOW);
         ExecInfo.lpVerb = L"open";
-        ExecInfo.lpFile =
-            L"https://github.com/M2Team/NanaZip/"
-            L"blob/main/CONTRIBUTING.md";
+        ExecInfo.lpFile = L"https://github.com/yangxijia111/CuinZip";
         ExecInfo.nShow = SW_SHOWNORMAL;
         ::ShellExecuteExW(&ExecInfo);
     }
 
-    winrt::fire_and_forget SponsorPage::BuySponsorEditionButtonClick(
-        winrt::IInspectable const& sender,
-        winrt::RoutedEventArgs const& e)
-    {
-        UNREFERENCED_PARAMETER(sender);
-        UNREFERENCED_PARAMETER(e);
-
-        winrt::StoreContext Context = winrt::StoreContext::GetDefault();
-        if (Context)
-        {
-            winrt::check_hresult(
-                Context.as<IInitializeWithWindow>()->Initialize(
-                    this->m_WindowHandle));
-
-            winrt::StoreProductQueryResult ProductQueryResult =
-                co_await Context.GetStoreProductsAsync(
-                    { L"Durable" },
-                    { L"9N9DNPT6D6Z9" });
-            for (auto Item : ProductQueryResult.Products())
-            {
-                winrt::StoreProduct Product = Item.Value();
-
-                co_await Product.RequestPurchaseAsync();
-            }
-        }
-    }
-
-    void SponsorPage::SponsorEditionPolicyButtonClick(
+    void SponsorPage::NanaZipGitHubButtonClick(
         winrt::IInspectable const& sender,
         winrt::RoutedEventArgs const& e)
     {
@@ -119,9 +76,22 @@ namespace winrt::NanaZip::Modern::implementation
         SHELLEXECUTEINFOW ExecInfo = {};
         ExecInfo.cbSize = sizeof(SHELLEXECUTEINFOW);
         ExecInfo.lpVerb = L"open";
-        ExecInfo.lpFile =
-            L"https://github.com/M2Team/NanaZip/"
-            L"blob/main/Documents/SponsorEdition.md";
+        ExecInfo.lpFile = L"https://github.com/M2Team/NanaZip";
+        ExecInfo.nShow = SW_SHOWNORMAL;
+        ::ShellExecuteExW(&ExecInfo);
+    }
+
+    void SponsorPage::SevenZipWebsiteButtonClick(
+        winrt::IInspectable const& sender,
+        winrt::RoutedEventArgs const& e)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(e);
+
+        SHELLEXECUTEINFOW ExecInfo = {};
+        ExecInfo.cbSize = sizeof(SHELLEXECUTEINFOW);
+        ExecInfo.lpVerb = L"open";
+        ExecInfo.lpFile = L"https://www.7-zip.org";
         ExecInfo.nShow = SW_SHOWNORMAL;
         ::ShellExecuteExW(&ExecInfo);
     }

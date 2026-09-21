@@ -157,19 +157,12 @@ void NanaZip::UI::SpecialCommandHandler()
         OptionsAndParameters,
         UnresolvedCommandLine);
 
-    bool AcquireSponsorEdition = false;
+    // CuinZip P1-1: the upstream --AcquireSponsorEdition branch (the
+    // Microsoft Store sponsor purchase flow) was removed. CuinZip does not
+    // sell licenses. The handler stays as the dedicated entry point for
+    // future CuinZip-specific command line switches.
 
-    for (auto& Current : OptionsAndParameters)
-    {
-        if (0 == _wcsicmp(Current.first.c_str(), L"AcquireSponsorEdition"))
-        {
-            AcquireSponsorEdition = true;
-        }
-    }
-
-    if (AcquireSponsorEdition)
-    {
-        ::MileXamlThreadInitialize();
-        ::ExitProcess(::K7ModernShowSponsorDialog(nullptr));
-    }
+    UNREFERENCED_PARAMETER(ApplicationName);
+    UNREFERENCED_PARAMETER(OptionsAndParameters);
+    UNREFERENCED_PARAMETER(UnresolvedCommandLine);
 }

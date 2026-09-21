@@ -5,12 +5,10 @@
 #include <Windows.h>
 
 #include <winrt/Windows.System.h>
-#include <winrt/Windows.Services.Store.h>
 
 namespace winrt
 {
     using Windows::Foundation::IInspectable;
-    using Windows::Services::Store::StoreContext;
     using Windows::System::DispatcherQueue;
     using Windows::UI::Xaml::RoutedEventArgs;
 }
@@ -74,7 +72,11 @@ namespace winrt::NanaZip::Modern::implementation
             winrt::IInspectable const& sender,
             winrt::RoutedEventArgs const& e);
 
-        void SponsorButtonClick(
+        // CuinZip P1-1: opens the Open Source Projects dialog directly.
+        // The upstream sponsor acquisition flow (relaunching with
+        // --AcquireSponsorEdition and querying the Microsoft Store) was
+        // removed together with its license state caching.
+        void OpenSourceButtonClick(
             winrt::IInspectable const& sender,
             winrt::RoutedEventArgs const& e);
 
@@ -83,11 +85,6 @@ namespace winrt::NanaZip::Modern::implementation
         HWND m_WindowHandle;
         HMENU m_MoreMenu;
         winrt::DispatcherQueue m_DispatcherQueue = nullptr;
-        winrt::StoreContext m_StoreContext = nullptr;
-
-        bool CheckSponsorEditionLicense();
-
-        void RefreshSponsorButtonContent();
     };
 }
 

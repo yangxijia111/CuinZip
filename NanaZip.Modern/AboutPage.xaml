@@ -7,6 +7,11 @@
   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
   IsTextScaleFactorEnabled="False"
   mc:Ignorable="d">
+  <!--
+    CuinZip P1-1: attribution rewritten to describe the relationship
+    correctly (CuinZip is based on NanaZip and 7-Zip) while keeping the
+    upstream credits. Link buttons now cover CuinZip, NanaZip and 7-Zip.
+  -->
   <Grid>
     <Grid.RowDefinitions>
       <RowDefinition Height="*" />
@@ -18,11 +23,13 @@
         Margin="0,0,0,12"
         FontSize="24"
         FontWeight="SemiBold"
-        Text="[About NanaZip]" />
-      <TextBlock>
+        Text="[About CuinZip]" />
+      <TextBlock IsTextSelectionEnabled="True">
         <Run x:Name="Version" />
         <LineBreak />
-        <Run Text="© M2-Team and Contributors. All rights reserved." />
+        <Run Text="CuinZip is an open source file archiver based on NanaZip and 7-Zip." />
+        <LineBreak />
+        <Run Text="© CuinZip Project and Contributors. Based on NanaZip © M2-Team and Contributors and 7-Zip © Igor Pavlov. All rights reserved." />
         <LineBreak />
         <LineBreak />
         <Run x:Name="Content" />
@@ -38,23 +45,29 @@
         <ColumnDefinition Width="*" />
         <ColumnDefinition Width="8" />
         <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="8" />
+        <ColumnDefinition Width="*" />
       </Grid.ColumnDefinitions>
       <Button
         Grid.Column="0"
         HorizontalAlignment="Stretch"
-        Click="NanaZipWebsiteButtonClick"
-        Content="NanaZip.org" />
-      <Button
-        Grid.Column="2"
-        HorizontalAlignment="Stretch"
         Click="GitHubButtonClick"
         Content="GitHub" />
       <Button
-        x:Uid="/NanaZip.Modern/Common/CancelButton"
+        Grid.Column="2"
+        HorizontalAlignment="Stretch"
+        Click="NanaZipWebsiteButtonClick"
+        Content="NanaZip.org" />
+      <Button
         Grid.Column="4"
         HorizontalAlignment="Stretch"
+        Click="SevenZipWebsiteButtonClick"
+        Content="7-Zip.org" />
+      <Button
+        Grid.Column="6"
+        HorizontalAlignment="Stretch"
         Click="CancelButtonClick"
-        Content="[Cancel]" />
+        Content="Close" />
     </Grid>
   </Grid>
 </Page>

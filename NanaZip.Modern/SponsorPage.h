@@ -21,15 +21,15 @@ namespace winrt::NanaZip::Modern::implementation
 
         void InitializeComponent();
 
-        void ContributeButtonClick(
+        void CuinZipGitHubButtonClick(
             winrt::IInspectable const& sender,
             winrt::RoutedEventArgs const& e);
 
-        winrt::fire_and_forget BuySponsorEditionButtonClick(
+        void NanaZipGitHubButtonClick(
             winrt::IInspectable const& sender,
             winrt::RoutedEventArgs const& e);
 
-        void SponsorEditionPolicyButtonClick(
+        void SevenZipWebsiteButtonClick(
             winrt::IInspectable const& sender,
             winrt::RoutedEventArgs const& e);
 

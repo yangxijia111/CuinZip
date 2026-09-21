@@ -90,6 +90,21 @@ namespace winrt::NanaZip::Modern::implementation
         ::ShellExecuteExW(&ExecInfo);
     }
 
+    void AboutPage::SevenZipWebsiteButtonClick(
+        winrt::IInspectable const& sender,
+        winrt::RoutedEventArgs const& e)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(e);
+
+        SHELLEXECUTEINFOW ExecInfo = {};
+        ExecInfo.cbSize = sizeof(SHELLEXECUTEINFOW);
+        ExecInfo.lpVerb = L"open";
+        ExecInfo.lpFile = L"https://www.7-zip.org";
+        ExecInfo.nShow = SW_SHOWNORMAL;
+        ::ShellExecuteExW(&ExecInfo);
+    }
+
     void AboutPage::CancelButtonClick(
         winrt::IInspectable const& sender,
         winrt::RoutedEventArgs const& e)

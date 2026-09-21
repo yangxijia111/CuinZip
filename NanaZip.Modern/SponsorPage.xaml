@@ -7,67 +7,92 @@
   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
   IsTextScaleFactorEnabled="False"
   mc:Ignorable="d">
+  <!--
+    CuinZip P1-1: this page used to be the NanaZip Sponsor Edition
+    purchase dialog. CuinZip does not sell licenses and does not accept
+    purchases on behalf of NanaZip, so it is now a plain
+    "Open Source Projects" page. The class and file names are kept for
+    ABI stability (K7ModernShowSponsorDialog).
+  -->
   <Grid>
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
       <RowDefinition Height="*" />
+      <RowDefinition Height="Auto" />
     </Grid.RowDefinitions>
 
     <TextBlock
-      x:Uid="/NanaZip.Modern/SponsorPage/GridTitleTextBlock"
-      Margin="16,0"
+      Grid.Row="0"
+      Margin="16,16,16,4"
       HorizontalAlignment="Center"
       FontSize="24"
       FontWeight="SemiBold"
-      Text="[Sponsor NanaZip]" />
+      Text="Open Source Projects" />
 
-    <Grid Grid.Row="1" Padding="32,16">
+    <TextBlock
+      Grid.Row="1"
+      Margin="32,0,32,8"
+      HorizontalAlignment="Center"
+      TextWrapping="Wrap"
+      TextAlignment="Center"
+      Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+      Text="CuinZip is an open source project based on NanaZip and 7-Zip. CuinZip itself is free and does not sell any license." />
+
+    <Grid Grid.Row="2" Padding="32,8">
       <Grid.RowDefinitions>
-        <RowDefinition Height="66" />
-        <RowDefinition Height="3" />
-        <RowDefinition Height="66" />
-        <RowDefinition Height="3" />
-        <RowDefinition Height="66" />
+        <RowDefinition Height="56" />
+        <RowDefinition Height="8" />
+        <RowDefinition Height="56" />
+        <RowDefinition Height="8" />
+        <RowDefinition Height="56" />
       </Grid.RowDefinitions>
       <Button
-        x:Uid="/NanaZip.Modern/SponsorPage/ContributeButton"
         Grid.Row="0"
         HorizontalAlignment="Stretch"
         VerticalAlignment="Stretch"
         HorizontalContentAlignment="Stretch"
-        AutomationProperties.Name="[Become a contributor of NanaZip]"
-        Click="ContributeButtonClick">
+        AutomationProperties.Name="CuinZip on GitHub"
+        Click="CuinZipGitHubButtonClick">
         <StackPanel Margin="16,0" Orientation="Horizontal">
           <SymbolIcon Margin="0,0,16,0" Symbol="Link" />
-          <TextBlock x:Uid="/NanaZip.Modern/SponsorPage/ContributeButtonTextBlock" Text="[Become a contributor of NanaZip]" />
+          <TextBlock Text="CuinZip on GitHub (yangxijia111/CuinZip)" />
         </StackPanel>
       </Button>
       <Button
-        x:Uid="/NanaZip.Modern/SponsorPage/BuySponsorEditionButton"
         Grid.Row="2"
         HorizontalAlignment="Stretch"
         VerticalAlignment="Stretch"
         HorizontalContentAlignment="Stretch"
-        AutomationProperties.Name="[Buy NanaZip Sponsor Edition]"
-        Click="BuySponsorEditionButtonClick">
+        AutomationProperties.Name="NanaZip on GitHub"
+        Click="NanaZipGitHubButtonClick">
         <StackPanel Margin="16,0" Orientation="Horizontal">
-          <SymbolIcon Margin="0,0,16,0" Symbol="Shop" />
-          <TextBlock x:Uid="/NanaZip.Modern/SponsorPage/BuySponsorEditionButtonTextBlock" Text="[Buy NanaZip Sponsor Edition]" />
+          <SymbolIcon Margin="0,0,16,0" Symbol="Link" />
+          <TextBlock Text="NanaZip on GitHub (M2Team/NanaZip)" />
         </StackPanel>
       </Button>
       <Button
-        x:Uid="/NanaZip.Modern/SponsorPage/SponsorEditionPolicyButton"
         Grid.Row="4"
         HorizontalAlignment="Stretch"
         VerticalAlignment="Stretch"
         HorizontalContentAlignment="Stretch"
-        AutomationProperties.Name="[Sponsor Edition Policy]"
-        Click="SponsorEditionPolicyButtonClick">
+        AutomationProperties.Name="7-Zip Official Website"
+        Click="SevenZipWebsiteButtonClick">
         <StackPanel Margin="16,0" Orientation="Horizontal">
-          <SymbolIcon Margin="0,0,16,0" Symbol="Help" />
-          <TextBlock x:Uid="/NanaZip.Modern/SponsorPage/SponsorEditionPolicyButtonTextBlock" Text="[Sponsor Edition Policy]" />
+          <SymbolIcon Margin="0,0,16,0" Symbol="Link" />
+          <TextBlock Text="7-Zip Official Website (7-zip.org)" />
         </StackPanel>
       </Button>
     </Grid>
+
+    <TextBlock
+      Grid.Row="3"
+      Margin="16,0,16,12"
+      HorizontalAlignment="Center"
+      TextWrapping="Wrap"
+      TextAlignment="Center"
+      FontSize="12"
+      Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+      Text="NanaZip © M2-Team and Contributors. 7-Zip © Igor Pavlov." />
   </Grid>
 </Page>
