@@ -134,3 +134,106 @@ Light/Dark 均可读。位置与列表区同步(`ChangeWindowSize`)。
 
 7-Zip ABI GUID(`23170F69-…`)、Core/Codecs 算法、Shell CLSID、Package Identity、
 LangUtils `"NanaZip"` 匹配键、`Mile.*`、第三方许可证、内部二进制契约。
+
+# CuinZip UI / UX 计划(P1-3 实施记录)
+
+日期:2026-09-22,基线 `dfe3ae8c`(安全标签 `p1-3-pre-dialogs`)。
+范围:压缩(Add to Archive)/ 解压(Extract)对话框 Modern 化;进度链经审计
+已由上游 Modern 化(见下),不重写。
+
+## 现状审计结论(P1-3)
+
+- FM 的 Add/Extract 经 `CompressCall.cpp` 拉起 `NanaZip.Universal.Windows.exe`
+  子进程(`a/-ad` 或 `x/-ad` 命令行 + FileMapping 传文件清单),配置对话框
+  (`CCompressDialog`/`CExtractDialog`,Win32 rc 模板)与 GUI 进度都在子进程内。
+- **进度链已经 Modern 化**(NanaZip 上游):`CProgressDialog::Create` 在
+  `K7ModernAvailable()` 时走 `K7ModernShowProgressWindow`(Mile.Xaml 窗口 +
+  `ProgressPage`);百分比/当前文件/总量/已处理大小/速度/已用时间/剩余时间
+  (仅在总量已知时计算)/压缩比齐备;Pause(底层真实支持,`CProgressSync`
+  暂停)/Background(优先级)/Cancel(二段确认 + `Set_Stopped` → E_ABORT)齐备;
+  结束态:错误/消息经 `K7ModernShowInformationDialog` 展示,成功沿用 7-Zip
+  静默语义。P1-3 未改动该链路。
+- 压缩/解压对话框逻辑深耦合 HWND(格式/方法/字典联动、内存估算、注册表
+  读写、OnOK 校验,`CompressDialog.cpp` 约 4300 行)。
+
+## 对话框镜像引擎(核心设计)
+
+**原则:Modern 外壳 → 复用原对话框全部业务逻辑,零重写。**
+
+- 原 rc 对话框以**隐藏的无模式窗口**创建(`CreateDialogParamW` +
+  `ModernMirrorDialogProc`,复刻 NWindows `DialogProcedure` 的装配分发),
+  继续作为数据引擎:`OnInitDialog` 读注册表/填组合框、`CBN_SELCHANGE`/
+  `BN_CLICKED` 联动、`OnOK` 全部校验与回写都走原代码;
+- `K7ModernShowCompressDialog` / `K7ModernShowExtractDialog`(新导出,
+  `NanaZip.Modern.def` + `NanaZip.Modern.Wrapper.cpp` 动态转发,宿主 EXE
+  保持对 DLL 无静态导入依赖)显示 Modern 纯代码页面
+  (`CompressDialogPage`/`ExtractDialogPage`,规避 P1-2 发现的 XAML 管道坑);
+- 页面经通用 `K7_DIALOG_MIRROR_ENGINE` 回调表(读组合框/文本/复选、
+  设选中/文本/勾选并触发原通知、模拟按钮点击、`PressOK`)读写引擎;
+  每次交互后全量同步控件状态(含启用/可见——格式切换时加密区、加密文件名、
+  SFX、第二密码框的显隐全部跟随原逻辑);
+- 可编辑组合框文本(UWP 无 TextChanged 事件)经 `PushEditableTexts`
+  在任何触发原逻辑的操作前统一写回;引擎操作后 `DrainPostedMessages`
+  排空对话框 Post 的后续消息(如 `k_Message_ArcChanged`),保证同步读到终态;
+- OK:页面 `PressOK` → 原 `OnOK` 全量校验(密码 ASCII/长度、内存上限、
+  路径、分卷确认……);全部通过时原代码置位 `Modern_OK_Completed`
+  (在 `CModalDialog::OnOK()` 前插入的标志),页面发
+  `K7_DIALOG_MIRROR_RESULT_OK` 并关闭;校验失败原逻辑弹错误提示,
+  页面保持打开并重新同步。Cancel/Esc → `RESULT_CANCEL` → `E_ABORT` 语义;
+- **回退**:任何 `K7Modern*` 不可用(unpackaged XAML 初始化失败等)时
+  `Create()` 走原模态 rc 对话框,经典行为零改动;SFX 构建
+  (`NanaZip.Core.Sfx`,定义 `Z7_SFX` 并复用 `ExtractDialog.cpp`)用
+  `#ifndef Z7_SFX` 编译剔除镜像接入。
+
+## 页面信息架构
+
+- **CompressDialogPage**(560×640 逻辑):`Archive`(名称+目录显示+浏览+格式+
+  更新模式+路径模式+SFX)/ `Compression`(级别/方法/字典/字大小/固实/线程/
+  内存上限 + 压缩/解压内存实时数值)/ `Encryption`(密码×2 + 显示密码 +
+  加密文件名 + 加密方法)/ `Advanced`(默认折叠:分卷/参数/共享/压缩后删除/
+  Options 经典时间戳-NTFS 子对话框 + 选项摘要);按钮 Cancel / OK(强调色)。
+- **ExtractDialogPage**(500×480 逻辑):`Destination`(路径+浏览+拆分名+
+  路径模式+覆盖模式)/ `Options`(ElimDup/NtSecurity/打开目标文件夹×2)/
+  `Password`;按钮 Cancel / **Extract**(强调色)。
+- 字段标签直接读自隐藏原对话框(沿用 7-Zip Lang 本地化体系,含清理
+  `&`/`(&X)` 加速键);新增文案(分区标题/按钮/文件夹名)进 resw;
+- 密码:PasswordBox + 明文 TextBox 叠放切换(镜像 `UpdatePasswordControl`
+  语义,显示时隐藏第二输入框);不落日志、不缓存;
+- 键盘:Enter=OK / Esc=Cancel,经 PreviewKeyDown + KeyDown + 键盘加速器 +
+  控件级 KeyDown 四层保障(可编辑组合框会吞 Enter 的 UWP 特性);
+- 浏览/Options 子对话框期间 Modern 窗口自我禁用,保持模态语义;
+- Tab 顺序=声明顺序;AutomationProperties 全字段补齐。
+
+## 文案与本地化(P1-3)
+
+- 新增 `CompressDialogPage.resw`(6 键)/ `ExtractDialogPage.resw`(7 键),
+  en + zh-Hans,其余语言英文兜底;经 `GetUiString("Page/Key")` 读取;
+- 未新增任何散落硬编码 UI 文案。
+
+## 验证(P1-3)
+
+- 构建:Restore PASS;NanaZip.Modern / Universal.Windows / Modern FM /
+  ShellExtension / Classic / Core / Codecs / Universal.Console /
+  Core.Sfx(Z7_SFX 保护)全部 0 错误;MSIX(msixbundle)构建 PASS;
+- 功能(unpackaged + 目录放置 `resources.pri` 使 XAML island 可用):
+  Modern 压缩对话框 OK → 压缩包生成、进程 exit 0(UIA 驱动);
+  Modern 解压对话框 Extract → 目录结构+文件完整还原;Cancel → exit
+  E_ABORT 且无产物;Esc 关闭;
+- 往返矩阵(Console,同核心管线):`.7z` store/normal/ultra、`.zip` fast、
+  `.zip` AES 加密、`.7z` 密码+加密文件名、`.7z` 分卷(-v100k)、
+  overwrite `-y` 重解压、不存在压缩包非零退出 —— 全部 PASS,文件 SHA-256
+  一致(`Docs/Screenshots/P1-3/` Light 主题截图);
+- 键盘备注:XAML island 需一次真实点击激活键盘路由(DesktopWindowXamlSource
+  特性);自动注入按键在 island 未激活时不达,四层键盘保障代码已就位,
+  真实交互(先点击窗口)验证 Enter=OK / Esc=Cancel 成立。
+- Modern MSIX 部署实测仍被 Developer Mode 关闭阻塞(与 P1-1/P1-2 相同,
+  不修改系统策略)。
+
+## P1-4+(记录)
+
+- Settings 的 Compression/Extraction 分类接入镜像引擎能力(当前为经典页
+  直达入口 + 说明,配置源仍唯一:NCompression/NExtract 注册表,经
+  压缩/解压对话框 OnOK 写入,无第二套配置);
+- Advanced 分区内的 Options(时间戳/NTFS)子对话框 Modern 化;
+- Classic 对话框(非 Modern 回退路径)的深色/视觉打磨;
+- P2 Search。

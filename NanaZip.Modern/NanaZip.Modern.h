@@ -321,4 +321,164 @@ EXTERN_C LPCWSTR WINAPI K7ModernGetUiString(
 
 // **************** CuinZip P1-2 Modification End ****************
 
+// **************** CuinZip P1-3 Modification Start ****************
+
+/**
+ * @brief 对话框镜像引擎:压缩/解压 Modern 对话框与 7-Zip 原对话框之间的
+ *        通用桥接。宿主侧(NanaZip.Universal.Windows.exe)把原 rc 对话框
+ *        以隐藏窗口方式创建为"数据引擎"(格式/方法/字典联动、注册表读写、
+ *        OnOK 校验全部走原逻辑),Modern 页作为纯视图经本引擎读写控件,
+ *        保证零业务逻辑复制、零行为漂移。
+ */
+
+/**
+ * @brief Modern 页通过 WM_COMMAND(BN_CLICKED)发往宿主子类过程的结果码。
+ *        OK 只有在原对话框 OnOK 完整通过校验后才会发送。
+ */
+#define K7_DIALOG_MIRROR_RESULT_OK     1
+#define K7_DIALOG_MIRROR_RESULT_CANCEL 2
+
+/** 组合框镜像读取的单项字符串容量(wchar 数,含终止符)。 */
+#define K7_DIALOG_MIRROR_ITEM_TEXT 512
+
+/**
+ * @brief 镜像引擎回调表。所有回调均在宿主 UI 线程内同步调用。
+ */
+typedef struct K7_DIALOG_MIRROR_ENGINE
+{
+    /**
+     * @brief 宿主侧上下文(隐藏对话框指针等),原样回传给每个回调。
+     */
+    void* Context;
+
+    /**
+     * @brief 读取组合框:项文本(每项 K7_DIALOG_MIRROR_ITEM_TEXT wchar)、
+     *        项数据、当前选中项、编辑框当前文本、启用/可见状态。
+     * @return 读到的项数;失败返回 (UINT)-1。MaxItems 为 Items/ItemData
+     *         数组容量。
+     */
+    UINT (WINAPI* ReadCombo)(
+        void* Context,
+        UINT ControlId,
+        wchar_t* Items,
+        UINT MaxItems,
+        LPARAM* ItemData,
+        int* CurrentSelection,
+        wchar_t* Text,
+        UINT TextMax,
+        BOOL* Enabled,
+        BOOL* Visible);
+
+    /**
+     * @brief 读取文本(编辑框/静态/按钮标题);ControlId 为 0 时读窗口标题。
+     */
+    BOOL (WINAPI* ReadText)(
+        void* Context,
+        UINT ControlId,
+        wchar_t* Text,
+        UINT TextMax,
+        BOOL* Enabled,
+        BOOL* Visible);
+
+    /**
+     * @brief 读取复选框状态。
+     */
+    BOOL (WINAPI* ReadCheck)(
+        void* Context,
+        UINT ControlId,
+        BOOL* Checked,
+        BOOL* Enabled,
+        BOOL* Visible);
+
+    /**
+     * @brief 设置组合框选中项,并向原对话框发送 CBN_SELCHANGE,
+     *        触发原有的联动逻辑(格式/方法/字典刷新等)。
+     */
+    void (WINAPI* SetComboSelection)(
+        void* Context,
+        UINT ControlId,
+        int Selection);
+
+    /**
+     * @brief 设置(可编辑)组合框编辑文本。原对话框无 EN_CHANGE 处理,
+     *        不触发联动,仅在 OnOK 时读取。
+     */
+    void (WINAPI* SetComboText)(
+        void* Context,
+        UINT ControlId,
+        const wchar_t* Text);
+
+    /**
+     * @brief 设置(非组合框)控件文本,如密码框。
+     */
+    void (WINAPI* SetText)(
+        void* Context,
+        UINT ControlId,
+        const wchar_t* Text);
+
+    /**
+     * @brief 设置复选框勾选态,并向原对话框发送 BN_CLICKED,
+     *        触发原有处理器(SFX 改名、显示密码切换等)。
+     */
+    void (WINAPI* SetCheck)(
+        void* Context,
+        UINT ControlId,
+        BOOL Checked);
+
+    /**
+     * @brief 模拟按钮点击(浏览/选项等),触发原有 OnButtonClicked 处理器。
+     *        可能嵌套打开经典子窗口(文件浏览/时间戳选项),Modern 页
+     *        应在调用期间禁用自身以保持模态语义。
+     */
+    void (WINAPI* NotifyButtonClick)(
+        void* Context,
+        UINT ControlId);
+
+    /**
+     * @brief 模拟 IDOK:运行原 OnOK 全部校验(密码/内存/路径/分卷等)。
+     *        校验失败时原逻辑会弹出错误提示且提前返回,此函数返回
+     *        FALSE,Modern 页应保持打开并重新同步状态;全部通过返回
+     *        TRUE,宿主侧 Info/注册表已被原逻辑完整写入。
+     */
+    BOOL (WINAPI* PressOK)(void* Context);
+} K7_DIALOG_MIRROR_ENGINE, *PK7_DIALOG_MIRROR_ENGINE;
+
+/**
+ * @brief Show the modern "Add to Archive" dialog.
+ * @param ParentWindowHandle A handle to the owner window of the dialog to be
+ *                           created. If this parameter is nullptr, the dialog
+ *                           has no owner window.
+ * @param Engine The dialog mirror engine bound to the hidden original dialog.
+ * @param WindowSubclassHandler The window subclass procedure which receives
+ *                              the result codes (K7_DIALOG_MIRROR_RESULT_*).
+ * @param WindowSubclassContext The context pointer for the window subclass
+ *                              procedure.
+ * @return The message loop exit code of the dialog.
+ */
+EXTERN_C INT WINAPI K7ModernShowCompressDialog(
+    _In_opt_ HWND ParentWindowHandle,
+    _In_ const K7_DIALOG_MIRROR_ENGINE* Engine,
+    _In_ SUBCLASSPROC WindowSubclassHandler,
+    _In_ LPVOID WindowSubclassContext);
+
+/**
+ * @brief Show the modern "Extract" dialog.
+ * @param ParentWindowHandle A handle to the owner window of the dialog to be
+ *                           created. If this parameter is nullptr, the dialog
+ *                           has no owner window.
+ * @param Engine The dialog mirror engine bound to the hidden original dialog.
+ * @param WindowSubclassHandler The window subclass procedure which receives
+ *                              the result codes (K7_DIALOG_MIRROR_RESULT_*).
+ * @param WindowSubclassContext The context pointer for the window subclass
+ *                              procedure.
+ * @return The message loop exit code of the dialog.
+ */
+EXTERN_C INT WINAPI K7ModernShowExtractDialog(
+    _In_opt_ HWND ParentWindowHandle,
+    _In_ const K7_DIALOG_MIRROR_ENGINE* Engine,
+    _In_ SUBCLASSPROC WindowSubclassHandler,
+    _In_ LPVOID WindowSubclassContext);
+
+// **************** CuinZip P1-3 Modification End ****************
+
 #endif // !NANAZIP_MODERN_EXPERIENCE

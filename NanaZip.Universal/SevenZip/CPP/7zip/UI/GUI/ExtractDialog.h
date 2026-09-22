@@ -12,6 +12,13 @@
 
 #include "../FileManager/DialogSize.h"
 
+// **************** CuinZip P1-3 Modification Start ****************
+// SFX 构建(NanaZip.Core.Sfx)不链接 NanaZip.Modern,编译剔除镜像接入
+#ifndef Z7_SFX
+#include <NanaZip.Modern.h>
+#endif
+// **************** CuinZip P1-3 Modification End ****************
+
 #ifndef Z7_NO_REGISTRY
 #include "../Common/ZipRegistry.h"
 #endif
@@ -101,6 +108,17 @@ public:
 
   INT_PTR Create(HWND aWndParent = NULL)
   {
+    // **************** CuinZip P1-3 Modification Start ****************
+    #ifndef Z7_SFX
+    if (::K7ModernAvailable())
+    {
+      INT_PTR modernResult = this->ModernCreate(aWndParent);
+      if (modernResult)
+        return modernResult;
+      // Modern 外壳创建失败(返回 0)时回退经典对话框
+    }
+    #endif
+    // **************** CuinZip P1-3 Modification End ****************
     #ifdef Z7_SFX
     BIG_DIALOG_SIZE(240, 64);
     #else
@@ -109,9 +127,22 @@ public:
     return CModalDialog::Create(SIZED_DIALOG(IDD_EXTRACT), aWndParent);
   }
 
+  // **************** CuinZip P1-3 Modification Start ****************
+  #ifndef Z7_SFX
+  // Modern 镜像模式:OnOK 完整通过校验(走到 CModalDialog::OnOK 前)
+  // 置位;实现见 ExtractDialog.cpp。
+  bool Modern_OK_Completed;
+
+  INT_PTR ModernCreate(HWND wndParent);
+  #endif
+  // **************** CuinZip P1-3 Modification End ****************
+
   CExtractDialog():
     PathMode_Force(false),
     OverwriteMode_Force(false)
+    #ifndef Z7_SFX
+    , Modern_OK_Completed(false)
+    #endif
   {
     ElimDup.Val = true;
   }

@@ -1,0 +1,12 @@
+﻿namespace NanaZip.Modern
+{
+    // CuinZip P1-3:Modern "添加到压缩包" 对话框。
+    // 纯代码构建 UI(规避旧版 XAML 编译管道对新 x:Class 页面的绑定注册
+    // 缺陷,同 SettingsPage);全部选项经对话框镜像引擎读写隐藏的
+    // 7-Zip 原对话框,业务逻辑(格式联动/注册表/OnOK 校验)零复制。
+    [Windows.UI.Xaml.Data.Bindable]
+    [default_interface]
+    runtimeclass CompressDialogPage : Windows.UI.Xaml.Controls.Page
+    {
+    }
+}

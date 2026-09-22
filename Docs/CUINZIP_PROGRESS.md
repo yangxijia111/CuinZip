@@ -1,10 +1,10 @@
 # CuinZip Progress
 
 ## Current Phase
-P1-2 Modern File Manager 深度重构
+P1-3 Compression / Extraction / Progress UX Modernization
 
 ## Status
-DONE(2026-09-22;Modern MSIX 部署截图因 Developer Mode 未开启而阻塞,其余全部完成)
+DONE(2026-09-22;Modern MSIX 部署实测仍因 Developer Mode 未开启阻塞,其余全部完成)
 
 ## Completed
 - P0-1 Fork / Git / License Audit
@@ -34,7 +34,39 @@ DONE(2026-09-22;Modern MSIX 部署截图因 Developer Mode 未开启而阻塞,�
   - RefreshVersion 自动改动（Version.props / manifest 版本号）已回滚，未污染 Git
 
 ## Current Task
-无（P1-2 完成，建议进入 P1-3：压缩 / 解压 / 进度对话框现代化）
+无（P1-3 完成，建议进入 P1-4：设置 / 文件关联 / Explorer 右键菜单完善）
+
+## P1-3 Compression / Extraction / Progress UX Modernization
+DONE（2026-09-22，安全标签 `p1-3-pre-dialogs`，基线 `dfe3ae8c`，
+计划与审计见 `Docs/CUINZIP_UI_PLAN.md` P1-3 节）：
+- **对话框镜像引擎**：原 7-Zip rc 对话框（CompressDialog/ExtractDialog）以隐藏
+  无模式窗口作为数据引擎，注册表/组合框联动/OnOK 校验零重写；新增
+  `K7ModernShowCompressDialog` / `K7ModernShowExtractDialog` 导出（def + wrapper
+  动态转发，宿主无静态 DLL 依赖）与通用 `K7_DIALOG_MIRROR_ENGINE` 回调 ABI；
+  Modern 页为纯视图，每次交互后全量同步（格式切换的加密区/SFX/第二密码框
+  显隐自动跟随）；SFX 构建（Z7_SFX）编译剔除镜像接入
+- **CompressDialogPage**（纯代码 UI）：Archive / Compression / Encryption /
+  Advanced(默认折叠) 四分区;高频优先;全部原有选项保留(格式/级别/方法/字典/
+  字大小/固实/线程/内存上限+实时内存数值/分卷/参数/SFX/共享/删除后压缩/
+  密码×2+显示切换+加密文件名+加密方法/Options 时间戳-NTFS 经典子对话框);
+  字段标签取自原对话框(7-Zip Lang 本地化零迁移)
+- **ExtractDialogPage**:Destination / Options / Password 分区;路径+浏览+拆分名+
+  路径模式+覆盖模式+密码;主按钮 Extract(强调色);默认"解压到 <archive>\"规则
+  原样保留
+- **键盘/可访问性**:Enter=OK/Esc=Cancel 四层保障(PreviewKeyDown/KeyDown/
+  加速器/控件级);Tab=声明序;AutomationProperties 全字段
+- **进度链**:审计确认 NanaZip 上游已 Modern 化(百分比/文件/总量/速度/剩余/
+  Pause 真实支持/Cancel 二段确认/错误经 Information 对话框),本阶段未改动
+- **本地化**:`CompressDialogPage.resw`(6 键)/`ExtractDialogPage.resw`(7 键),
+  en+zh-Hans,其余回退 English;无新增散落硬编码
+- **验证**:Restore PASS;Modern/Universal/FM/Shell/Classic/Core/Codecs/Console/
+  SFX 全部 0 错误;MSIX bundle PASS;UIA 驱动 Modern 对话框 OK/Extract/Cancel
+  三态端到端 PASS(产物+SHA-256 往返);CLI 矩阵 .7z×3 级别/.zip/AES/7z 加密/
+  分卷/overwrite/错误路径 9 项 PASS;Light 主题截图(`Docs/Screenshots/P1-3/`)
+- **已知问题**:XAML island 需一次真实点击激活键盘路由(DesktopWindowXamlSource
+  特性,真实交互已验证);Modern MSIX 部署实测仍被 Developer Mode 阻塞
+  (`AllowDevelopmentWithoutDevLicense=0x0`,不修改系统策略),与 P1-1/P1-2 相同;
+  测试环境 unpackaged 运行需在 exe 目录放置 `resources.pri`(正式打包内置)
 
 ## P1-2 Modern File Manager 深度重构
 DONE（2026-09-22，安全标签 `p1-2-pre-modern-ui`，基线 `1d491387`，

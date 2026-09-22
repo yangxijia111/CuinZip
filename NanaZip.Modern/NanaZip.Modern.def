@@ -17,3 +17,5 @@ K7ModernGetCopyLocationDialogPath
 K7ModernCreateMainWindowToolBarPage
 K7ModernShowSettingsDialog
 K7ModernGetUiString
+K7ModernShowCompressDialog
+K7ModernShowExtractDialog

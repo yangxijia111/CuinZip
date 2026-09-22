@@ -159,6 +159,7 @@
     <ClInclude Include="SevenZip\CPP\7zip\UI\GUI\CompressDialog.h" />
     <ClInclude Include="SevenZip\CPP\7zip\UI\GUI\CompressDialogRes.h" />
     <ClInclude Include="SevenZip\CPP\7zip\UI\GUI\ExtractDialog.h" />
+    <ClInclude Include="SevenZip\CPP\7zip\UI\GUI\ModernDialogMirror.h" />
     <ClInclude Include="SevenZip\CPP\7zip\UI\GUI\ExtractDialogRes.h" />
     <ClInclude Include="SevenZip\CPP\7zip\UI\GUI\ExtractGUI.h" />
     <ClInclude Include="SevenZip\CPP\7zip\UI\GUI\ExtractRes.h" />
@@ -302,6 +303,7 @@
     <ClCompile Include="SevenZip\CPP\7zip\UI\GUI\BenchmarkDialog.cpp" />
     <ClCompile Include="SevenZip\CPP\7zip\UI\GUI\CompressDialog.cpp" />
     <ClCompile Include="SevenZip\CPP\7zip\UI\GUI\ExtractDialog.cpp" />
+    <ClCompile Include="SevenZip\CPP\7zip\UI\GUI\ModernDialogMirror.cpp" />
     <ClCompile Include="SevenZip\CPP\7zip\UI\GUI\ExtractGUI.cpp" />
     <ClCompile Include="SevenZip\CPP\7zip\UI\GUI\GUI.cpp" />
     <ClCompile Include="SevenZip\CPP\7zip\UI\GUI\HashGUI.cpp" />

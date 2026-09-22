@@ -22,6 +22,10 @@
 #include "ProgressPage.h"
 #include "CopyLocationPage.h"
 #include "SettingsPage.h"
+// **************** CuinZip P1-3 Modification Start ****************
+#include "CompressDialogPage.h"
+#include "ExtractDialogPage.h"
+// **************** CuinZip P1-3 Modification End ****************
 #include "UiStrings.h"
 
 #pragma comment(lib, "comctl32.lib")
@@ -706,3 +710,95 @@ EXTERN_C LPCWSTR WINAPI K7ModernGetUiString(
 }
 
 // **************** CuinZip P1-2 Modification End ****************
+
+// **************** CuinZip P1-3 Modification Start ****************
+
+EXTERN_C INT WINAPI K7ModernShowCompressDialog(
+    _In_opt_ HWND ParentWindowHandle,
+    _In_ const K7_DIALOG_MIRROR_ENGINE* Engine,
+    _In_ SUBCLASSPROC WindowSubclassHandler,
+    _In_ LPVOID WindowSubclassContext)
+{
+    HWND WindowHandle = ::K7ModernCreateXamlDialog(ParentWindowHandle);
+    if (!WindowHandle)
+    {
+        return -1;
+    }
+
+    using Interface =
+        winrt::NanaZip::Modern::CompressDialogPage;
+    using Implementation =
+        winrt::NanaZip::Modern::implementation::CompressDialogPage;
+
+    Interface Window = winrt::make<Implementation>(
+        WindowHandle,
+        Engine);
+
+    if (WindowSubclassHandler)
+    {
+        if (!::SetWindowSubclass(
+            WindowHandle,
+            WindowSubclassHandler,
+            1,
+            reinterpret_cast<DWORD_PTR>(WindowSubclassContext)))
+        {
+            ::DestroyWindow(WindowHandle);
+            return -1;
+        }
+    }
+
+    int Result = ::K7ModernShowXamlDialog(
+        WindowHandle,
+        560,
+        640,
+        winrt::get_abi(Window),
+        ParentWindowHandle);
+
+    return Result;
+}
+
+EXTERN_C INT WINAPI K7ModernShowExtractDialog(
+    _In_opt_ HWND ParentWindowHandle,
+    _In_ const K7_DIALOG_MIRROR_ENGINE* Engine,
+    _In_ SUBCLASSPROC WindowSubclassHandler,
+    _In_ LPVOID WindowSubclassContext)
+{
+    HWND WindowHandle = ::K7ModernCreateXamlDialog(ParentWindowHandle);
+    if (!WindowHandle)
+    {
+        return -1;
+    }
+
+    using Interface =
+        winrt::NanaZip::Modern::ExtractDialogPage;
+    using Implementation =
+        winrt::NanaZip::Modern::implementation::ExtractDialogPage;
+
+    Interface Window = winrt::make<Implementation>(
+        WindowHandle,
+        Engine);
+
+    if (WindowSubclassHandler)
+    {
+        if (!::SetWindowSubclass(
+            WindowHandle,
+            WindowSubclassHandler,
+            1,
+            reinterpret_cast<DWORD_PTR>(WindowSubclassContext)))
+        {
+            ::DestroyWindow(WindowHandle);
+            return -1;
+        }
+    }
+
+    int Result = ::K7ModernShowXamlDialog(
+        WindowHandle,
+        500,
+        480,
+        winrt::get_abi(Window),
+        ParentWindowHandle);
+
+    return Result;
+}
+
+// **************** CuinZip P1-3 Modification End ****************

@@ -330,3 +330,71 @@ EXTERN_C LPVOID WINAPI K7ModernCreateMainWindowToolBarPage(
 
     return nullptr;
 }
+
+// **************** CuinZip P1-3 Modification Start ****************
+// 压缩/解压 Modern 对话框转发。与上面的函数一样经 GetProcAddress
+// 动态转发,宿主 EXE(NanaZip.Universal.Windows)不产生对
+// NanaZip.Modern.dll 的静态导入依赖,保持原有的可独立部署行为。
+
+EXTERN_C INT WINAPI K7ModernShowCompressDialog(
+    _In_opt_ HWND ParentWindowHandle,
+    _In_ const K7_DIALOG_MIRROR_ENGINE* Engine,
+    _In_ SUBCLASSPROC WindowSubclassHandler,
+    _In_ LPVOID WindowSubclassContext)
+{
+    using ProcType = decltype(::K7ModernShowCompressDialog)*;
+
+    static ProcType ProcAddress = reinterpret_cast<ProcType>([]() -> FARPROC
+    {
+        HMODULE ModuleHandle = ::GetNanaZipModernModuleHandle();
+        if (ModuleHandle)
+        {
+            return ::GetProcAddress(
+                ModuleHandle,
+                "K7ModernShowCompressDialog");
+        }
+        return nullptr;
+    }());
+
+    if (ProcAddress)
+    {
+        return ProcAddress(
+            ParentWindowHandle,
+            Engine,
+            WindowSubclassHandler,
+            WindowSubclassContext);
+    }
+    return -1;
+}
+
+EXTERN_C INT WINAPI K7ModernShowExtractDialog(
+    _In_opt_ HWND ParentWindowHandle,
+    _In_ const K7_DIALOG_MIRROR_ENGINE* Engine,
+    _In_ SUBCLASSPROC WindowSubclassHandler,
+    _In_ LPVOID WindowSubclassContext)
+{
+    using ProcType = decltype(::K7ModernShowExtractDialog)*;
+
+    static ProcType ProcAddress = reinterpret_cast<ProcType>([]() -> FARPROC
+    {
+        HMODULE ModuleHandle = ::GetNanaZipModernModuleHandle();
+        if (ModuleHandle)
+        {
+            return ::GetProcAddress(
+                ModuleHandle,
+                "K7ModernShowExtractDialog");
+        }
+        return nullptr;
+    }());
+
+    if (ProcAddress)
+    {
+        return ProcAddress(
+            ParentWindowHandle,
+            Engine,
+            WindowSubclassHandler,
+            WindowSubclassContext);
+    }
+    return -1;
+}
+// **************** CuinZip P1-3 Modification End ****************

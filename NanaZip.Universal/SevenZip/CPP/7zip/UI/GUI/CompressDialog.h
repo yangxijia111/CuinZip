@@ -393,13 +393,19 @@ public:
   NCompressDialog::CInfo Info;
   UString OriginalFileName; // for bzip2, gzip2
 
-  INT_PTR Create(HWND wndParent = NULL)
-  {
-    BIG_DIALOG_SIZE(400, 320);
-    return CModalDialog::Create(SIZED_DIALOG(IDD_COMPRESS), wndParent);
-  }
+  // **************** CuinZip P1-3 Modification Start ****************
+  // Modern 镜像模式:OnOK 完整通过校验(走到 CModalDialog::OnOK 前)
+  // 置位,供镜像引擎判断结果;经典路径不读它。
+  bool Modern_OK_Completed;
 
-  CCompressDialog() {}
+  // Modern 外壳可用时,以隐藏镜像对话框为数据引擎弹出 Modern 对话框;
+  // 否则回退原模态 rc 对话框。实现见 CompressDialog.cpp。
+  INT_PTR Create(HWND wndParent = NULL);
+
+  INT_PTR ModernCreate(HWND wndParent);
+  // **************** CuinZip P1-3 Modification End ****************
+
+  CCompressDialog() : Modern_OK_Completed(false) {}
 };
 
 

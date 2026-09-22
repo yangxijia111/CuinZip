@@ -24,11 +24,31 @@
 #include "ExtractDialogRes.h"
 #include "ExtractRes.h"
 
+// **************** CuinZip P1-3 Modification Start ****************
+#ifndef Z7_SFX
+#include "ModernDialogMirror.h"
+#endif
+// **************** CuinZip P1-3 Modification End ****************
+
 using namespace NWindows;
 using namespace NFile;
 using namespace NName;
 
 extern HINSTANCE g_hInstance;
+
+// **************** CuinZip P1-3 Modification Start ****************
+#ifndef Z7_SFX
+INT_PTR CExtractDialog::ModernCreate(HWND wndParent)
+{
+  return NModernDialogMirror::Show(
+      wndParent,
+      *this,
+      SIZED_DIALOG(IDD_EXTRACT),
+      this->Modern_OK_Completed,
+      ::K7ModernShowExtractDialog);
+}
+#endif
+// **************** CuinZip P1-3 Modification End ****************
 
 #ifndef Z7_SFX
 
@@ -450,6 +470,13 @@ void CExtractDialog::OnOK()
     }
   _info.Save();
   #endif
+
+  // **************** CuinZip P1-3 Modification Start ****************
+  #ifndef Z7_SFX
+  // 全部校验与回写已完成,通知 Modern 镜像引擎可以关闭外壳
+  Modern_OK_Completed = true;
+  #endif
+  // **************** CuinZip P1-3 Modification End ****************
 
   CModalDialog::OnOK();
 }

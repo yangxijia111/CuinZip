@@ -113,6 +113,8 @@
       <SubType>Code</SubType>
     </Midl>
     <Midl Include="SettingsPage.idl" />
+    <Midl Include="CompressDialogPage.idl" />
+    <Midl Include="ExtractDialogPage.idl" />
     <Midl Include="StatusBar.idl" />
     <Midl Include="StatusBarTemplate.idl">
       <DependentUpon>StatusBarTemplate.xaml</DependentUpon>
@@ -168,6 +170,13 @@
       <DependentUpon>SettingsPage.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="UiStrings.h" />
+    <ClInclude Include="CompressDialogPage.h">
+      <DependentUpon>CompressDialogPage.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="ExtractDialogPage.h">
+      <DependentUpon>ExtractDialogPage.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="DialogMirrorUi.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AddressBarTemplate.cpp">
@@ -215,6 +224,8 @@
       <SubType>Code</SubType>
     </ClCompile>
     <ClCompile Include="SettingsPage.cpp" />
+    <ClCompile Include="CompressDialogPage.cpp" />
+    <ClCompile Include="ExtractDialogPage.cpp" />
     <ClCompile Include="UiStrings.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -278,6 +289,8 @@
     <PRIResource Include="Strings\en\MainWindowToolBarPage.resw" />
     <PRIResource Include="Strings\en\ProgressPage.resw" />
     <PRIResource Include="Strings\en\SettingsPage.resw" />
+    <PRIResource Include="Strings\en\CompressDialogPage.resw" />
+    <PRIResource Include="Strings\en\ExtractDialogPage.resw" />
     <PRIResource Include="Strings\en\SponsorPage.resw" />
     <PRIResource Include="Strings\eo\Common.resw" />
     <PRIResource Include="Strings\eo\CopyLocationPage.resw" />
@@ -484,6 +497,8 @@
     <PRIResource Include="Strings\zh-Hans\MainWindowToolBarPage.resw" />
     <PRIResource Include="Strings\zh-Hans\ProgressPage.resw" />
     <PRIResource Include="Strings\zh-Hans\SettingsPage.resw" />
+    <PRIResource Include="Strings\zh-Hans\CompressDialogPage.resw" />
+    <PRIResource Include="Strings\zh-Hans\ExtractDialogPage.resw" />
     <PRIResource Include="Strings\zh-Hans\SponsorPage.resw" />
     <PRIResource Include="Strings\zh-Hant\Common.resw" />
     <PRIResource Include="Strings\zh-Hant\CopyLocationPage.resw" />

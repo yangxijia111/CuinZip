@@ -31,6 +31,11 @@
 
 #include "CompressDialog.h"
 
+// **************** CuinZip P1-3 Modification Start ****************
+#include <NanaZip.Modern.h>
+#include "ModernDialogMirror.h"
+// **************** CuinZip P1-3 Modification End ****************
+
 #ifndef _UNICODE
 extern bool g_IsNT;
 #endif
@@ -598,6 +603,31 @@ void CCompressDialog::SetMethods(const CObjectVector<CCodecInfoUser> &userCodecs
   }
 }
                                          
+
+// **************** CuinZip P1-3 Modification Start ****************
+INT_PTR CCompressDialog::Create(HWND wndParent)
+{
+  if (::K7ModernAvailable())
+  {
+    INT_PTR modernResult = this->ModernCreate(wndParent);
+    if (modernResult)
+      return modernResult;
+    // Modern 外壳创建失败(返回 0)时回退经典对话框
+  }
+  BIG_DIALOG_SIZE(400, 320);
+  return CModalDialog::Create(SIZED_DIALOG(IDD_COMPRESS), wndParent);
+}
+
+INT_PTR CCompressDialog::ModernCreate(HWND wndParent)
+{
+  return NModernDialogMirror::Show(
+      wndParent,
+      *this,
+      SIZED_DIALOG(IDD_COMPRESS),
+      this->Modern_OK_Completed,
+      ::K7ModernShowCompressDialog);
+}
+// **************** CuinZip P1-3 Modification End ****************
 
 bool CCompressDialog::OnInit()
 {
@@ -1459,7 +1489,12 @@ void CCompressDialog::OnOK()
   m_RegistryInfo.ArcPaths = arcPaths;
 
   m_RegistryInfo.Save();
-  
+
+  // **************** CuinZip P1-3 Modification Start ****************
+  // 全部校验与回写已完成,通知 Modern 镜像引擎可以关闭外壳
+  Modern_OK_Completed = true;
+  // **************** CuinZip P1-3 Modification End ****************
+
   CModalDialog::OnOK();
 }
 
