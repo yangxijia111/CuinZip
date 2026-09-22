@@ -133,4 +133,10 @@
     <value>Appreciate your sponsorship</value>
     <comment>Appreciate your sponsorship</comment>
   </data>
+  <!--
+    CuinZip P1-2: Open Source 按钮文案接入本地化(P1-1 为硬编码)。
+  -->
+  <data name="OpenSourceButton.Content" xml:space="preserve">
+    <value>Open Source</value>
+  </data>
 </root>

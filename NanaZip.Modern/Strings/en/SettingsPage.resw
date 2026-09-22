@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!--
+    CuinZip P1-2: Modern 设置窗口文案(en)。
+    x:Uid 前缀为 /NanaZip.Modern/SettingsPage/。
+    其他语言暂时回退 English。
+  -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>1.3</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="SettingsTitle.Text" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="NavGeneralText.Text" xml:space="preserve">
+    <value>General</value>
+  </data>
+  <data name="NavCompressionText.Text" xml:space="preserve">
+    <value>Compression</value>
+  </data>
+  <data name="NavExtractionText.Text" xml:space="preserve">
+    <value>Extraction</value>
+  </data>
+  <data name="NavFileAssociationsText.Text" xml:space="preserve">
+    <value>File Associations</value>
+  </data>
+  <data name="NavContextMenuText.Text" xml:space="preserve">
+    <value>Context Menu</value>
+  </data>
+  <data name="NavAppearanceText.Text" xml:space="preserve">
+    <value>Appearance</value>
+  </data>
+  <data name="NavAdvancedText.Text" xml:space="preserve">
+    <value>Advanced</value>
+  </data>
+  <data name="NavAboutText.Text" xml:space="preserve">
+    <value>About</value>
+  </data>
+  <data name="GeneralTitle.Text" xml:space="preserve">
+    <value>General</value>
+  </data>
+  <data name="GeneralDescription.Text" xml:space="preserve">
+    <value>Core file manager behavior options are currently provided by the classic settings pages.</value>
+  </data>
+  <data name="GeneralLegacyButton.Content" xml:space="preserve">
+    <value>Open classic settings (General)</value>
+  </data>
+  <data name="CompressionTitle.Text" xml:space="preserve">
+    <value>Compression</value>
+  </data>
+  <data name="CompressionDescription.Text" xml:space="preserve">
+    <value>Compression options are configured in the archive creation dialog. More options will be available in a future update.</value>
+  </data>
+  <data name="ExtractionTitle.Text" xml:space="preserve">
+    <value>Extraction</value>
+  </data>
+  <data name="ExtractionDescription.Text" xml:space="preserve">
+    <value>Choose where extracted files are placed and how extraction integrates with your system.</value>
+  </data>
+  <data name="ExtractionFoldersButton.Content" xml:space="preserve">
+    <value>Working folder settings</value>
+  </data>
+  <data name="ExtractionIntegrationButton.Content" xml:space="preserve">
+    <value>Extraction integration options</value>
+  </data>
+  <data name="FileAssociationsTitle.Text" xml:space="preserve">
+    <value>File Associations</value>
+  </data>
+  <data name="FileAssociationsDescription.Text" xml:space="preserve">
+    <value>Choose which file types open with CuinZip. Associations are managed by Windows.</value>
+  </data>
+  <data name="FileAssociationsSystemButton.Content" xml:space="preserve">
+    <value>Open Windows Settings (Default apps)</value>
+  </data>
+  <data name="FileAssociationsLegacyButton.Content" xml:space="preserve">
+    <value>Open classic settings (Integration)</value>
+  </data>
+  <data name="ContextMenuTitle.Text" xml:space="preserve">
+    <value>Context Menu</value>
+  </data>
+  <data name="ContextMenuDescription.Text" xml:space="preserve">
+    <value>Configure the entries shown in the Windows Explorer context menu.</value>
+  </data>
+  <data name="ContextMenuLegacyButton.Content" xml:space="preserve">
+    <value>Open classic settings (Context menu)</value>
+  </data>
+  <data name="AppearanceTitle.Text" xml:space="preserve">
+    <value>Appearance</value>
+  </data>
+  <data name="AppearanceDescription.Text" xml:space="preserve">
+    <value>Changes apply immediately to the file lists.</value>
+  </data>
+  <data name="ShowDotsToggle.Header" xml:space="preserve">
+    <value>Show ".." item</value>
+  </data>
+  <data name="ShowRealFileIconsToggle.Header" xml:space="preserve">
+    <value>Show real file icons</value>
+  </data>
+  <data name="FullRowToggle.Header" xml:space="preserve">
+    <value>Full row select</value>
+  </data>
+  <data name="ShowGridToggle.Header" xml:space="preserve">
+    <value>Show grid lines</value>
+  </data>
+  <data name="SingleClickToggle.Header" xml:space="preserve">
+    <value>Single-click to open an item</value>
+  </data>
+  <data name="AlternativeSelectionToggle.Header" xml:space="preserve">
+    <value>Alternative selection mode</value>
+  </data>
+  <data name="AppearanceLegacyButton.Content" xml:space="preserve">
+    <value>More appearance options (classic settings)</value>
+  </data>
+  <data name="AdvancedTitle.Text" xml:space="preserve">
+    <value>Advanced</value>
+  </data>
+  <data name="AdvancedDescription.Text" xml:space="preserve">
+    <value>System menu, memory pages, history and other advanced options.</value>
+  </data>
+  <data name="AdvancedLegacyButton.Content" xml:space="preserve">
+    <value>Open classic settings (Advanced)</value>
+  </data>
+  <data name="AdvancedEditorButton.Content" xml:space="preserve">
+    <value>Editor settings</value>
+  </data>
+  <data name="AboutTitle.Text" xml:space="preserve">
+    <value>About</value>
+  </data>
+  <data name="AboutDescription.Text" xml:space="preserve">
+    <value>CuinZip is an open source file archiver based on NanaZip and 7-Zip.</value>
+  </data>
+  <data name="AboutDialogButton.Content" xml:space="preserve">
+    <value>Open the About dialog</value>
+  </data>
+</root>

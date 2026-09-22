@@ -1,18 +1,38 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
+  <!--
+    CuinZip P1-2: 关于对话框 P1-1 新增文案接入本地化(en)。
+    其他语言暂时回退 English。
+  -->
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
     <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
         <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
           <xsd:element name="data">
             <xsd:complexType>
               <xsd:sequence>
                 <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
                 <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
               <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
               <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="resheader">
@@ -39,42 +59,22 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="CancelButton.Content" xml:space="preserve">
-    <value>Cancel</value>
+  <data name="AttributionRun.Text" xml:space="preserve">
+    <value>CuinZip is an open source file archiver based on NanaZip and 7-Zip.</value>
+  </data>
+  <data name="CopyrightRun.Text" xml:space="preserve">
+    <value>© CuinZip Project and Contributors. Based on NanaZip © M2-Team and Contributors and 7-Zip © Igor Pavlov. All rights reserved.</value>
+  </data>
+  <data name="GitHubButton.Content" xml:space="preserve">
+    <value>GitHub</value>
+  </data>
+  <data name="NanaZipWebsiteButton.Content" xml:space="preserve">
+    <value>NanaZip.org</value>
+  </data>
+  <data name="SevenZipWebsiteButton.Content" xml:space="preserve">
+    <value>7-Zip.org</value>
   </data>
   <data name="CloseButton.Content" xml:space="preserve">
     <value>Close</value>
-  </data>
-  <data name="OKButton.Content" xml:space="preserve">
-    <value>OK</value>
-  </data>
-  <!--
-    CuinZip P1-2: 导航按钮 / 空目录提示 / 状态栏文案(en)。
-    供 Win32 面板侧经 K7ModernGetUiString 与 XAML 模板侧共同使用;
-    其他语言暂时回退 English。
-  -->
-  <data name="NavBackToolTip" xml:space="preserve">
-    <value>Back</value>
-  </data>
-  <data name="NavForwardToolTip" xml:space="preserve">
-    <value>Forward</value>
-  </data>
-  <data name="NavUpToolTip" xml:space="preserve">
-    <value>Up one level</value>
-  </data>
-  <data name="EmptyFolderMessage" xml:space="preserve">
-    <value>This folder is empty</value>
-  </data>
-  <data name="EmptyArchiveMessage" xml:space="preserve">
-    <value>This archive is empty</value>
-  </data>
-  <data name="StatusBarItemsFormat" xml:space="preserve">
-    <value>{0} items</value>
-  </data>
-  <data name="StatusBarSelectedFormat" xml:space="preserve">
-    <value>{0} selected</value>
-  </data>
-  <data name="StatusBarSizeSeparator" xml:space="preserve">
-    <value>·</value>
   </data>
 </root>

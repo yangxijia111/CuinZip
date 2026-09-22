@@ -43,8 +43,16 @@ bool CPropertyPage::OnNotify(UINT /* controlID */, LPNMHDR lParam)
   return true;
 }
 
+// **************** CuinZip P1-2 Modification Start ****************
+// 原三参签名保持不变(默认从第一页开始);新增 startPage 重载。
 INT_PTR MyPropertySheet(const CObjectVector<CPageInfo> &pagesInfo, HWND hwndParent, const UString &title)
 {
+  return MyPropertySheet(pagesInfo, hwndParent, title, 0);
+}
+
+INT_PTR MyPropertySheet(const CObjectVector<CPageInfo> &pagesInfo, HWND hwndParent, const UString &title, unsigned startPage)
+{
+// **************** CuinZip P1-2 Modification End ****************
   #ifndef _UNICODE
   AStringVector titles;
   #endif
@@ -117,7 +125,7 @@ INT_PTR MyPropertySheet(const CObjectVector<CPageInfo> &pagesInfo, HWND hwndPare
     AString titleA (GetSystemString(title));
     sheet.pszCaption = titleA;
     sheet.nPages = pagesInfo.Size();
-    sheet.nStartPage = 0;
+    sheet.nStartPage = startPage;
     sheet.ppsp = &pagesA.Front();
     sheet.pfnCallback = NULL;
     return ::PropertySheetA(&sheet);
@@ -132,7 +140,7 @@ INT_PTR MyPropertySheet(const CObjectVector<CPageInfo> &pagesInfo, HWND hwndPare
     sheet.hInstance = g_hInstance;
     sheet.pszCaption = title;
     sheet.nPages = pagesInfo.Size();
-    sheet.nStartPage = 0;
+    sheet.nStartPage = startPage;
     sheet.ppsp = &pagesW.Front();
     sheet.pfnCallback = NULL;
     return ::PropertySheetW(&sheet);

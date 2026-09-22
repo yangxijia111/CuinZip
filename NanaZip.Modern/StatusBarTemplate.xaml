@@ -10,18 +10,17 @@
     BasedOn="{StaticResource CaptionTextBlockStyle}"
     TargetType="TextBlock">
     <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
-    <Setter Property="TextTrimming" Value="Clip" />
+    <Setter Property="TextTrimming" Value="CharacterEllipsis" />
   </Style>
 
-  <Style x:Key="SeparatorRectangleStyle" TargetType="Rectangle">
-    <Setter Property="Margin" Value="0,0,8,0" />
-    <Setter Property="Width" Value="1" />
-    <Setter Property="Height" Value="16" />
-    <Setter Property="Fill" Value="{ThemeResource DividerStrokeColorDefaultBrush}" />
-  </Style>
-
+  <!--
+    CuinZip P1-2: 状态栏信息层级。
+    左侧(TextPrimary):项目数 / 已选择数量与大小,占满剩余宽度。
+    右侧(TextArchive):压缩包信息,按内容自适应,为空时不显示。
+    不再展示焦点项大小 / 日期,避免状态栏堆满。
+  -->
   <Style x:Key="DefaultStatusBarStyle" TargetType="local:StatusBar">
-    <Setter Property="Padding" Value="16,0" />
+    <Setter Property="Padding" Value="12,0" />
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="local:StatusBar">
@@ -30,37 +29,26 @@
             Padding="{TemplateBinding Padding}"
             Background="{TemplateBinding Background}">
             <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="220" />
-              <ColumnDefinition Width="Auto" />
-              <ColumnDefinition Width="100" />
-              <ColumnDefinition Width="Auto" />
-              <ColumnDefinition Width="100" />
-              <ColumnDefinition Width="Auto" />
               <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <TextBlock
               Grid.Column="0"
               VerticalAlignment="Center"
               Style="{StaticResource StatusBarTextBlockStyle}"
-              Text="{x:Bind Text1, Mode=OneWay}" />
-            <Rectangle Grid.Column="1" Style="{StaticResource SeparatorRectangleStyle}" />
+              Text="{x:Bind TextPrimary, Mode=OneWay}" />
+            <!--
+              压缩包信息为空时 TextBlock 不渲染任何内容,
+              因此不使用分隔线,避免空态下残留孤立分隔线。
+            -->
             <TextBlock
               Grid.Column="2"
+              x:Name="ArchiveTextBlock"
+              Margin="8,0,0,0"
               VerticalAlignment="Center"
               Style="{StaticResource StatusBarTextBlockStyle}"
-              Text="{x:Bind Text2, Mode=OneWay}" />
-            <Rectangle Grid.Column="3" Style="{StaticResource SeparatorRectangleStyle}" />
-            <TextBlock
-              Grid.Column="4"
-              VerticalAlignment="Center"
-              Style="{StaticResource StatusBarTextBlockStyle}"
-              Text="{x:Bind Text3, Mode=OneWay}" />
-            <Rectangle Grid.Column="5" Style="{StaticResource SeparatorRectangleStyle}" />
-            <TextBlock
-              Grid.Column="6"
-              VerticalAlignment="Center"
-              Style="{StaticResource StatusBarTextBlockStyle}"
-              Text="{x:Bind Text4, Mode=OneWay}" />
+              Text="{x:Bind TextArchive, Mode=OneWay}" />
           </Grid>
         </ControlTemplate>
       </Setter.Value>

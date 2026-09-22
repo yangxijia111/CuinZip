@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!--
+    CuinZip P1-2: Modern 设置窗口文案(en)。
+    x:Uid 前缀为 /NanaZip.Modern/SettingsPage/。
+    其他语言暂时回退 English。
+  -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>1.3</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="SettingsTitle.Text" xml:space="preserve">
+    <value>设置</value>
+  </data>
+  <data name="NavGeneralText.Text" xml:space="preserve">
+    <value>常规</value>
+  </data>
+  <data name="NavCompressionText.Text" xml:space="preserve">
+    <value>压缩</value>
+  </data>
+  <data name="NavExtractionText.Text" xml:space="preserve">
+    <value>解压</value>
+  </data>
+  <data name="NavFileAssociationsText.Text" xml:space="preserve">
+    <value>文件关联</value>
+  </data>
+  <data name="NavContextMenuText.Text" xml:space="preserve">
+    <value>右键菜单</value>
+  </data>
+  <data name="NavAppearanceText.Text" xml:space="preserve">
+    <value>外观</value>
+  </data>
+  <data name="NavAdvancedText.Text" xml:space="preserve">
+    <value>高级</value>
+  </data>
+  <data name="NavAboutText.Text" xml:space="preserve">
+    <value>关于</value>
+  </data>
+  <data name="GeneralTitle.Text" xml:space="preserve">
+    <value>常规</value>
+  </data>
+  <data name="GeneralDescription.Text" xml:space="preserve">
+    <value>文件管理器的核心行为选项目前仍由经典设置页提供。</value>
+  </data>
+  <data name="GeneralLegacyButton.Content" xml:space="preserve">
+    <value>打开经典设置（常规）</value>
+  </data>
+  <data name="CompressionTitle.Text" xml:space="preserve">
+    <value>压缩</value>
+  </data>
+  <data name="CompressionDescription.Text" xml:space="preserve">
+    <value>压缩选项在创建压缩包的对话框中配置，更多选项将在后续版本提供。</value>
+  </data>
+  <data name="ExtractionTitle.Text" xml:space="preserve">
+    <value>解压</value>
+  </data>
+  <data name="ExtractionDescription.Text" xml:space="preserve">
+    <value>选择解压文件的存放位置，以及解压与系统的集成方式。</value>
+  </data>
+  <data name="ExtractionFoldersButton.Content" xml:space="preserve">
+    <value>工作文件夹设置</value>
+  </data>
+  <data name="ExtractionIntegrationButton.Content" xml:space="preserve">
+    <value>解压集成选项</value>
+  </data>
+  <data name="FileAssociationsTitle.Text" xml:space="preserve">
+    <value>文件关联</value>
+  </data>
+  <data name="FileAssociationsDescription.Text" xml:space="preserve">
+    <value>选择哪些文件类型使用 CuinZip 打开。文件关联由 Windows 管理。</value>
+  </data>
+  <data name="FileAssociationsSystemButton.Content" xml:space="preserve">
+    <value>打开 Windows 设置（默认应用）</value>
+  </data>
+  <data name="FileAssociationsLegacyButton.Content" xml:space="preserve">
+    <value>打开经典设置（系统集成）</value>
+  </data>
+  <data name="ContextMenuTitle.Text" xml:space="preserve">
+    <value>右键菜单</value>
+  </data>
+  <data name="ContextMenuDescription.Text" xml:space="preserve">
+    <value>配置 Windows 资源管理器右键菜单中显示的条目。</value>
+  </data>
+  <data name="ContextMenuLegacyButton.Content" xml:space="preserve">
+    <value>打开经典设置（右键菜单）</value>
+  </data>
+  <data name="AppearanceTitle.Text" xml:space="preserve">
+    <value>外观</value>
+  </data>
+  <data name="AppearanceDescription.Text" xml:space="preserve">
+    <value>更改会立即应用到文件列表。</value>
+  </data>
+  <data name="ShowDotsToggle.Header" xml:space="preserve">
+    <value>显示 ".." 项</value>
+  </data>
+  <data name="ShowRealFileIconsToggle.Header" xml:space="preserve">
+    <value>显示真实文件图标</value>
+  </data>
+  <data name="FullRowToggle.Header" xml:space="preserve">
+    <value>整行选择</value>
+  </data>
+  <data name="ShowGridToggle.Header" xml:space="preserve">
+    <value>显示网格线</value>
+  </data>
+  <data name="SingleClickToggle.Header" xml:space="preserve">
+    <value>单击打开项目</value>
+  </data>
+  <data name="AlternativeSelectionToggle.Header" xml:space="preserve">
+    <value>备选选择模式</value>
+  </data>
+  <data name="AppearanceLegacyButton.Content" xml:space="preserve">
+    <value>更多外观选项（经典设置）</value>
+  </data>
+  <data name="AdvancedTitle.Text" xml:space="preserve">
+    <value>高级</value>
+  </data>
+  <data name="AdvancedDescription.Text" xml:space="preserve">
+    <value>系统菜单、内存页、历史记录等高级选项。</value>
+  </data>
+  <data name="AdvancedLegacyButton.Content" xml:space="preserve">
+    <value>打开经典设置（高级）</value>
+  </data>
+  <data name="AdvancedEditorButton.Content" xml:space="preserve">
+    <value>编辑器设置</value>
+  </data>
+  <data name="AboutTitle.Text" xml:space="preserve">
+    <value>关于</value>
+  </data>
+  <data name="AboutDescription.Text" xml:space="preserve">
+    <value>CuinZip 是基于 NanaZip 和 7-Zip 的开源压缩工具。</value>
+  </data>
+  <data name="AboutDialogButton.Content" xml:space="preserve">
+    <value>打开关于对话框</value>
+  </data>
+</root>

@@ -27,9 +27,13 @@
       <TextBlock IsTextSelectionEnabled="True">
         <Run x:Name="Version" />
         <LineBreak />
-        <Run Text="CuinZip is an open source file archiver based on NanaZip and 7-Zip." />
+        <!--
+          CuinZip P1-2: P1-1 新增的 attribution / 版权行接入 resw 本地化,
+          键位于 AboutPage.resw(en / zh-Hans),其余语言回退 English。
+        -->
+        <Run x:Uid="/NanaZip.Modern/AboutPage/AttributionRun" Text="CuinZip is an open source file archiver based on NanaZip and 7-Zip." />
         <LineBreak />
-        <Run Text="© CuinZip Project and Contributors. Based on NanaZip © M2-Team and Contributors and 7-Zip © Igor Pavlov. All rights reserved." />
+        <Run x:Uid="/NanaZip.Modern/AboutPage/CopyrightRun" Text="© CuinZip Project and Contributors. Based on NanaZip © M2-Team and Contributors and 7-Zip © Igor Pavlov. All rights reserved." />
         <LineBreak />
         <LineBreak />
         <Run x:Name="Content" />
@@ -52,22 +56,26 @@
         Grid.Column="0"
         HorizontalAlignment="Stretch"
         Click="GitHubButtonClick"
-        Content="GitHub" />
+        Content="GitHub"
+        x:Uid="/NanaZip.Modern/AboutPage/GitHubButton" />
       <Button
         Grid.Column="2"
         HorizontalAlignment="Stretch"
         Click="NanaZipWebsiteButtonClick"
-        Content="NanaZip.org" />
+        Content="NanaZip.org"
+        x:Uid="/NanaZip.Modern/AboutPage/NanaZipWebsiteButton" />
       <Button
         Grid.Column="4"
         HorizontalAlignment="Stretch"
         Click="SevenZipWebsiteButtonClick"
-        Content="7-Zip.org" />
+        Content="7-Zip.org"
+        x:Uid="/NanaZip.Modern/AboutPage/SevenZipWebsiteButton" />
       <Button
         Grid.Column="6"
         HorizontalAlignment="Stretch"
         Click="CancelButtonClick"
-        Content="Close" />
+        Content="Close"
+        x:Uid="/NanaZip.Modern/AboutPage/CloseButton" />
     </Grid>
   </Grid>
 </Page>

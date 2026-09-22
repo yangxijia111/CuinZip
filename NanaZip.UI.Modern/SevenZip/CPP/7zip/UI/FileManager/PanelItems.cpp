@@ -816,6 +816,23 @@ HRESULT CPanel::RefreshListCtrl(const CSelectedState &state)
   /*
   _listView.UpdateWindow();
   */
+
+  // **************** CuinZip P1-2 Modification Start ****************
+  // 状态栏汇总缓存:仅在列表刷新时遍历一次统计项目总数与总大小,
+  // 之后的选择变化直接复用缓存,不重复遍历大型压缩包。
+  {
+    UInt64 totalSize = 0;
+    const unsigned realItemCount = _selectedStatusVector.Size();
+    for (unsigned i = 0; i < realItemCount; i++)
+      totalSize += GetItemSize(i);
+    _statusItemsTotalSize = totalSize;
+    _statusItemCount = realItemCount;
+
+    // 空目录 / 空压缩包提示随列表内容更新(有内容时自动消失)。
+    UpdateEmptyStateHint();
+  }
+  // **************** CuinZip P1-2 Modification End ****************
+
   Refresh_StatusBar();
   /*
   char s[256];

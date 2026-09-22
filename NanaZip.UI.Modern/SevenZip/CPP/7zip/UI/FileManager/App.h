@@ -27,6 +27,20 @@ enum
   kMenuCmdID_Toolbar_Add = kMenuCmdID_Toolbar_Start,
   kMenuCmdID_Toolbar_Extract,
   kMenuCmdID_Toolbar_Test,
+
+  // **************** CuinZip P1-2 Modification Start ****************
+  // 后退 / 前进导航(地址栏按钮与 Alt+Left / Alt+Right 加速键共用;
+  // 数值与 resource.h 的 ID_TOOLBAR_NAV_* 保持一致)。
+  kMenuCmdID_Toolbar_NavBack,      // 1073
+  kMenuCmdID_Toolbar_NavForward,   // 1074
+
+  // Modern 设置窗口中的经典设置页入口(属性表起始页)。
+  kMenuCmdID_Toolbar_Legacy_Settings,    // 1075: Settings 页(常规/高级)
+  kMenuCmdID_Toolbar_Legacy_Integration, // 1076: Integration 页(关联/右键菜单/提取)
+  kMenuCmdID_Toolbar_Legacy_Folders,     // 1077: Folders 页(提取工作文件夹)
+  kMenuCmdID_Toolbar_Legacy_Editor,      // 1078: Editor 页
+  // **************** CuinZip P1-2 Modification End ****************
+
   kMenuCmdID_Toolbar_End
 };
 

@@ -1,0 +1,10 @@
+﻿namespace NanaZip.Modern
+{
+    // CuinZip P1-2: Modern 设置窗口第一轮 —— Modern 外壳 + 经典设置入口
+    // 的渐进迁移方式,详见 Docs/CUINZIP_UI_PLAN.md。
+    [Windows.UI.Xaml.Data.Bindable]
+    [default_interface]
+    runtimeclass SettingsPage : Windows.UI.Xaml.Controls.Page
+    {
+    }
+}

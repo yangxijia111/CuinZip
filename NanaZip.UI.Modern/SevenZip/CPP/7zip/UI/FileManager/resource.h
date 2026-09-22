@@ -1,5 +1,12 @@
 ﻿#include "resourceGui.h"
 
+// **************** CuinZip P1-2 Modification Start ****************
+// 后退 / 前进导航命令(Alt+Left / Alt+Right 加速键使用)。
+// 数值必须与 App.h 中 kMenuCmdID_Toolbar_NavBack/Forward 一致。
+#define ID_TOOLBAR_NAV_BACK                1073
+#define ID_TOOLBAR_NAV_FORWARD             1074
+// **************** CuinZip P1-2 Modification End ****************
+
 #define IDR_MENUBAR1      70
 #define IDM_MENU          71
 #define IDR_ACCELERATOR1  72

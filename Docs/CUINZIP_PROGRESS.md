@@ -1,10 +1,10 @@
 # CuinZip Progress
 
 ## Current Phase
-P1-1 UI / UX Modernization
+P1-2 Modern File Manager 深度重构
 
 ## Status
-DONE
+DONE(2026-09-22;Modern MSIX 部署截图因 Developer Mode 未开启而阻塞,其余全部完成)
 
 ## Completed
 - P0-1 Fork / Git / License Audit
@@ -34,7 +34,44 @@ DONE
   - RefreshVersion 自动改动（Version.props / manifest 版本号）已回滚，未污染 Git
 
 ## Current Task
-无（P1-1 完成，建议进入 P1-2：Modern File Manager 主界面深度重构）
+无（P1-2 完成，建议进入 P1-3：压缩 / 解压 / 进度对话框现代化）
+
+## P1-2 Modern File Manager 深度重构
+DONE（2026-09-22，安全标签 `p1-2-pre-modern-ui`，基线 `1d491387`，
+计划与审计见 `Docs/CUINZIP_UI_PLAN.md` P1-2 节）：
+- **导航**：AddressBar 新增 后退 / 前进 按钮（E72B/E72A，Tooltip 本地化），与
+  上一级（E74A）并列；Win32 侧 `CPanel::NavigateBack/Forward` 以路径串历史
+  （上限 64）经既有 `BindToPathAndRefresh` 管线导航，不改动文件列表核心；
+  新增 Alt+Left / Alt+Right 加速键（命令 1073/1074）
+- **地址栏视觉简化**：下拉箭头 Subtle 填充去边框；路径保持可编辑/可复制
+- **状态栏层级重构**：无选择 `128 items · 245 MB`，有选择 `3 selected · 16.4 MB`，
+  右侧追加压缩包名；总大小/项目数随列表刷新一次缓存，选择变化零重复遍历；
+  移除焦点项大小/日期
+- **Empty State**：面板空列表（或仅剩 ".."）时显示 `This folder is empty` /
+  `This archive is empty`（压缩包内外自动区分，resw 本地化），有内容自动隐藏
+- **Search**：DEFERRED → `P2 Search`（7-Zip Panel 无可复用过滤能力，增量过滤需
+  大规模侵入列表核心；未加假搜索框，审计结论见 UI_PLAN）
+- **Settings Modern 化第一轮**：`K7ModernShowSettingsDialog`（8 分类：
+  General/Compression/Extraction/FileAssociations/ContextMenu/Appearance/
+  Advanced/About）；Appearance 6 开关经回调直写 `CFmSettings` 即时生效；
+  其余分类为经典设置页直达入口（`OptionsDialog` 新增 startPage 参数，
+  WM_COMMAND 1075-1078）；工具栏 Options 按钮改开 Modern 设置；原设置功能零删除；
+  Settings 页为纯代码构建 UI（规避旧版 XAML 编译管道对新 x:Class 页面的绑定
+  注册缺陷，详见 UI_PLAN 实现备注）
+- **本地化**：新增 `SettingsPage.resw`（41 键）/`AboutPage.resw`（6 键）；
+  `Common.resw` 增补导航/空态/状态栏文案；`MainWindowToolBarPage.resw` 增补
+  Open Source 按钮；About 页 attribution/版权/按钮接入 resw；新导出
+  `K7ModernGetUiString`（PRI 取文本 + 英文兜底）；English + zh-Hans 覆盖，
+  其余语言暂回退 English
+- **验证**：Restore PASS；NanaZip.Modern / FileManager / Classic / ShellExtension /
+  Console / Codecs / Core / MSIX（wapproj，msixbundle 产物）构建全部 0 错误；
+  .7z 压缩→解压 SHA-256 往返 PASS；Classic GUI 启动/打开 .7z 截图 PASS
+  （`Docs/Screenshots/P1-2/`）
+- **已知问题**：本机 Developer Mode 未开启（`AllowDevelopmentWithoutDevLicense=0x0`），
+  按约束不修改系统安全策略 → Modern MSIX 部署（Launch/Light/Dark/Empty State
+  实测截图）阻塞，与 P1-1 相同；待管理员开启后
+  `Add-AppxPackage -Register` 验证；Modern FM 直接运行（unpackaged）的
+  `K7ModernInitialize Failed` 限制仍存在（非本阶段回归）
 
 ## P1-1 UI / UX Modernization
 DONE（2026-09-21，安全标签 `p1-1-pre-ui`，基线 `fea047c4`，计划与审计见

@@ -35,6 +35,11 @@
 #include <K7User.h>
 // **************** NanaZip Modification End ****************
 
+// **************** CuinZip P1-2 Modification Start ****************
+// K7ModernGetUiString:空目录 / 空压缩包提示文案(经 resw 本地化)。
+#include <NanaZip.Modern.h>
+// **************** CuinZip P1-2 Modification End ****************
+
 #include "PropertyNameRes.h"
 
 #include <Mile.Xaml.h>
@@ -160,6 +165,19 @@ LRESULT CPanel::OnMessage(UINT message, WPARAM wParam, LPARAM lParam)
     case WM_TIMER:
       OnTimer();
       return 0;
+    // **************** CuinZip P1-2 Modification Start ****************
+    // 空态提示:灰字 + 与列表视图一致的窗口背景(Light / Dark 下均
+    // 跟随系统 COLOR_WINDOW)。
+    case WM_CTLCOLORSTATIC:
+      if ((HWND)lParam == _emptyStateWindow)
+      {
+        HDC dc = (HDC)wParam;
+        ::SetTextColor(dc, ::GetSysColor(COLOR_GRAYTEXT));
+        ::SetBkColor(dc, ::GetSysColor(COLOR_WINDOW));
+        return (LRESULT)::GetSysColorBrush(COLOR_WINDOW);
+      }
+      break;
+    // **************** CuinZip P1-2 Modification End ****************
     case WM_CONTEXTMENU:
       if (OnContextMenu(HANDLE(wParam), GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)))
         return 0;
@@ -404,6 +422,48 @@ bool CPanel::OnCreate(CREATESTRUCT * /* createStruct */)
   _listView.InvalidateRect(NULL, true);
   _listView.Update();
 
+  // **************** CuinZip P1-2 Modification Start ****************
+  // 空目录 / 空压缩包提示(Empty State):STATIC 子控件,平时隐藏,
+  // 仅当文件列表为空时显示,不遮挡正常文件列表;文案经 resw 本地化。
+  {
+    _emptyStateWindow = ::CreateWindowExW(
+        0,
+        L"STATIC",
+        nullptr,
+        WS_CHILD | SS_CENTER | SS_CENTERIMAGE | SS_ENDELLIPSIS,
+        0,
+        0,
+        0,
+        0,
+        *this,
+        nullptr,
+        g_hInstance,
+        nullptr);
+    if (_emptyStateWindow)
+    {
+      // 使用系统消息字体(随系统 DPI 缩放),避免 DEFAULT_GUI_FONT 的
+      // 陈旧观感。
+      NONCLIENTMETRICSW Metrics = {};
+      Metrics.cbSize = sizeof(Metrics);
+      HFONT Font = nullptr;
+      if (::SystemParametersInfoW(
+          SPI_GETNONCLIENTMETRICS,
+          Metrics.cbSize,
+          &Metrics,
+          0))
+      {
+        Font = ::CreateFontIndirectW(&Metrics.lfMessageFont);
+      }
+      if (!Font)
+      {
+        Font = (HFONT)::GetStockObject(DEFAULT_GUI_FONT);
+      }
+      ::SendMessageW(_emptyStateWindow, WM_SETFONT, (WPARAM)Font, TRUE);
+      ::ShowWindow(_emptyStateWindow, SW_HIDE);
+    }
+  }
+  // **************** CuinZip P1-2 Modification End ****************
+
   // Ensure that the common control DLL is loaded.
   INITCOMMONCONTROLSEX icex;
 
@@ -493,6 +553,21 @@ bool CPanel::OnCreate(CREATESTRUCT * /* createStruct */)
           this->OpenParentFolder();
           this->SetFocusToList();
       });
+
+  // **************** CuinZip P1-2 Modification Start ****************
+  // 后退 / 前进导航按钮,导航逻辑见 PanelFolderChange.cpp。
+  _addressBarControl.BackButtonClicked(
+      [this](auto&&, auto&&)
+      {
+          this->NavigateBack();
+      });
+
+  _addressBarControl.ForwardButtonClicked(
+      [this](auto&&, auto&&)
+      {
+          this->NavigateForward();
+      });
+  // **************** CuinZip P1-2 Modification End ****************
 
   _addressBarControl.QuerySubmitted({ this, &CPanel::OnAddressBarQuerySubmitted });
 
@@ -802,6 +877,22 @@ void CPanel::ChangeWindowSize(int xSize, int ySize)
   */
 
   _listView.Move(0, kHeaderSize, xSize, yListViewSize);
+  // **************** CuinZip P1-2 Modification Start ****************
+  // 空态提示覆盖整个列表区域(仅在列表为空且可见时显示)。
+  // 注意:不能改 Z 序(需保持在列表视图之上才会可见);
+  // 可见性由 UpdateEmptyStateHint 控制,不会遮挡文件内容。
+  if (_emptyStateWindow)
+  {
+    ::SetWindowPos(
+        _emptyStateWindow,
+        nullptr,
+        0,
+        kHeaderSize,
+        xSize,
+        yListViewSize,
+        SWP_NOACTIVATE | (IsWindowVisible(_emptyStateWindow) ? SWP_SHOWWINDOW : 0));
+  }
+  // **************** CuinZip P1-2 Modification End ****************
   if (_statusBarWindow)
   {
       ::SetWindowPos(
@@ -1038,6 +1129,35 @@ bool CPanel::IsHashFolder() const
   }
   return false;
 }
+
+// **************** CuinZip P1-2 Modification Start ****************
+// 空目录 / 空压缩包提示:仅在文件列表为空(或只剩 ".." 父项)时
+// 显示,有内容时自动隐藏,不遮挡正常文件列表。
+// 文案经 K7ModernGetUiString 从 resw 读取(English 兜底)。
+void CPanel::UpdateEmptyStateHint()
+{
+  if (!_emptyStateWindow)
+    return;
+
+  const int rowCount = _listView.GetItemCount();
+  const bool isEmpty = (rowCount == 0)
+      || (rowCount == 1 && _selectedStatusVector.Size() == 0);
+
+  if (isEmpty)
+  {
+    // 目录链非空表示当前在压缩包内部。
+    const bool isArchive = !_parentFolders.IsEmpty();
+    LPCWSTR text = ::K7ModernGetUiString(
+        isArchive ? L"EmptyArchiveMessage" : L"EmptyFolderMessage",
+        isArchive ? L"This archive is empty" : L"This folder is empty");
+    ::SetWindowTextW(_emptyStateWindow, text);
+  }
+
+  const bool visible = (::IsWindowVisible(_emptyStateWindow) != FALSE);
+  if (isEmpty != visible)
+    ::ShowWindow(_emptyStateWindow, isEmpty ? SW_SHOWNA : SW_HIDE);
+}
+// **************** CuinZip P1-2 Modification End ****************
 
 UString CPanel::GetFsPath() const
 {

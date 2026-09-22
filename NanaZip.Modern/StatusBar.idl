@@ -1,17 +1,14 @@
 ﻿namespace NanaZip.Modern
 {
+    // CuinZip P1-2: 状态栏信息层级重整。
     runtimeclass StatusBar : Windows.UI.Xaml.Controls.Control
     {
         StatusBar();
 
-        String Text1;
-        String Text2;
-        String Text3;
-        String Text4;
+        String TextPrimary;
+        static Windows.UI.Xaml.DependencyProperty TextPrimaryProperty{ get; };
 
-        static Windows.UI.Xaml.DependencyProperty Text1Property{ get; };
-        static Windows.UI.Xaml.DependencyProperty Text2Property{ get; };
-        static Windows.UI.Xaml.DependencyProperty Text3Property{ get; };
-        static Windows.UI.Xaml.DependencyProperty Text4Property{ get; };
+        String TextArchive;
+        static Windows.UI.Xaml.DependencyProperty TextArchiveProperty{ get; };
     }
 }

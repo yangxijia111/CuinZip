@@ -271,4 +271,54 @@ EXTERN_C LPVOID WINAPI K7ModernCreateMainWindowToolBarPage(
     _In_ HWND ParentWindowHandle,
     _In_ HMENU MoreMenuHandle);
 
+// **************** CuinZip P1-2 Modification Start ****************
+
+/**
+ * @brief 外观设置项的快照。NanaZip.Modern.dll 不直接读注册表,
+ *        由宿主(FileManager)通过回调读写真实设置源(CFmSettings),
+ *        避免双份注册表实现漂移。
+ */
+typedef struct K7_MODERN_APPEARANCE_SETTINGS
+{
+    BOOL ShowDots;
+    BOOL ShowRealFileIcons;
+    BOOL FullRow;
+    BOOL ShowGrid;
+    BOOL SingleClick;
+    BOOL AlternativeSelection;
+} K7_MODERN_APPEARANCE_SETTINGS;
+
+typedef void(*K7_MODERN_SETTINGS_LOAD_CALLBACK)(
+    _Out_ K7_MODERN_APPEARANCE_SETTINGS* Settings);
+
+typedef void(*K7_MODERN_SETTINGS_APPLY_CALLBACK)(
+    _In_ const K7_MODERN_APPEARANCE_SETTINGS* Settings);
+
+/**
+ * @brief Show the modern Settings window.
+ * @param ParentWindowHandle A handle to the owner window of the dialog to be
+ *                           created. If this parameter is nullptr, the dialog
+ *                           has no owner window.
+ * @param LoadCallback The callback to load the current appearance settings.
+ * @param ApplyCallback The callback to apply the changed appearance settings.
+ * @return The message loop exit code of the dialog.
+ */
+EXTERN_C INT WINAPI K7ModernShowSettingsDialog(
+    _In_opt_ HWND ParentWindowHandle,
+    _In_opt_ K7_MODERN_SETTINGS_LOAD_CALLBACK LoadCallback,
+    _In_opt_ K7_MODERN_SETTINGS_APPLY_CALLBACK ApplyCallback);
+
+/**
+ * @brief Get a localized UI string from the modern resource file.
+ * @param Name The resource name under the "NanaZip.Modern/Common" subtree.
+ * @param Fallback The English fallback text if the resource is unavailable.
+ * @return The localized string (UTF-16, owned by the module; valid until the
+ *         next call).
+ */
+EXTERN_C LPCWSTR WINAPI K7ModernGetUiString(
+    _In_ LPCWSTR Name,
+    _In_opt_ LPCWSTR Fallback);
+
+// **************** CuinZip P1-2 Modification End ****************
+
 #endif // !NANAZIP_MODERN_EXPERIENCE

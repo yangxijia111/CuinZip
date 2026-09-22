@@ -843,6 +843,42 @@ static void SaveWindowInfo(HWND aWnd)
   info.Save();
 }
 
+// **************** CuinZip P1-2 Modification Start ****************
+// Modern 设置窗口(Appearance 分类)的读 / 应用回调:
+// 真实设置源仍是 CFmSettings(注册表),NanaZip.Modern.dll 不直接
+// 访问注册表,避免双份实现漂移;应用后立即刷新列表。
+// 应用回调在主线程执行(设置窗口跑在主线程模态循环),可安全
+// 访问 g_App。
+#include "RegistryUtils.h"
+
+void FmModernSettingsLoad(K7_MODERN_APPEARANCE_SETTINGS *settings)
+{
+  CFmSettings st;
+  st.Load();
+  settings->ShowDots = st.ShowDots ? TRUE : FALSE;
+  settings->ShowRealFileIcons = st.ShowRealFileIcons ? TRUE : FALSE;
+  settings->FullRow = st.FullRow ? TRUE : FALSE;
+  settings->ShowGrid = st.ShowGrid ? TRUE : FALSE;
+  settings->SingleClick = st.SingleClick ? TRUE : FALSE;
+  settings->AlternativeSelection = st.AlternativeSelection ? TRUE : FALSE;
+}
+
+void FmModernSettingsApply(const K7_MODERN_APPEARANCE_SETTINGS *settings)
+{
+  CFmSettings st;
+  st.Load();
+  st.ShowDots = (settings->ShowDots != FALSE);
+  st.ShowRealFileIcons = (settings->ShowRealFileIcons != FALSE);
+  st.FullRow = (settings->FullRow != FALSE);
+  st.ShowGrid = (settings->ShowGrid != FALSE);
+  st.SingleClick = (settings->SingleClick != FALSE);
+  st.AlternativeSelection = (settings->AlternativeSelection != FALSE);
+  st.Save();
+  g_App.SetListSettings();
+  g_App.RefreshAllPanels();
+}
+// **************** CuinZip P1-2 Modification End ****************
+
 static void ExecuteCommand(UINT commandID)
 {
   CPanel::CDisableTimerProcessing disableTimerProcessing1(g_App.Panels[0]);
@@ -853,6 +889,32 @@ static void ExecuteCommand(UINT commandID)
     case kMenuCmdID_Toolbar_Add: g_App.AddToArchive(); break;
     case kMenuCmdID_Toolbar_Extract: g_App.ExtractArchives(); break;
     case kMenuCmdID_Toolbar_Test: g_App.TestArchives(); break;
+
+    // **************** CuinZip P1-2 Modification Start ****************
+    // 后退 / 前进:作用于当前聚焦面板的导航历史。
+    case kMenuCmdID_Toolbar_NavBack:
+      g_App.Panels[g_App.LastFocusedPanel].NavigateBack();
+      break;
+    case kMenuCmdID_Toolbar_NavForward:
+      g_App.Panels[g_App.LastFocusedPanel].NavigateForward();
+      break;
+
+    // Modern 设置窗口中的经典设置页入口:直接打开对应属性表页。
+    // 页序与 OptionsDialog 中 pageIDs 一致:
+    // 0 = Integration(Menu), 1 = Folders, 2 = Edit, 3 = Settings。
+    case kMenuCmdID_Toolbar_Legacy_Settings:
+      OptionsDialog(g_HWND, g_hInstance, 3);
+      break;
+    case kMenuCmdID_Toolbar_Legacy_Integration:
+      OptionsDialog(g_HWND, g_hInstance, 0);
+      break;
+    case kMenuCmdID_Toolbar_Legacy_Folders:
+      OptionsDialog(g_HWND, g_hInstance, 1);
+      break;
+    case kMenuCmdID_Toolbar_Legacy_Editor:
+      OptionsDialog(g_HWND, g_hInstance, 2);
+      break;
+    // **************** CuinZip P1-2 Modification End ****************
   }
 }
 

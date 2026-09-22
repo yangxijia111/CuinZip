@@ -21,6 +21,8 @@
 #include "InformationPage.h"
 #include "ProgressPage.h"
 #include "CopyLocationPage.h"
+#include "SettingsPage.h"
+#include "UiStrings.h"
 
 #pragma comment(lib, "comctl32.lib")
 
@@ -643,3 +645,64 @@ EXTERN_C LPCWSTR WINAPI K7ModernGetCopyLocationDialogPath(
     }
     return winrt::get_self<Implementation>(InstanceObject)->GetPath();
 }
+
+// **************** CuinZip P1-2 Modification Start ****************
+
+EXTERN_C INT WINAPI K7ModernShowSettingsDialog(
+    _In_opt_ HWND ParentWindowHandle,
+    _In_opt_ K7_MODERN_SETTINGS_LOAD_CALLBACK LoadCallback,
+    _In_opt_ K7_MODERN_SETTINGS_APPLY_CALLBACK ApplyCallback)
+{
+    HWND WindowHandle = ::K7ModernCreateXamlDialog(ParentWindowHandle);
+    if (!WindowHandle)
+    {
+        return -1;
+    }
+
+    using Interface =
+        winrt::NanaZip::Modern::SettingsPage;
+    using Implementation =
+        winrt::NanaZip::Modern::implementation::SettingsPage;
+
+    Interface Window = winrt::make<Implementation>(
+        WindowHandle,
+        LoadCallback,
+        ApplyCallback);
+
+    int Result = ::K7ModernShowXamlDialog(
+        WindowHandle,
+        640,
+        480,
+        winrt::get_abi(Window),
+        ParentWindowHandle);
+
+    return Result;
+}
+
+EXTERN_C LPCWSTR WINAPI K7ModernGetUiString(
+    _In_ LPCWSTR Name,
+    _In_opt_ LPCWSTR Fallback)
+{
+    if (!Name)
+    {
+        return nullptr;
+    }
+
+    // GetUiString 内部有缓存;返回的字符串由本模块持有,
+    // 调用方直接使用,不需要释放(与 K7ModernGetLegacyStringResource
+    // 的所有权约定一致)。
+    static std::map<std::wstring, winrt::hstring> g_CachedUiStrings;
+    static std::mutex g_CachedUiStringsMutex;
+
+    winrt::hstring Content = winrt::NanaZip::Modern::GetUiString(
+        Name,
+        Fallback ? Fallback : L"");
+
+    std::lock_guard Lock(g_CachedUiStringsMutex);
+    auto Iterator = g_CachedUiStrings.emplace(
+        std::wstring(Name),
+        std::move(Content));
+    return Iterator.first->second.c_str();
+}
+
+// **************** CuinZip P1-2 Modification End ****************

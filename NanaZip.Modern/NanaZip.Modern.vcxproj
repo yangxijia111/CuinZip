@@ -112,6 +112,7 @@
       <DependentUpon>MainWindowToolBarPage.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Midl>
+    <Midl Include="SettingsPage.idl" />
     <Midl Include="StatusBar.idl" />
     <Midl Include="StatusBarTemplate.idl">
       <DependentUpon>StatusBarTemplate.xaml</DependentUpon>
@@ -163,6 +164,10 @@
       <DependentUpon>StatusBarTemplate.xaml</DependentUpon>
       <SubType>Code</SubType>
     </ClInclude>
+    <ClInclude Include="SettingsPage.h">
+      <DependentUpon>SettingsPage.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="UiStrings.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AddressBarTemplate.cpp">
@@ -209,6 +214,8 @@
       <DependentUpon>StatusBarTemplate.xaml</DependentUpon>
       <SubType>Code</SubType>
     </ClCompile>
+    <ClCompile Include="SettingsPage.cpp" />
+    <ClCompile Include="UiStrings.cpp" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Mile.Xaml">
@@ -266,9 +273,11 @@
     <PRIResource Include="Strings\el\ProgressPage.resw" />
     <PRIResource Include="Strings\el\SponsorPage.resw" />
     <PRIResource Include="Strings\en\Common.resw" />
+    <PRIResource Include="Strings\en\AboutPage.resw" />
     <PRIResource Include="Strings\en\CopyLocationPage.resw" />
     <PRIResource Include="Strings\en\MainWindowToolBarPage.resw" />
     <PRIResource Include="Strings\en\ProgressPage.resw" />
+    <PRIResource Include="Strings\en\SettingsPage.resw" />
     <PRIResource Include="Strings\en\SponsorPage.resw" />
     <PRIResource Include="Strings\eo\Common.resw" />
     <PRIResource Include="Strings\eo\CopyLocationPage.resw" />
@@ -470,9 +479,11 @@
     <PRIResource Include="Strings\yo-latn\CopyLocationPage.resw" />
     <PRIResource Include="Strings\yo-latn\ProgressPage.resw" />
     <PRIResource Include="Strings\zh-Hans\Common.resw" />
+    <PRIResource Include="Strings\zh-Hans\AboutPage.resw" />
     <PRIResource Include="Strings\zh-Hans\CopyLocationPage.resw" />
     <PRIResource Include="Strings\zh-Hans\MainWindowToolBarPage.resw" />
     <PRIResource Include="Strings\zh-Hans\ProgressPage.resw" />
+    <PRIResource Include="Strings\zh-Hans\SettingsPage.resw" />
     <PRIResource Include="Strings\zh-Hans\SponsorPage.resw" />
     <PRIResource Include="Strings\zh-Hant\Common.resw" />
     <PRIResource Include="Strings\zh-Hant\CopyLocationPage.resw" />

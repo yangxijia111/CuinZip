@@ -17,6 +17,11 @@
 #include "Panel.h"
 #include "FormatUtils.h"
 
+// **************** CuinZip P1-2 Modification Start ****************
+// K7ModernGetUiString:状态栏文案本地化(English 兜底)。
+#include <NanaZip.Modern.h>
+// **************** CuinZip P1-2 Modification End ****************
+
 using namespace NWindows;
 
 /* Unicode characters for space:
@@ -782,83 +787,77 @@ bool CPanel::OnCustomDraw(LPNMLVCUSTOMDRAW lplvcd, LRESULT &result)
   return false;
 }
 
+// **************** CuinZip P1-2 Modification Start ****************
+// 状态栏信息层级重整:
+//   无选择:  "128 items · 245 MB"
+//   有选择:  "3 selected · 16.4 MB"
+//   右侧:    当前打开的压缩包文件名(压缩包打开时)。
+// 汇总数据使用 RefreshListCtrl 里的缓存(_statusItemsTotalSize /
+// _statusItemCount),选择变化时不再重新遍历大型压缩包。
+// 原实现(选中数/焦点项大小/日期四列)由新层级取代。
 void CPanel::Refresh_StatusBar()
 {
-  /*
-  g_name_cnt++;
-  char s[256];
-  sprintf(s, "g_name_cnt = %8d", g_name_cnt);
-  OutputDebugStringA(s);
-  */
-  // DWORD dw = GetTickCount();
-
   CRecordVector<UInt32> indices;
   GetOperatedItemIndices(indices);
 
-  wchar_t temp[32];
-  ConvertUInt32ToString(indices.Size(), temp);
-  wcscat(temp, L" / ");
-  ConvertUInt32ToString(_selectedStatusVector.Size(), temp + wcslen(temp));
-
-  // UString s1 = MyFormatNew(g_App.LangString_N_SELECTED_ITEMS, NumberToString(indices.Size()));
-  // UString s1 = MyFormatNew(IDS_N_SELECTED_ITEMS, NumberToString(indices.Size()));
-  // _statusBar.SetText(0, MyFormatNew(g_App.LangString_N_SELECTED_ITEMS, temp));
-  _statusBarControl.Text1(MyFormatNew(g_App.LangString_N_SELECTED_ITEMS, temp).Ptr());
-  // _statusBar.SetText(0, MyFormatNew(IDS_N_SELECTED_ITEMS, NumberToString(indices.Size())));
-
-  wchar_t selectSizeString[32];
-  selectSizeString[0] = 0;
+  UString primaryText;
 
   if (indices.Size() > 0)
   {
-    // for (unsigned ttt = 0; ttt < 1000; ttt++) {
+    // 有选择:"{0} selected · {size}"
     UInt64 totalSize = 0;
     FOR_VECTOR (i, indices)
       totalSize += GetItemSize(indices[i]);
-    ConvertSizeToString(totalSize, selectSizeString);
-    // }
-  }
-  // _statusBar.SetText(1, selectSizeString);
-  _statusBarControl.Text2(selectSizeString);
 
-  int focusedItem = _listView.GetFocusedItem();
-  wchar_t sizeString[32];
-  sizeString[0] = 0;
-  wchar_t dateString[32];
-  dateString[0] = 0;
-  if (focusedItem >= 0 && _listView.GetSelectedCount() > 0)
+    wchar_t countString[32];
+    countString[0] = 0;
+    ConvertUInt32ToString(indices.Size(), countString);
+
+    wchar_t sizeString[32];
+    ConvertSizeToString(totalSize, sizeString);
+
+    UString format(::K7ModernGetUiString(L"StatusBarSelectedFormat", L"{0} selected"));
+    primaryText = format;
+    primaryText.Replace(L"{0}", UString(countString));
+    primaryText += L" ";
+    primaryText += ::K7ModernGetUiString(L"StatusBarSizeSeparator", L"\x00B7");
+    primaryText += L" ";
+    primaryText += sizeString;
+  }
+  else
   {
-    int realIndex = GetRealItemIndex(focusedItem);
-    if (realIndex != kParentIndex)
+    // 无选择:"{0} items · {size}"(总大小来自列表刷新时的缓存)
+    wchar_t countString[32];
+    countString[0] = 0;
+    ConvertUInt32ToString(_statusItemCount, countString);
+
+    UString format(::K7ModernGetUiString(L"StatusBarItemsFormat", L"{0} items"));
+    primaryText = format;
+    primaryText.Replace(L"{0}", UString(countString));
+    if (_statusItemsTotalSize > 0)
     {
-      ConvertSizeToString(GetItemSize(realIndex), sizeString);
-      NCOM::CPropVariant prop;
-      if (_folder->GetProperty(realIndex, kpidMTime, &prop) == S_OK)
-      {
-        char dateString2[32];
-        dateString2[0] = 0;
-        ConvertPropertyToShortString2(dateString2, prop, kpidMTime);
-        for (unsigned i = 0;; i++)
-        {
-          char c = dateString2[i];
-          dateString[i] = (Byte)c;
-          if (c == 0)
-            break;
-        }
-      }
+      wchar_t sizeString[32];
+      ConvertSizeToString(_statusItemsTotalSize, sizeString);
+      primaryText += L" ";
+      primaryText += ::K7ModernGetUiString(L"StatusBarSizeSeparator", L"\x00B7");
+      primaryText += L" ";
+      primaryText += sizeString;
     }
   }
-  // _statusBar.SetText(2, sizeString);
-  // _statusBar.SetText(3, dateString);
-  _statusBarControl.Text3(sizeString);
-  _statusBarControl.Text4(dateString);
 
-  // _statusBar.SetText(4, nameString);
-  // _statusBar2.SetText(1, MyFormatNew(L"{0} bytes", NumberToStringW(totalSize)));
-  // }
-  /*
-  dw = GetTickCount() - dw;
-  sprintf(s, "status = %8d ms", dw);
-  OutputDebugStringA(s);
-  */
+  _statusBarControl.TextPrimary(primaryText.Ptr());
+
+  // 右侧压缩包信息:仅显示压缩包文件名,不堆满状态栏。
+  UString archiveInfo;
+  if (!_parentFolders.IsEmpty())
+  {
+    UString archivePath = fs2us(_parentFolders.Back().FilePath);
+    if (!archivePath.IsEmpty())
+    {
+      const int pos = archivePath.ReverseFind_PathSepar();
+      archiveInfo = (pos >= 0) ? UString(archivePath.Ptr(pos + 1)) : archivePath;
+    }
+  }
+  _statusBarControl.TextArchive(archiveInfo.Ptr());
 }
+// **************** CuinZip P1-2 Modification End ****************

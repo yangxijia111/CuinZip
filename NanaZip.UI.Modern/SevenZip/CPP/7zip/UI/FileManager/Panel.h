@@ -596,6 +596,10 @@ public:
       _markDeletedItems(true),
       PanelCreated(false),
 
+      // CuinZip P1-2: 状态栏汇总缓存初值。
+      _statusItemsTotalSize(0),
+      _statusItemCount(0),
+
       _ListViewMode(3),
       _xSize(300),
 
@@ -889,6 +893,30 @@ public:
 
   void Post_Refresh_StatusBar();
   void Refresh_StatusBar();
+
+  // **************** CuinZip P1-2 Modification Start ****************
+  // 后退 / 前进导航历史(基于与地址栏一致的路径字符串,经
+  // BindToPathAndRefresh 复用既有导航管线,不改动文件列表核心)。
+  void NavigateBack();
+  void NavigateForward();
+  void UpdateNavButtons();
+
+  // 空目录 / 空压缩包提示(Empty State)。
+  void UpdateEmptyStateHint();
+
+  // 状态栏汇总缓存:仅在列表刷新时计算一次,避免每次选择变化都
+  // 重新遍历大型压缩包。
+  UInt64 _statusItemsTotalSize;
+  unsigned _statusItemCount;
+
+  // 空态提示控件(STATIC,仅在列表为空时显示,不遮挡文件列表)。
+  HWND _emptyStateWindow{ nullptr };
+
+  UStringVector _navBackHistory;
+  UStringVector _navForwardHistory;
+  UString _navLastPath;
+  bool _navHistorySuspended{ false };
+  // **************** CuinZip P1-2 Modification End ****************
 
   void AddToArchive();
   // **************** NanaZip Modification Start ****************

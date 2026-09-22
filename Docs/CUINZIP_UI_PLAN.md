@@ -41,6 +41,95 @@
 - Classic Dark Mode / 工具栏间距(Win32 层,延后;Classic 保持兼容模式)
 - 新增文案的多语言 resw 补齐
 
+# CuinZip UI / UX 计划(P1-2 实施记录)
+
+日期:2026-09-22,基线 `1d491387`(安全标签 `p1-2-pre-modern-ui`)。
+
+## 主窗口信息架构(目标布局已达成)
+
+```text
+┌────────────────────────────────────────────┐
+│ Add Extract Test Delete Info │ Open Source │  ← App 级 ToolBar(XAML 岛,P1-1 布局保持)
+├────────────────────────────────────────────┤
+│ ← → ↑  地址栏(可编辑/可复制)          ▾ │  ← AddressBar 岛(面板级,每面板)
+├────────────────────────────────────────────┤
+│         文件 / 压缩包列表(Win32 核心)     │  ← 不改动
+├────────────────────────────────────────────┤
+│ 项目数·大小 │ 压缩包名                     │  ← StatusBar 岗(信息层级重构)
+└────────────────────────────────────────────┘
+```
+
+- **导航**:`AddressBar` 新增 Back(E72B)/ Forward(E72A)按钮,与 Up(E74A)并列;
+  状态属性 `IsBackButtonEnabled / IsForwardButtonEnabled`,事件经面板侧接线。
+  Win32 侧实现 `CPanel::NavigateBack/Forward`:以 `_currentFolderPrefix` 路径串为
+  历史(深度上限 64),统一经既有 `BindToPathAndRefresh` 管线导航,文件系统与压缩包
+  虚拟路径均可用,**未改动文件列表核心**。记录点在 `LoadFullPathAndShow`(刷新不重复
+  入栈);新增 Alt+Left / Alt+Right 加速键(`IDR_ACCELERATOR1`,命令 1073/1074),
+  Backspace=上一级 等原有快捷键不变。
+- **地址栏视觉简化**:下拉箭头改 Subtle 填充、去边框;路径文本保持可编辑、可选中、
+  可复制(TextCommandBarFlyout);Light/Dark 均走主题资源(SubtleBrush 已确认存在
+  于 Mile.Xaml SunValley 主题)。
+- **状态栏层级**:`Refresh_StatusBar` 重写 —— 无选择 `128 items · 245 MB`;有选择
+  `3 selected · 16.4 MB`;右侧追加压缩包文件名。总大小/项目数在 `RefreshListCtrl`
+  一次性缓存(`_statusItemsTotalSize/_statusItemCount`),选择变化复用缓存,不重复
+  遍历大型压缩包;移除原焦点项大小/日期(信息降噪)。控件接口改为
+  `TextPrimary/TextArchive`。
+
+## 搜索(审计结论)
+
+7-Zip FM Panel **无可安全复用的列表过滤能力**:列表由 `_folder` COM 绑定 +
+`RefreshListCtrl` 全量重建,增量过滤需侵入 `PanelItems/PanelListNotify/Selection`
+核心(全量重建 + 虚拟模式 + 选择映射重写)。按阶段约束**不做**,记为 **`P2 Search`**;
+未加入任何假搜索框。
+
+## Empty State
+
+面板新增 STATIC 子控件(`_emptyStateWindow`),仅在列表为空(或仅剩 ".." 父项)时
+显示,文案 `This folder is empty` / `This archive is empty`(resw 本地化,压缩包内
+外自动区分);有内容时自动隐藏,不遮挡文件列表;配色走系统 COLOR_WINDOW/COLOR_GRAYTEXT,
+Light/Dark 均可读。位置与列表区同步(`ChangeWindowSize`)。
+
+## Settings 第一轮 Modern 化(渐进迁移)
+
+新增 `K7ModernShowSettingsDialog`(NanaZip.Modern.dll):
+- 8 分类:General / Compression / Extraction / File Associations / Context Menu /
+  Appearance / Advanced / About;
+- **Appearance 直接 Modern 化**:6 个开关(ShowDots/RealFileIcons/FullRow/Grid/
+  SingleClick/AltSelection)经回调(`K7_MODERN_SETTINGS_LOAD/APPLY_CALLBACK`,由
+  FM 侧以 `CFmSettings` 读写注册表)即时生效并刷新列表 —— 真实设置源仍是
+  `CFmSettings`,无双重注册表实现;
+- 其余分类提供**经典设置页直达入口**(WM_COMMAND 1075-1078 →
+  `OptionsDialog(hwnd,hInstance,startPage)`,`MyPropertySheet` 新增 startPage 参数),
+  原有设置功能零删除;
+- File Associations 附带直接打开 `ms-settings:defaultapps`;
+- Compression 如实说明当前经由压缩对话框配置(后续 P1-3 扩展);
+- About 分类内嵌打开 About 对话框入口;
+- 工具栏 Options 按钮(`IDM_OPTIONS`)改开 Modern 设置窗口。
+- **实现备注**:Settings 页为纯代码构建 UI(不走 x:Class XAML 绑定)——项目所用
+  旧版 XAML 编译管道(V8.2 CompileXaml)对新增 x:Class 页面确定性跳过绑定注册
+  (perfXC_SearchIxmpAndBindable 后不产出 XamlTypeInfo include),导致链接失败;
+  纯代码构建 + GetUiString(PRI) 文本可完全等效并规避。此坑已记录,后续新页面
+  优先沿用本模式或扩展已注册页面。
+
+## 文案与本地化(P1-2)
+
+- 新增 resw:`SettingsPage.resw`(41 条)、`AboutPage.resw`(6 条)(en + zh-Hans);
+- `Common.resw` 增补:导航 Tooltip ×3、Empty State ×2、状态栏格式 ×3(en + zh-Hans);
+- `MainWindowToolBarPage.resw` 增补 `OpenSourceButton.Content`(P1-1 硬编码迁移);
+- AboutPage 的 attribution/版权行/四按钮接入 resw(x:Uid + 英文兜底);
+- 新导出 `K7ModernGetUiString(name, fallback)`:Win32 面板侧(空态/状态栏)与
+  XAML 模板(AddressBar Tooltip)统一经 PRI 取文本,英文兜底,其余语言暂回退
+  English;`UiStrings.h/cpp` 提供带缓存的内部实现。
+
+## 部署与验证(本阶段)
+
+- 本机 Developer Mode 处于关闭状态(`AllowDevelopmentWithoutDevLicense=0x0`),
+  按约束**不修改系统安全策略** → Modern MSIX 部署(Launch/Light/Dark 实测)仍被
+  阻塞,与 P1-1 相同;已完成:Restore PASS、构建 0 错误、压缩/解压/SHA-256 往返
+  PASS、Classic GUI 回归截图 PASS。
+- 待管理员开启 Developer Mode 后执行 `Add-AppxPackage -Register` 部署验证
+  (见 CUINZIP_PROGRESS.md Known Issues)。
+
 ## 永不改(红线)
 
 7-Zip ABI GUID(`23170F69-…`)、Core/Codecs 算法、Shell CLSID、Package Identity、

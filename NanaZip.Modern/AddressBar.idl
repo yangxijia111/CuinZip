@@ -13,11 +13,23 @@
         Boolean IsUpButtonEnabled;
         static Windows.UI.Xaml.DependencyProperty IsUpButtonEnabledProperty{ get; };
 
+        // CuinZip P1-2: 后退 / 前进导航按钮的启用状态
+        Boolean IsBackButtonEnabled;
+        static Windows.UI.Xaml.DependencyProperty IsBackButtonEnabledProperty{ get; };
+
+        Boolean IsForwardButtonEnabled;
+        static Windows.UI.Xaml.DependencyProperty IsForwardButtonEnabledProperty{ get; };
+
         Object ItemsSource;
         static Windows.UI.Xaml.DependencyProperty ItemsSourceProperty{ get; };
 
         event Windows.Foundation.TypedEventHandler<AddressBar, AddressBarQuerySubmittedEventArgs> QuerySubmitted;
         event Windows.UI.Xaml.RoutedEventHandler UpButtonClicked;
+
+        // CuinZip P1-2: 后退 / 前进按钮点击事件
+        event Windows.UI.Xaml.RoutedEventHandler BackButtonClicked;
+        event Windows.UI.Xaml.RoutedEventHandler ForwardButtonClicked;
+
         event Windows.Foundation.TypedEventHandler<AddressBar, Object> DropDownOpened;
     }
 

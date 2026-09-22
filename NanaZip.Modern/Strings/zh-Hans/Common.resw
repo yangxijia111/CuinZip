@@ -48,4 +48,31 @@
   <data name="OKButton.Content" xml:space="preserve">
     <value>确定</value>
   </data>
+  <!--
+    CuinZip P1-2: 导航按钮 / 空目录提示 / 状态栏文案(zh-Hans)。
+  -->
+  <data name="NavBackToolTip" xml:space="preserve">
+    <value>后退</value>
+  </data>
+  <data name="NavForwardToolTip" xml:space="preserve">
+    <value>前进</value>
+  </data>
+  <data name="NavUpToolTip" xml:space="preserve">
+    <value>上一级</value>
+  </data>
+  <data name="EmptyFolderMessage" xml:space="preserve">
+    <value>此文件夹为空</value>
+  </data>
+  <data name="EmptyArchiveMessage" xml:space="preserve">
+    <value>此压缩包为空</value>
+  </data>
+  <data name="StatusBarItemsFormat" xml:space="preserve">
+    <value>{0} 个项目</value>
+  </data>
+  <data name="StatusBarSelectedFormat" xml:space="preserve">
+    <value>已选择 {0} 个项目</value>
+  </data>
+  <data name="StatusBarSizeSeparator" xml:space="preserve">
+    <value>·</value>
+  </data>
 </root>

@@ -90,6 +90,7 @@
       </CommandBar>
       <Button
         x:Name="OpenSourceButton"
+        x:Uid="/NanaZip.Modern/MainWindowToolBarPage/OpenSourceButton"
         Grid.Column="2"
         Margin="0,0,6,0"
         VerticalAlignment="Center"

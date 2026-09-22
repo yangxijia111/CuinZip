@@ -491,7 +491,92 @@ void CPanel::LoadFullPathAndShow()
   #endif
 
   RefreshTitle();
+
+  // **************** CuinZip P1-2 Modification Start ****************
+  // 每次导航 / 刷新后更新地址栏文本,这里同时是导航历史的记录点:
+  // 路径发生变化视为一次导航(刷新时路径不变,不会重复入栈)。
+  if (!_navHistorySuspended)
+  {
+    const UString &path = _currentFolderPrefix;
+    if (path != _navLastPath)
+    {
+      if (!_navLastPath.IsEmpty())
+      {
+        _navBackHistory.Add(_navLastPath);
+        // 限制历史深度,避免极端场景下无限增长。
+        if (_navBackHistory.Size() > 64)
+          _navBackHistory.Delete(0);
+      }
+      _navForwardHistory.Clear();
+      _navLastPath = path;
+    }
+  }
+  UpdateNavButtons();
+  // **************** CuinZip P1-2 Modification End ****************
 }
+
+// **************** CuinZip P1-2 Modification Start ****************
+// 后退 / 前进导航:复用 BindToPathAndRefresh(与地址栏一致的
+// 路径管线,文件系统与压缩包虚拟路径均适用),不改动文件列表核心。
+void CPanel::NavigateBack()
+{
+  if (_navBackHistory.IsEmpty())
+    return;
+
+  UString target = _navBackHistory.Back();
+  UString current = _navLastPath;
+  _navBackHistory.DeleteBack();
+
+  _navHistorySuspended = true;
+  HRESULT res = BindToPathAndRefresh(target);
+  _navHistorySuspended = false;
+
+  if (res == S_OK)
+  {
+    if (!current.IsEmpty())
+      _navForwardHistory.Add(current);
+    _navLastPath = target;
+  }
+  else
+  {
+    // 导航失败:回滚历史栈,保持当前位置不变。
+    _navBackHistory.Add(target);
+  }
+  PostMsg(kSetFocusToListView);
+}
+
+void CPanel::NavigateForward()
+{
+  if (_navForwardHistory.IsEmpty())
+    return;
+
+  UString target = _navForwardHistory.Back();
+  UString current = _navLastPath;
+  _navForwardHistory.DeleteBack();
+
+  _navHistorySuspended = true;
+  HRESULT res = BindToPathAndRefresh(target);
+  _navHistorySuspended = false;
+
+  if (res == S_OK)
+  {
+    if (!current.IsEmpty())
+      _navBackHistory.Add(current);
+    _navLastPath = target;
+  }
+  else
+  {
+    _navForwardHistory.Add(target);
+  }
+  PostMsg(kSetFocusToListView);
+}
+
+void CPanel::UpdateNavButtons()
+{
+  _addressBarControl.IsBackButtonEnabled(!_navBackHistory.IsEmpty());
+  _addressBarControl.IsForwardButtonEnabled(!_navForwardHistory.IsEmpty());
+}
+// **************** CuinZip P1-2 Modification End ****************
 
 #ifndef UNDER_CE
 LRESULT CPanel::OnNotifyComboBoxEnter(const UString &s)

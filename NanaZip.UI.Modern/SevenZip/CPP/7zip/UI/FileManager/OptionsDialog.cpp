@@ -24,8 +24,12 @@
 
 using namespace NWindows;
 
-void OptionsDialog(HWND hwndOwner, HINSTANCE hInstance);
-void OptionsDialog(HWND hwndOwner, HINSTANCE /* hInstance */)
+// **************** CuinZip P1-2 Modification Start ****************
+// 增加 startPage 参数:Modern 设置窗口的经典设置入口按分类直达
+// 对应属性表页(0 = Integration, 1 = Folders, 2 = Edit, 3 = Settings)。
+void OptionsDialog(HWND hwndOwner, HINSTANCE hInstance, unsigned startPage);
+void OptionsDialog(HWND hwndOwner, HINSTANCE /* hInstance */, unsigned startPage)
+// **************** CuinZip P1-2 Modification End ****************
 {
   CMenuPage menuPage;
   CFoldersPage foldersPage;
@@ -52,7 +56,7 @@ void OptionsDialog(HWND hwndOwner, HINSTANCE /* hInstance */)
     page.Page = pagePointers[i];
   }
 
-  INT_PTR res = NControl::MyPropertySheet(pages, hwndOwner, LangString(IDS_OPTIONS));
+  INT_PTR res = NControl::MyPropertySheet(pages, hwndOwner, LangString(IDS_OPTIONS), startPage);
 
   if (res != -1 && res != 0)
   {

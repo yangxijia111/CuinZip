@@ -29,7 +29,8 @@ static const UINT kMenuID_Time = 761;
 
 extern HINSTANCE g_hInstance;
 
-extern void OptionsDialog(HWND hwndOwner, HINSTANCE hInstance);
+// CuinZip P1-2: 增加 startPage 参数。
+extern void OptionsDialog(HWND hwndOwner, HINSTANCE hInstance, unsigned startPage);
 
 enum
 {
@@ -777,7 +778,12 @@ bool OnMenuCommand(HWND hWnd, unsigned id)
     case IDM_VIEW_TWO_PANELS:       g_App.SwitchOnOffOnePanel(); break;
 
     // Tools
-    case IDM_OPTIONS: OptionsDialog(hWnd, g_hInstance); break;
+    // **************** CuinZip P1-2 Modification Start ****************
+    // Options 入口改为 Modern 设置窗口;classic 页仍经由
+    // kMenuCmdID_Toolbar_Legacy_* 入口可达(FM.cpp ExecuteCommand),
+    // 原有设置功能全部保留。
+    case IDM_OPTIONS: ::K7ModernShowSettingsDialog(hWnd, FmModernSettingsLoad, FmModernSettingsApply); break;
+    // **************** CuinZip P1-2 Modification End ****************
 
     case IDM_BENCHMARK: MyBenchmark(false); break;
     case IDM_BENCHMARK2: MyBenchmark(true); break;

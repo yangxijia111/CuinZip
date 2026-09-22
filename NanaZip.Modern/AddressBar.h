@@ -47,6 +47,17 @@ namespace winrt::NanaZip::Modern::implementation
             bool
         );
 
+        // CuinZip P1-2: 后退 / 前进导航按钮的启用状态
+        DEPENDENCY_PROPERTY_HEADER(
+            IsBackButtonEnabled,
+            bool
+        );
+
+        DEPENDENCY_PROPERTY_HEADER(
+            IsForwardButtonEnabled,
+            bool
+        );
+
         Mile::WinRT::Event<
             winrt::TypedEventHandler<
             winrt::NanaZip::Modern::AddressBar,
@@ -55,6 +66,13 @@ namespace winrt::NanaZip::Modern::implementation
 
         Mile::WinRT::Event<winrt::Windows::UI::Xaml::RoutedEventHandler>
             UpButtonClicked;
+
+        // CuinZip P1-2: 后退 / 前进按钮点击事件
+        Mile::WinRT::Event<winrt::Windows::UI::Xaml::RoutedEventHandler>
+            BackButtonClicked;
+
+        Mile::WinRT::Event<winrt::Windows::UI::Xaml::RoutedEventHandler>
+            ForwardButtonClicked;
 
         Mile::WinRT::Event<
             winrt::TypedEventHandler<
@@ -69,6 +87,8 @@ namespace winrt::NanaZip::Modern::implementation
         winrt::Popup
             m_popup{ nullptr };
         winrt::Button m_upButtonElement{ nullptr };
+        winrt::Button m_backButtonElement{ nullptr };
+        winrt::Button m_forwardButtonElement{ nullptr };
         winrt::ListView m_suggestionsList{ nullptr };
     };
 

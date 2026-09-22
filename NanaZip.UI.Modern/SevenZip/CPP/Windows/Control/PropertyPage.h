@@ -43,6 +43,11 @@ struct CPageInfo
 
 INT_PTR MyPropertySheet(const CObjectVector<CPageInfo> &pagesInfo, HWND hwndParent, const UString &title);
 
+// **************** CuinZip P1-2 Modification Start ****************
+// 支持指定起始属性页(Modern 设置窗口的经典设置入口按分类直达)。
+INT_PTR MyPropertySheet(const CObjectVector<CPageInfo> &pagesInfo, HWND hwndParent, const UString &title, unsigned startPage);
+// **************** CuinZip P1-2 Modification End ****************
+
 }}
 
 #endif

@@ -5,6 +5,9 @@
 #include "AddressBarQuerySubmittedEventArgs.g.cpp"
 
 #include <winrt/Windows.System.h>
+#include <winrt/Windows.UI.Xaml.Automation.h>
+
+#include "UiStrings.h"
 
 namespace winrt::NanaZip::Modern::implementation
 {
@@ -111,6 +114,82 @@ namespace winrt::NanaZip::Modern::implementation
                 }
             });
 
+        // CuinZip P1-2: 后退 / 前进导航按钮,点击事件由 Win32 面板侧
+        // 的导航历史处理;Tooltip 走 resw 本地化,英文兜底。
+        this->m_backButtonElement =
+            GetTemplateChild(L"BackButton")
+            .as<winrt::Button>();
+
+        if (this->m_backButtonElement)
+        {
+            winrt::hstring BackToolTip = winrt::NanaZip::Modern::GetUiString(
+                L"NavBackToolTip",
+                L"Back");
+            winrt::ToolTipService::SetToolTip(
+                this->m_backButtonElement,
+                box_value(BackToolTip));
+            winrt::Windows::UI::Xaml::Automation::AutomationProperties::SetName(
+                this->m_backButtonElement,
+                BackToolTip);
+
+            this->m_backButtonElement.Click(
+                [weak_this{ get_weak() }]
+                (
+                    auto&&,
+                    winrt::RoutedEventArgs const& args
+                    )
+                {
+                    if (auto strong_this{ weak_this.get() })
+                    {
+                        strong_this->BackButtonClicked(*strong_this, args);
+                    }
+                });
+        }
+
+        this->m_forwardButtonElement =
+            GetTemplateChild(L"ForwardButton")
+            .as<winrt::Button>();
+
+        if (this->m_forwardButtonElement)
+        {
+            winrt::hstring ForwardToolTip = winrt::NanaZip::Modern::GetUiString(
+                L"NavForwardToolTip",
+                L"Forward");
+            winrt::ToolTipService::SetToolTip(
+                this->m_forwardButtonElement,
+                box_value(ForwardToolTip));
+            winrt::Windows::UI::Xaml::Automation::AutomationProperties::SetName(
+                this->m_forwardButtonElement,
+                ForwardToolTip);
+
+            this->m_forwardButtonElement.Click(
+                [weak_this{ get_weak() }]
+                (
+                    auto&&,
+                    winrt::RoutedEventArgs const& args
+                    )
+                {
+                    if (auto strong_this{ weak_this.get() })
+                    {
+                        strong_this->ForwardButtonClicked(*strong_this, args);
+                    }
+                });
+        }
+
+        // CuinZip P1-2: 上一级按钮 Tooltip 同样接入本地化。
+        if (this->m_upButtonElement)
+        {
+            winrt::hstring UpToolTip = winrt::NanaZip::Modern::GetUiString(
+                L"NavUpToolTip",
+                L"Up one level");
+            winrt::ToolTipService::SetToolTip(
+                this->m_upButtonElement,
+                box_value(UpToolTip));
+            winrt::Windows::UI::Xaml::Automation::AutomationProperties::SetName(
+                this->m_upButtonElement,
+                UpToolTip);
+        }
+
         __super::OnApplyTemplate();
     }
 
@@ -213,6 +292,22 @@ namespace winrt::NanaZip::Modern::implementation
         AddressBar,
         winrt::NanaZip::Modern::AddressBar,
         true
+    );
+
+    DEPENDENCY_PROPERTY_SOURCE_BOX_WITHDEFAULT(
+        IsBackButtonEnabled,
+        bool,
+        AddressBar,
+        winrt::NanaZip::Modern::AddressBar,
+        false
+    );
+
+    DEPENDENCY_PROPERTY_SOURCE_BOX_WITHDEFAULT(
+        IsForwardButtonEnabled,
+        bool,
+        AddressBar,
+        winrt::NanaZip::Modern::AddressBar,
+        false
     );
 
     bool AddressBar::OpenSuggestionsPopup(

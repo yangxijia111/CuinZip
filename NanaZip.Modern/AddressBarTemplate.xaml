@@ -189,6 +189,11 @@
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="local:AddressBar">
+          <!--
+            CuinZip P1-2: 导航行 = 后退 / 前进 / 上一级 + 地址栏。
+            地址栏视觉简化:去掉独立边框按钮组,仅保留层级下拉箭头,
+            路径文本保持可编辑、可选中、可复制。
+          -->
           <Grid Margin="4,0">
             <Grid.Resources>
               <Style x:Name="DropDownButtonStyle" TargetType="Button">
@@ -198,10 +203,8 @@
                       <Grid
                         x:Name="ButtonLayoutGrid"
                         Margin="2,4,4,8"
-                        Background="{ThemeResource TextControlButtonBackground}"
+                        Background="Transparent"
                         BackgroundSizing="{TemplateBinding BackgroundSizing}"
-                        BorderBrush="{ThemeResource TextControlButtonBorderBrush}"
-                        BorderThickness="{TemplateBinding BorderThickness}"
                         CornerRadius="{ThemeResource ControlCornerRadius}">
                         <TextBlock
                           x:Name="GlyphElement"
@@ -219,10 +222,7 @@
                             <VisualState x:Name="PointerOver">
                               <Storyboard>
                                 <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ButtonLayoutGrid" Storyboard.TargetProperty="Background">
-                                  <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource TextControlButtonBackgroundPointerOver}" />
-                                </ObjectAnimationUsingKeyFrames>
-                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ButtonLayoutGrid" Storyboard.TargetProperty="BorderBrush">
-                                  <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource TextControlButtonBorderBrushPointerOver}" />
+                                  <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource SubtleFillColorSecondaryBrush}" />
                                 </ObjectAnimationUsingKeyFrames>
                                 <ObjectAnimationUsingKeyFrames Storyboard.TargetName="GlyphElement" Storyboard.TargetProperty="Foreground">
                                   <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource TextControlButtonForegroundPointerOver}" />
@@ -232,10 +232,7 @@
                             <VisualState x:Name="Pressed">
                               <Storyboard>
                                 <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ButtonLayoutGrid" Storyboard.TargetProperty="Background">
-                                  <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource TextControlButtonBackgroundPressed}" />
-                                </ObjectAnimationUsingKeyFrames>
-                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ButtonLayoutGrid" Storyboard.TargetProperty="BorderBrush">
-                                  <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource TextControlButtonBorderBrushPressed}" />
+                                  <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource SubtleFillColorTertiaryBrush}" />
                                 </ObjectAnimationUsingKeyFrames>
                                 <ObjectAnimationUsingKeyFrames Storyboard.TargetName="GlyphElement" Storyboard.TargetProperty="Foreground">
                                   <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource TextControlButtonForegroundPressed}" />
@@ -258,25 +255,65 @@
                   </Setter.Value>
                 </Setter>
               </Style>
+              <!--
+                CuinZip P1-2: 导航按钮统一样式 — 无边框、悬停时出现
+                Subtle 填充,Light / Dark 均走主题资源。
+              -->
+              <Style x:Name="NavButtonStyle" TargetType="Button">
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="CornerRadius" Value="{ThemeResource ControlCornerRadius}" />
+                <Setter Property="Padding" Value="0" />
+              </Style>
             </Grid.Resources>
             <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="Auto" />
               <ColumnDefinition Width="Auto" />
               <ColumnDefinition Width="24" />
               <ColumnDefinition Width="*" />
               <ColumnDefinition Width="30" />
             </Grid.ColumnDefinitions>
             <Button
+              x:Name="BackButton"
+              Grid.Column="0"
+              Width="36"
+              Height="32"
+              Margin="0,0,2,0"
+              HorizontalContentAlignment="Center"
+              VerticalContentAlignment="Center"
+              Content="&#xE72B;"
+              FontFamily="{StaticResource SymbolThemeFontFamily}"
+              FontSize="12"
+              IsEnabled="{TemplateBinding IsBackButtonEnabled}"
+              Style="{StaticResource NavButtonStyle}" />
+            <Button
+              x:Name="ForwardButton"
+              Grid.Column="1"
+              Width="36"
+              Height="32"
+              Margin="0,0,2,0"
+              HorizontalContentAlignment="Center"
+              VerticalContentAlignment="Center"
+              Content="&#xE72A;"
+              FontFamily="{StaticResource SymbolThemeFontFamily}"
+              FontSize="12"
+              IsEnabled="{TemplateBinding IsForwardButtonEnabled}"
+              Style="{StaticResource NavButtonStyle}" />
+            <Button
               x:Name="UpButton"
-              Width="48"
+              Grid.Column="2"
+              Width="36"
               Height="32"
               Margin="0,0,4,0"
-              Padding="0"
-              VerticalAlignment="Top"
+              HorizontalContentAlignment="Center"
+              VerticalContentAlignment="Center"
               Content="&#xE74A;"
               FontFamily="{StaticResource SymbolThemeFontFamily}"
               FontSize="12"
-              IsEnabled="{TemplateBinding IsUpButtonEnabled}" />
-            <RelativePanel Grid.Column="1" Grid.ColumnSpan="3">
+              IsEnabled="{TemplateBinding IsUpButtonEnabled}"
+              Style="{StaticResource NavButtonStyle}" />
+            <RelativePanel Grid.Column="3" Grid.ColumnSpan="3">
               <TextBox
                 x:Name="TextBoxElement"
                 RelativePanel.AlignLeftWithPanel="True"
@@ -315,14 +352,14 @@
             </RelativePanel>
             <Image
               x:Name="IconElement"
-              Grid.Column="1"
+              Grid.Column="3"
               Width="16"
               Height="16"
               Margin="{StaticResource AddressBarImageIconMargin}"
               Source="{x:Bind IconSource, Mode=OneWay}" />
             <Button
               x:Name="DropDownButton"
-              Grid.Column="3"
+              Grid.Column="5"
               Width="30"
               Padding="{ThemeResource HelperButtonThemePadding}"
               VerticalAlignment="Stretch"
