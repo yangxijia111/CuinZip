@@ -1,10 +1,10 @@
 # CuinZip Progress
 
 ## Current Phase
-P1-3 Compression / Extraction / Progress UX Modernization
+P1-4 Settings / File Associations / Explorer Context Menu(系统集成体验)
 
 ## Status
-DONE(2026-09-22;Modern MSIX 部署实测仍因 Developer Mode 未开启阻塞,其余全部完成)
+IN PROGRESS(2026-09-23,安全标签 `p1-4-pre-integration`,基线 `723d047a`)
 
 ## Completed
 - P0-1 Fork / Git / License Audit
@@ -34,7 +34,59 @@ DONE(2026-09-22;Modern MSIX 部署实测仍因 Developer Mode 未开启阻塞,�
   - RefreshVersion 自动改动（Version.props / manifest 版本号）已回滚，未污染 Git
 
 ## Current Task
-无（P1-3 完成，建议进入 P1-4：设置 / 文件关联 / Explorer 右键菜单完善）
+P1-4 Settings / File Associations / Explorer Context Menu 实施中(实现已完成,
+验证与构建进行中)
+
+## P1-4 Settings / File Associations / Explorer Context Menu
+IN PROGRESS(2026-09-23,安全标签 `p1-4-pre-integration`,基线 `723d047a`,
+计划见 `Docs/CUINZIP_UI_PLAN.md` P1-4 节):
+- **Settings 全分类真实化**:Modern 设置窗口 8 个分类全部接入真实配置源
+  (经宿主回调读写,Modern DLL 不直接访问注册表,无第二套设置):
+  General/Appearance → `CFmSettings`(即时生效);Compression →
+  `NCompression::CInfo`(压缩对话框同一处,默认格式/级别);Extraction →
+  `NExtract::CInfo`(解压对话框同一处,路径模式/覆盖模式/完成后打开文件夹);
+  Context Menu → `CContextMenuInfo`(Shell 扩展实时读取的同一注册表);
+  File Associations 状态经 `K7ModernQueryFileAssociation` 只读查询
+  Windows 官方 UserChoice / Progid,变更默认应用一律走 Windows 设置
+  (ms-settings:defaultapps?registeredAUMID=...,不绕过 Windows 11 用户确认)
+- **Context Menu 设置真实驱动 Shell**:13 个菜单项开关 + 二级菜单模式 +
+  消除重复文件夹 + 打开时解压,全部直写 `CContextMenuInfo`;写入后下一次
+  右键即生效(Shell 扩展每次弹出菜单时重新读取)
+- **右键菜单双模式**:二级菜单模式(默认)= 单个 CuinZip 子菜单;平铺模式
+  = 6 个高频项(Open with CuinZip / Extract Here / Extract to <archive>\ /
+  Add to archive... / Add to .7z / Add to .zip)直接出现在一级菜单。
+  两种模式经同一组设置开关 + 选择场景(文件/文件夹/压缩包/多选)由
+  `GetState(ECS_HIDDEN)` 实时过滤;6 个平铺动词使用全新 CuinZip 自有 CLSID
+  (与上游 NanaZip 不重复,理论可共存),manifest 已注册(*/Directory/Drive)
+- **本地化**:`SettingsPage.resw` 扩充至 96 键(en + zh-Hans,其余回退
+  English);右键菜单新字符串(Open with CuinZip / Hash 组)进入
+  Explorer STRINGTABLE(与既有菜单字符串同一本地化机制)
+- **实现备注**:Settings 页继续沿用 P1-2 的纯代码构建 UI 模式;新导出
+  `K7ModernQueryFileAssociation` / `K7ModernLaunchDefaultAppsSettings`;
+  设置回调 ABI 收敛为 `K7_MODERN_SETTINGS_CALLBACKS` 结构(仅 FM 调用,
+  无外部消费者)
+- **验证(2026-09-23)**:
+  - 构建:BuildAllTargets(Debug+Release × x64+arm64 + MSIX bundle)0 错误;
+    MSIX 包内 manifest 验证:7 个动词(1 根 + 6 平铺)× 3 ItemType、
+    6 个新 CLSID、fileTypeAssociation / comServer / fileExplorerContextMenus
+    全部就位;RefreshVersion 自动改动已回滚
+  - Settings 页 UIA 驱动 18/18 PASS(Universal exe 临时钩子承载 XAML 环境,
+    钩子已验证后移除):8 分类导航、General/Compression/Extraction/Context
+    Menu/File Associations 全部开关与组合框均正确写真实配置源(回调结构值
+    逐一断言);关联列表实时显示各扩展名当前默认应用
+  - Shell 扩展 COM 驱动测试 43/43 PASS(DllGetClassObject 直接创建各动词 +
+    真实 IShellItemArray):二级菜单模式(18 子命令/根项显隐)、平铺模式
+    (6 动词显隐/标题/图标)、设置开关实时过滤、多选、Invoke 全链路
+    (Add to ZIP 多文件 / Add to 7z / Extract Here / Extract to Folder /
+    Open),压缩解压 SHA-256 一致
+  - 文件关联 9/9 PASS:每用户 Progid 注册后 `.7z`/`.zip` 双击经关联拉起
+    CuinZip;查询函数如实反映 Windows 真实状态(UserChoice 受保护,
+    不谎报、不抢占);自有扩展名 Progid 场景正确报告 CuinZip 为默认;
+    测试注册已清理,不留失效关联
+  - CLI 矩阵 PASS:.7z / .zip / .7z(AES+加密文件名)压缩解压 SHA-256 一致
+  - Classic UI 冒烟 PASS(标题 CuinZip);MSIX 部署仍受 Developer Mode
+    关闭阻塞(不修改系统策略)
+
 
 ## P1-3 Compression / Extraction / Progress UX Modernization
 DONE（2026-09-22，安全标签 `p1-3-pre-dialogs`，基线 `dfe3ae8c`，

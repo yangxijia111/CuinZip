@@ -10,10 +10,13 @@
 
 #include <shlobj.h>
 
+#include <cstring>
+#include <string>
+
 #include <winrt/Windows.UI.Text.h>
 #include <winrt/Windows.UI.Xaml.Media.h>
 
-// CuinZip P1-2: 经典设置页入口命令 ID。
+// CuinZip P1-4: 经典设置页入口命令 ID。
 // 与 FileManager(App.h)侧的 kMenuCmdID_Toolbar_Legacy_* 常量保持一致,
 // 通过 WM_COMMAND 投递到主窗口,由 ExecuteCommand 打开对应属性表页。
 namespace
@@ -38,12 +41,114 @@ namespace
         CategoryAdvanced,
         CategoryAbout
     };
+
+    // 压缩默认格式(值与压缩对话框的 ArcType 一致)。
+    struct CompressionFormatItem
+    {
+        std::wstring_view Key;
+        std::wstring_view Fallback;
+        std::wstring_view ArcType;
+    };
+
+    CompressionFormatItem const kCompressionFormats[] =
+    {
+        { L"SettingsPage/Format7z.Text",    L"7z",   L"7z"   },
+        { L"SettingsPage/FormatZip.Text",   L"zip",  L"Zip"  },
+        { L"SettingsPage/FormatTar.Text",   L"tar",  L"Tar"  },
+        { L"SettingsPage/FormatGzip.Text",  L"gzip", L"GZip" },
+        { L"SettingsPage/FormatBzip2.Text", L"bzip2",L"BZip2"},
+        { L"SettingsPage/FormatXz.Text",    L"xz",   L"xz"   },
+    };
+
+    // 压缩级别(值与压缩对话框一致:0/1/3/5/7/9)。
+    struct CompressionLevelItem
+    {
+        std::wstring_view Key;
+        std::wstring_view Fallback;
+        int Level;
+    };
+
+    CompressionLevelItem const kCompressionLevels[] =
+    {
+        { L"SettingsPage/LevelStore.Text",   L"Store",   0 },
+        { L"SettingsPage/LevelFastest.Text", L"Fastest", 1 },
+        { L"SettingsPage/LevelFast.Text",    L"Fast",    3 },
+        { L"SettingsPage/LevelNormal.Text",  L"Normal",  5 },
+        { L"SettingsPage/LevelMaximum.Text", L"Maximum", 7 },
+        { L"SettingsPage/LevelUltra.Text",   L"Ultra",   9 },
+    };
+
+    // 解压路径模式(NExtract::NPathMode::EEnum,与解压对话框一致)。
+    struct ExtractionPathModeItem
+    {
+        std::wstring_view Key;
+        std::wstring_view Fallback;
+        int Value;
+    };
+
+    ExtractionPathModeItem const kExtractionPathModes[] =
+    {
+        { L"SettingsPage/PathModeFull.Text", L"Full pathnames",       0 },
+        { L"SettingsPage/PathModeNo.Text",   L"No pathnames",         2 },
+        { L"SettingsPage/PathModeAbs.Text",  L"Absolute pathnames",   3 },
+    };
+
+    // 覆盖模式(NExtract::NOverwriteMode::EEnum,与解压对话框一致)。
+    struct ExtractionOverwriteItem
+    {
+        std::wstring_view Key;
+        std::wstring_view Fallback;
+        int Value;
+    };
+
+    ExtractionOverwriteItem const kExtractionOverwriteModes[] =
+    {
+        { L"SettingsPage/OverwriteAsk.Text",        L"Ask before overwrite",           0 },
+        { L"SettingsPage/OverwriteAlways.Text",     L"Overwrite without prompt",       1 },
+        { L"SettingsPage/OverwriteSkip.Text",       L"Skip existing files",            2 },
+        { L"SettingsPage/OverwriteRename.Text",     L"Auto rename",                    3 },
+        { L"SettingsPage/OverwriteRenameOld.Text",  L"Auto rename existing files",     4 },
+    };
+
+    // 文件关联分类展示的常见格式(MSIX 声明的完整集合以包清单为准)。
+    wchar_t const* const kCommonAssociationExtensions[] =
+    {
+        L".7z",  L".zip",  L".rar",  L".tar",  L".gz",   L".tgz",
+        L".bz2", L".tbz2", L".xz",   L".txz",  L".zst",  L".lz4",
+        L".iso", L".cab",  L".wim",  L".arj",  L".lzh",  L".001",
+    };
+
+    template <typename T, std::size_t N>
+    constexpr std::size_t ArraySize(T const (&)[N]) noexcept
+    {
+        return N;
+    }
+
+    std::wstring ReplaceAll(
+        std::wstring Text,
+        std::wstring const& From,
+        std::wstring const& To)
+    {
+        if (From.empty())
+        {
+            return Text;
+        }
+        std::size_t Position = 0;
+        while ((Position = Text.find(From, Position)) != std::wstring::npos)
+        {
+            Text.replace(Position, From.length(), To);
+            Position += To.length();
+        }
+        return Text;
+    }
 }
 
 namespace winrt
 {
     using Windows::UI::Xaml::Controls::Button;
     using Windows::UI::Xaml::Controls::ColumnDefinition;
+    using Windows::UI::Xaml::Controls::ComboBox;
+    using Windows::UI::Xaml::Controls::ComboBoxItem;
     using Windows::UI::Xaml::Controls::FontIcon;
     using Windows::UI::Xaml::Controls::Grid;
     using Windows::UI::Xaml::Controls::ListView;
@@ -118,23 +223,46 @@ namespace winrt::NanaZip::Modern::implementation
 {
     SettingsPage::SettingsPage(
         _In_opt_ HWND WindowHandle,
-        _In_opt_ K7_MODERN_SETTINGS_LOAD_CALLBACK LoadCallback,
-        _In_opt_ K7_MODERN_SETTINGS_APPLY_CALLBACK ApplyCallback) :
-        m_WindowHandle(WindowHandle),
-        m_LoadCallback(LoadCallback),
-        m_ApplyCallback(ApplyCallback)
+        _In_opt_ const K7_MODERN_SETTINGS_CALLBACKS* Callbacks) :
+        m_WindowHandle(WindowHandle)
     {
+        if (Callbacks)
+        {
+            m_Callbacks = *Callbacks;
+        }
         this->InitializeComponent();
+    }
+
+    void SettingsPage::LoadHostSettings()
+    {
+        if (m_Callbacks.Load)
+        {
+            m_Callbacks.Load(&m_Appearance);
+        }
+        if (m_Callbacks.ContextMenuLoad)
+        {
+            m_Callbacks.ContextMenuLoad(&m_ContextMenu);
+        }
+        if (m_Callbacks.CompressionLoad)
+        {
+            m_Callbacks.CompressionLoad(&m_Compression);
+        }
+        if (m_Callbacks.ExtractionLoad)
+        {
+            m_Callbacks.ExtractionLoad(&m_Extraction);
+        }
     }
 
     void SettingsPage::InitializeComponent()
     {
         using namespace winrt;
 
+        this->LoadHostSettings();
+
         // ================== 根布局:左右两栏 ==================
         Grid root;
         ColumnDefinition leftColumn;
-        leftColumn.Width(GridLengthHelper::FromPixels(200));
+        leftColumn.Width(GridLengthHelper::FromPixels(220));
         ColumnDefinition rightColumn;
         rightColumn.Width(GridLengthHelper::FromValueAndType(1, GridUnitType::Star));
         root.ColumnDefinitions().Append(leftColumn);
@@ -210,7 +338,7 @@ namespace winrt::NanaZip::Modern::implementation
         content.Margin(LengthsThickness(20, 16, 20, 20));
         content.Spacing(8);
 
-        // ---------- General ----------
+        // ---------- General(CFmSettings 真实配置源) ----------
         m_Panels[CategoryGeneral] = StackPanel();
         {
             auto& panel = m_Panels[CategoryGeneral];
@@ -221,8 +349,40 @@ namespace winrt::NanaZip::Modern::implementation
                 18, true, false, UniformThickness(0)));
             panel.Children().Append(MakeText(
                 L"SettingsPage/GeneralDescription.Text",
-                L"Core file manager behavior options are currently provided by the classic settings pages.",
+                L"Core file manager behavior options. Changes are saved immediately.",
                 0, false, true, UniformThickness(0)));
+
+            m_ShowSystemMenuToggle = this->BuildToggle(
+                panel,
+                L"SettingsPage/ShowSystemMenuToggle.Header",
+                L"Show system menu",
+                m_Appearance.ShowSystemMenu != FALSE,
+                [this]() { this->ApplyAppearanceSettings(); });
+            m_ArcHistoryToggle = this->BuildToggle(
+                panel,
+                L"SettingsPage/ArcHistoryToggle.Header",
+                L"Keep archive history",
+                m_Appearance.ArcHistory != FALSE,
+                [this]() { this->ApplyAppearanceSettings(); });
+            m_PathHistoryToggle = this->BuildToggle(
+                panel,
+                L"SettingsPage/PathHistoryToggle.Header",
+                L"Keep path history",
+                m_Appearance.PathHistory != FALSE,
+                [this]() { this->ApplyAppearanceSettings(); });
+            m_CopyHistoryToggle = this->BuildToggle(
+                panel,
+                L"SettingsPage/CopyHistoryToggle.Header",
+                L"Keep copy history",
+                m_Appearance.CopyHistory != FALSE,
+                [this]() { this->ApplyAppearanceSettings(); });
+            m_FolderHistoryToggle = this->BuildToggle(
+                panel,
+                L"SettingsPage/FolderHistoryToggle.Header",
+                L"Keep folder history",
+                m_Appearance.FolderHistory != FALSE,
+                [this]() { this->ApplyAppearanceSettings(); });
+
             this->BuildButton(
                 panel,
                 L"SettingsPage/GeneralLegacyButton.Content",
@@ -231,7 +391,7 @@ namespace winrt::NanaZip::Modern::implementation
         }
         content.Children().Append(m_Panels[CategoryGeneral]);
 
-        // ---------- Compression ----------
+        // ---------- Compression(NCompression::CInfo 真实配置源) ----------
         m_Panels[CategoryCompression] = StackPanel();
         {
             auto& panel = m_Panels[CategoryCompression];
@@ -242,12 +402,61 @@ namespace winrt::NanaZip::Modern::implementation
                 18, true, false, UniformThickness(0)));
             panel.Children().Append(MakeText(
                 L"SettingsPage/CompressionDescription.Text",
-                L"Compression options are configured in the archive creation dialog. More options will be available in a future update.",
+                L"Default format and compression level for the Add to Archive dialog. Detailed options are available in the archive creation dialog.",
+                0, false, true, UniformThickness(0)));
+
+            std::vector<std::pair<std::wstring, int>> formatItems;
+            int selectedFormat = 0;
+            for (std::size_t i = 0; i < ArraySize(kCompressionFormats); ++i)
+            {
+                auto const& Item = kCompressionFormats[i];
+                formatItems.push_back(std::make_pair(
+                    std::wstring(
+                        winrt::NanaZip::Modern::GetUiString(Item.Key, Item.Fallback)),
+                    static_cast<int>(i)));
+                if (m_Compression.ArchiveType == Item.ArcType)
+                {
+                    selectedFormat = static_cast<int>(i);
+                }
+            }
+            m_FormatCombo = this->BuildCombo(
+                panel,
+                L"SettingsPage/FormatComboHeader.Text",
+                L"Default archive format",
+                formatItems,
+                selectedFormat,
+                [this]() { this->ApplyCompressionSettings(); });
+
+            std::vector<std::pair<std::wstring, int>> levelItems;
+            int selectedLevel = 3;
+            for (std::size_t i = 0; i < ArraySize(kCompressionLevels); ++i)
+            {
+                auto const& Item = kCompressionLevels[i];
+                levelItems.push_back(std::make_pair(
+                    std::wstring(
+                        winrt::NanaZip::Modern::GetUiString(Item.Key, Item.Fallback)),
+                    Item.Level));
+                if (static_cast<int>(m_Compression.Level) == Item.Level)
+                {
+                    selectedLevel = static_cast<int>(i);
+                }
+            }
+            m_LevelCombo = this->BuildCombo(
+                panel,
+                L"SettingsPage/LevelComboHeader.Text",
+                L"Default compression level",
+                levelItems,
+                selectedLevel,
+                [this]() { this->ApplyCompressionSettings(); });
+
+            panel.Children().Append(MakeText(
+                L"SettingsPage/CompressionNote.Text",
+                L"New defaults apply to the next Add to Archive dialog.",
                 0, false, true, UniformThickness(0)));
         }
         content.Children().Append(m_Panels[CategoryCompression]);
 
-        // ---------- Extraction ----------
+        // ---------- Extraction(NExtract::CInfo 真实配置源) ----------
         m_Panels[CategoryExtraction] = StackPanel();
         {
             auto& panel = m_Panels[CategoryExtraction];
@@ -258,8 +467,65 @@ namespace winrt::NanaZip::Modern::implementation
                 18, true, false, UniformThickness(0)));
             panel.Children().Append(MakeText(
                 L"SettingsPage/ExtractionDescription.Text",
-                L"Choose where extracted files are placed and how extraction integrates with your system.",
+                L"Default destination and overwrite behavior for the Extract dialog.",
                 0, false, true, UniformThickness(0)));
+
+            std::vector<std::pair<std::wstring, int>> pathModeItems;
+            int selectedPathMode = 0;
+            for (std::size_t i = 0; i < ArraySize(kExtractionPathModes); ++i)
+            {
+                auto const& Item = kExtractionPathModes[i];
+                pathModeItems.push_back(std::make_pair(
+                    std::wstring(
+                        winrt::NanaZip::Modern::GetUiString(Item.Key, Item.Fallback)),
+                    Item.Value));
+                if (static_cast<int>(m_Extraction.PathMode) == Item.Value)
+                {
+                    selectedPathMode = static_cast<int>(i);
+                }
+            }
+            m_PathModeCombo = this->BuildCombo(
+                panel,
+                L"SettingsPage/PathModeComboHeader.Text",
+                L"Default path mode",
+                pathModeItems,
+                selectedPathMode,
+                [this]() { this->ApplyExtractionSettings(); });
+
+            std::vector<std::pair<std::wstring, int>> overwriteItems;
+            int selectedOverwrite = 0;
+            for (std::size_t i = 0; i < ArraySize(kExtractionOverwriteModes); ++i)
+            {
+                auto const& Item = kExtractionOverwriteModes[i];
+                overwriteItems.push_back(std::make_pair(
+                    std::wstring(
+                        winrt::NanaZip::Modern::GetUiString(Item.Key, Item.Fallback)),
+                    Item.Value));
+                if (static_cast<int>(m_Extraction.OverwriteMode) == Item.Value)
+                {
+                    selectedOverwrite = static_cast<int>(i);
+                }
+            }
+            m_OverwriteModeCombo = this->BuildCombo(
+                panel,
+                L"SettingsPage/OverwriteComboHeader.Text",
+                L"Default overwrite mode",
+                overwriteItems,
+                selectedOverwrite,
+                [this]() { this->ApplyExtractionSettings(); });
+
+            m_OpenFolderToggle = this->BuildToggle(
+                panel,
+                L"SettingsPage/OpenFolderToggle.Header",
+                L"Open folder after extraction",
+                m_Extraction.OpenFolderAfterExtraction != FALSE,
+                [this]() { this->ApplyExtractionSettings(); });
+
+            panel.Children().Append(MakeText(
+                L"SettingsPage/ExtractionNote.Text",
+                L"New defaults apply to the next Extract dialog.",
+                0, false, true, UniformThickness(0)));
+
             this->BuildButton(
                 panel,
                 L"SettingsPage/ExtractionFoldersButton.Content",
@@ -273,7 +539,7 @@ namespace winrt::NanaZip::Modern::implementation
         }
         content.Children().Append(m_Panels[CategoryExtraction]);
 
-        // ---------- File Associations ----------
+        // ---------- File Associations(只读状态 + 官方设置入口) ----------
         m_Panels[CategoryFileAssociations] = StackPanel();
         {
             auto& panel = m_Panels[CategoryFileAssociations];
@@ -286,6 +552,29 @@ namespace winrt::NanaZip::Modern::implementation
                 L"SettingsPage/FileAssociationsDescription.Text",
                 L"Choose which file types open with CuinZip. Associations are managed by Windows.",
                 0, false, true, UniformThickness(0)));
+
+            m_ExtractOnOpenToggle = this->BuildToggle(
+                panel,
+                L"SettingsPage/ExtractOnOpenToggle.Header",
+                L"Extract archives to a temporary folder when opening them",
+                m_ContextMenu.ExtractOnOpen != FALSE,
+                [this]() { this->ApplyContextMenuSettings(); });
+
+            panel.Children().Append(MakeText(
+                L"SettingsPage/AssocListHeader.Text",
+                L"Common archive formats",
+                14, true, false, LengthsThickness(0, 12, 0, 0)));
+
+            m_AssociationList = ListView();
+            m_AssociationList.SelectionMode(ListViewSelectionMode::None);
+            m_AssociationList.MaxHeight(280);
+            panel.Children().Append(m_AssociationList);
+
+            this->BuildButton(
+                panel,
+                L"SettingsPage/AssocRefreshButton.Content",
+                L"Refresh status",
+                { this, &SettingsPage::FileAssociationsRefreshButtonClick });
             this->BuildButton(
                 panel,
                 L"SettingsPage/FileAssociationsSystemButton.Content",
@@ -299,24 +588,126 @@ namespace winrt::NanaZip::Modern::implementation
         }
         content.Children().Append(m_Panels[CategoryFileAssociations]);
 
-        // ---------- Context Menu ----------
+        // ---------- Context Menu(CContextMenuInfo 真实配置源) ----------
         m_Panels[CategoryContextMenu] = StackPanel();
         {
             auto& panel = m_Panels[CategoryContextMenu];
-            panel.Spacing(8);
+            panel.Spacing(4);
             panel.Visibility(Visibility::Collapsed);
             panel.Children().Append(MakeText(
                 L"SettingsPage/ContextMenuTitle.Text", L"Context Menu",
                 18, true, false, UniformThickness(0)));
             panel.Children().Append(MakeText(
                 L"SettingsPage/ContextMenuDescription.Text",
-                L"Configure the entries shown in the Windows Explorer context menu.",
+                L"Configure the entries shown in the Windows Explorer context menu. Changes apply the next time you right-click.",
                 0, false, true, UniformThickness(0)));
-            this->BuildButton(
+
+            m_CtxOpenToggle = this->BuildToggle(
                 panel,
-                L"SettingsPage/ContextMenuLegacyButton.Content",
-                L"Open classic settings (Context menu)",
-                { this, &SettingsPage::ContextMenuLegacyButtonClick });
+                L"SettingsPage/CtxOpenToggle.Header",
+                L"Open archive",
+                m_ContextMenu.ShowOpen != FALSE,
+                [this]() { this->ApplyContextMenuSettings(); });
+            m_CtxExtractHereToggle = this->BuildToggle(
+                panel,
+                L"SettingsPage/CtxExtractHereToggle.Header",
+                L"Extract Here",
+                m_ContextMenu.ShowExtractHere != FALSE,
+                [this]() { this->ApplyContextMenuSettings(); });
+            m_CtxExtractToToggle = this->BuildToggle(
+                panel,
+                L"SettingsPage/CtxExtractToToggle.Header",
+                L"Extract to <folder>",
+                m_ContextMenu.ShowExtractTo != FALSE,
+                [this]() { this->ApplyContextMenuSettings(); });
+            m_CtxCompressToggle = this->BuildToggle(
+                panel,
+                L"SettingsPage/CtxCompressToggle.Header",
+                L"Add to archive...",
+                m_ContextMenu.ShowCompress != FALSE,
+                [this]() { this->ApplyContextMenuSettings(); });
+            m_CtxCompressTo7zToggle = this->BuildToggle(
+                panel,
+                L"SettingsPage/CtxCompressTo7zToggle.Header",
+                L"Add to <archive>.7z",
+                m_ContextMenu.ShowCompressTo7z != FALSE,
+                [this]() { this->ApplyContextMenuSettings(); });
+            m_CtxCompressToZipToggle = this->BuildToggle(
+                panel,
+                L"SettingsPage/CtxCompressToZipToggle.Header",
+                L"Add to <archive>.zip",
+                m_ContextMenu.ShowCompressToZip != FALSE,
+                [this]() { this->ApplyContextMenuSettings(); });
+
+            panel.Children().Append(MakeText(
+                L"SettingsPage/ContextMenuMoreHeader.Text",
+                L"More items",
+                14, true, false, LengthsThickness(0, 12, 0, 0)));
+
+            m_CtxTestToggle = this->BuildToggle(
+                panel,
+                L"SettingsPage/CtxTestToggle.Header",
+                L"Test archive",
+                m_ContextMenu.ShowTest != FALSE,
+                [this]() { this->ApplyContextMenuSettings(); });
+            m_CtxExtractToggle = this->BuildToggle(
+                panel,
+                L"SettingsPage/CtxExtractToggle.Header",
+                L"Extract files...",
+                m_ContextMenu.ShowExtract != FALSE,
+                [this]() { this->ApplyContextMenuSettings(); });
+            m_CtxExtractHereSmartToggle = this->BuildToggle(
+                panel,
+                L"SettingsPage/CtxExtractHereSmartToggle.Header",
+                L"Extract Here (Smart)",
+                m_ContextMenu.ShowExtractHereSmart != FALSE,
+                [this]() { this->ApplyContextMenuSettings(); });
+            m_CtxCompressEmailToggle = this->BuildToggle(
+                panel,
+                L"SettingsPage/CtxCompressEmailToggle.Header",
+                L"Compress and email...",
+                m_ContextMenu.ShowCompressEmail != FALSE,
+                [this]() { this->ApplyContextMenuSettings(); });
+            m_CtxCompressTo7zEmailToggle = this->BuildToggle(
+                panel,
+                L"SettingsPage/CtxCompressTo7zEmailToggle.Header",
+                L"Compress to <archive>.7z and email",
+                m_ContextMenu.ShowCompressTo7zEmail != FALSE,
+                [this]() { this->ApplyContextMenuSettings(); });
+            m_CtxCompressToZipEmailToggle = this->BuildToggle(
+                panel,
+                L"SettingsPage/CtxCompressToZipEmailToggle.Header",
+                L"Compress to <archive>.zip and email",
+                m_ContextMenu.ShowCompressToZipEmail != FALSE,
+                [this]() { this->ApplyContextMenuSettings(); });
+            m_CtxHashToggle = this->BuildToggle(
+                panel,
+                L"SettingsPage/CtxHashToggle.Header",
+                L"Hash (CRC / SHA)",
+                m_ContextMenu.ShowHash != FALSE,
+                [this]() { this->ApplyContextMenuSettings(); });
+            m_CtxElimDupToggle = this->BuildToggle(
+                panel,
+                L"SettingsPage/CtxElimDupToggle.Header",
+                L"Eliminate duplicate folders",
+                m_ContextMenu.EliminateDuplicateFiles != FALSE,
+                [this]() { this->ApplyContextMenuSettings(); });
+
+            panel.Children().Append(MakeText(
+                L"SettingsPage/ContextMenuLayoutHeader.Text",
+                L"Menu layout",
+                14, true, false, LengthsThickness(0, 12, 0, 0)));
+
+            m_CtxCascadedToggle = this->BuildToggle(
+                panel,
+                L"SettingsPage/CtxCascadedToggle.Header",
+                L"Show all items under one CuinZip submenu",
+                m_ContextMenu.CascadedMenu != FALSE,
+                [this]() { this->ApplyContextMenuSettings(); });
+            panel.Children().Append(MakeText(
+                L"SettingsPage/ContextMenuCascadedNote.Text",
+                L"When off, the most common items appear directly in the context menu.",
+                0, false, true, UniformThickness(0)));
         }
         content.Children().Append(m_Panels[CategoryContextMenu]);
 
@@ -334,43 +725,42 @@ namespace winrt::NanaZip::Modern::implementation
                 L"Changes apply immediately to the file lists.",
                 0, false, true, UniformThickness(0)));
 
-            // 初始化期间 Toggled 被抑制,直接按当前设置构建开关。
-            K7_MODERN_APPEARANCE_SETTINGS settings = {};
-            if (this->m_LoadCallback)
-            {
-                this->m_LoadCallback(&settings);
-            }
-
             m_ShowDotsToggle = this->BuildToggle(
                 panel,
                 L"SettingsPage/ShowDotsToggle.Header",
                 L"Show \"..\" item",
-                settings.ShowDots != FALSE);
+                m_Appearance.ShowDots != FALSE,
+                [this]() { this->ApplyAppearanceSettings(); });
             m_ShowRealFileIconsToggle = this->BuildToggle(
                 panel,
                 L"SettingsPage/ShowRealFileIconsToggle.Header",
                 L"Show real file icons",
-                settings.ShowRealFileIcons != FALSE);
+                m_Appearance.ShowRealFileIcons != FALSE,
+                [this]() { this->ApplyAppearanceSettings(); });
             m_FullRowToggle = this->BuildToggle(
                 panel,
                 L"SettingsPage/FullRowToggle.Header",
                 L"Full row select",
-                settings.FullRow != FALSE);
+                m_Appearance.FullRow != FALSE,
+                [this]() { this->ApplyAppearanceSettings(); });
             m_ShowGridToggle = this->BuildToggle(
                 panel,
                 L"SettingsPage/ShowGridToggle.Header",
                 L"Show grid lines",
-                settings.ShowGrid != FALSE);
+                m_Appearance.ShowGrid != FALSE,
+                [this]() { this->ApplyAppearanceSettings(); });
             m_SingleClickToggle = this->BuildToggle(
                 panel,
                 L"SettingsPage/SingleClickToggle.Header",
                 L"Single-click to open an item",
-                settings.SingleClick != FALSE);
+                m_Appearance.SingleClick != FALSE,
+                [this]() { this->ApplyAppearanceSettings(); });
             m_AlternativeSelectionToggle = this->BuildToggle(
                 panel,
                 L"SettingsPage/AlternativeSelectionToggle.Header",
                 L"Alternative selection mode",
-                settings.AlternativeSelection != FALSE);
+                m_Appearance.AlternativeSelection != FALSE,
+                [this]() { this->ApplyAppearanceSettings(); });
 
             this->BuildButton(
                 panel,
@@ -452,6 +842,13 @@ namespace winrt::NanaZip::Modern::implementation
             return;
         }
         this->ShowCategory(index);
+
+        // 文件关联状态可能在设置窗口外被 Windows 更改,每次进入该分类
+        // 都重新查询,保证展示的是实时状态。
+        if (index == CategoryFileAssociations)
+        {
+            this->RefreshFileAssociationList();
+        }
     }
 
     void SettingsPage::ShowCategory(int index)
@@ -474,16 +871,79 @@ namespace winrt::NanaZip::Modern::implementation
         winrt::Windows::UI::Xaml::Controls::Panel const& parent,
         std::wstring_view const& headerKey,
         std::wstring_view const& headerFallback,
-        bool isOn)
+        bool isOn,
+        std::function<void()> const& applyHandler)
     {
         winrt::Windows::UI::Xaml::Controls::ToggleSwitch toggle;
         toggle.Header(winrt::box_value(
             winrt::NanaZip::Modern::GetUiString(headerKey, headerFallback)));
         toggle.Margin(winrt::Windows::UI::Xaml::ThicknessHelper::FromLengths(0, 4, 0, 0));
         toggle.IsOn(isOn);
-        toggle.Toggled({ this, &SettingsPage::AppearanceToggleToggled });
+        toggle.Toggled([this, applyHandler](
+            winrt::IInspectable const&,
+            winrt::Windows::UI::Xaml::RoutedEventArgs const&)
+        {
+            if (this->m_Initializing)
+            {
+                return;
+            }
+            applyHandler();
+        });
         parent.Children().Append(toggle);
         return toggle;
+    }
+
+    winrt::Windows::UI::Xaml::Controls::ComboBox SettingsPage::BuildCombo(
+        winrt::Windows::UI::Xaml::Controls::Panel const& parent,
+        std::wstring_view const& headerKey,
+        std::wstring_view const& headerFallback,
+        std::vector<std::pair<std::wstring, int>> const& items,
+        int selectedValue,
+        std::function<void()> const& applyHandler)
+    {
+        parent.Children().Append(MakeText(
+            headerKey,
+            headerFallback,
+            14, true, false, LengthsThickness(0, 12, 0, 0)));
+
+        winrt::Windows::UI::Xaml::Controls::ComboBox combo;
+        combo.Margin(winrt::Windows::UI::Xaml::ThicknessHelper::FromLengths(0, 4, 0, 0));
+        combo.MinWidth(220);
+        combo.HorizontalAlignment(
+            winrt::Windows::UI::Xaml::HorizontalAlignment::Left);
+
+        int selectedIndex = 0;
+        for (auto const& Item : items)
+        {
+            winrt::Windows::UI::Xaml::Controls::ComboBoxItem element;
+            element.Content(winrt::box_value(winrt::hstring(Item.first)));
+            element.Tag(winrt::box_value(Item.second));
+            combo.Items().Append(element);
+        }
+        for (std::size_t i = 0; i < items.size(); ++i)
+        {
+            if (items[i].second == selectedValue)
+            {
+                selectedIndex = static_cast<int>(i);
+                break;
+            }
+        }
+        if (!items.empty())
+        {
+            combo.SelectedIndex(selectedIndex);
+        }
+        combo.SelectionChanged([this, applyHandler](
+            winrt::IInspectable const&,
+            winrt::Windows::UI::Xaml::RoutedEventArgs const&)
+        {
+            if (this->m_Initializing)
+            {
+                return;
+            }
+            applyHandler();
+        });
+        parent.Children().Append(combo);
+        return combo;
     }
 
     winrt::Windows::UI::Xaml::Controls::Button SettingsPage::BuildButton(
@@ -496,6 +956,8 @@ namespace winrt::NanaZip::Modern::implementation
         button.Content(winrt::box_value(
             winrt::NanaZip::Modern::GetUiString(textKey, textFallback)));
         button.Margin(winrt::Windows::UI::Xaml::ThicknessHelper::FromLengths(0, 8, 0, 0));
+        button.HorizontalAlignment(
+            winrt::Windows::UI::Xaml::HorizontalAlignment::Left);
         button.Click(handler);
         parent.Children().Append(button);
         return button;
@@ -503,7 +965,7 @@ namespace winrt::NanaZip::Modern::implementation
 
     void SettingsPage::ApplyAppearanceSettings()
     {
-        if (!this->m_ApplyCallback)
+        if (!m_Callbacks.Apply)
         {
             return;
         }
@@ -515,22 +977,191 @@ namespace winrt::NanaZip::Modern::implementation
         settings.ShowGrid = m_ShowGridToggle.IsOn() ? TRUE : FALSE;
         settings.SingleClick = m_SingleClickToggle.IsOn() ? TRUE : FALSE;
         settings.AlternativeSelection = m_AlternativeSelectionToggle.IsOn() ? TRUE : FALSE;
+        settings.ShowSystemMenu = m_ShowSystemMenuToggle.IsOn() ? TRUE : FALSE;
+        settings.ArcHistory = m_ArcHistoryToggle.IsOn() ? TRUE : FALSE;
+        settings.PathHistory = m_PathHistoryToggle.IsOn() ? TRUE : FALSE;
+        settings.CopyHistory = m_CopyHistoryToggle.IsOn() ? TRUE : FALSE;
+        settings.FolderHistory = m_FolderHistoryToggle.IsOn() ? TRUE : FALSE;
 
-        this->m_ApplyCallback(&settings);
+        m_Callbacks.Apply(&settings);
     }
 
-    void SettingsPage::AppearanceToggleToggled(
-        winrt::IInspectable const& sender,
-        winrt::RoutedEventArgs const& e)
+    void SettingsPage::ApplyContextMenuSettings()
     {
-        UNREFERENCED_PARAMETER(sender);
-        UNREFERENCED_PARAMETER(e);
-
-        if (this->m_Initializing)
+        if (!m_Callbacks.ContextMenuApply)
         {
             return;
         }
-        this->ApplyAppearanceSettings();
+
+        K7_MODERN_CONTEXT_MENU_SETTINGS settings = {};
+        settings.ShowOpen = m_CtxOpenToggle.IsOn() ? TRUE : FALSE;
+        settings.ShowTest = m_CtxTestToggle.IsOn() ? TRUE : FALSE;
+        settings.ShowExtract = m_CtxExtractToggle.IsOn() ? TRUE : FALSE;
+        settings.ShowExtractHere = m_CtxExtractHereToggle.IsOn() ? TRUE : FALSE;
+        settings.ShowExtractHereSmart = m_CtxExtractHereSmartToggle.IsOn() ? TRUE : FALSE;
+        settings.ShowExtractTo = m_CtxExtractToToggle.IsOn() ? TRUE : FALSE;
+        settings.ShowCompress = m_CtxCompressToggle.IsOn() ? TRUE : FALSE;
+        settings.ShowCompressTo7z = m_CtxCompressTo7zToggle.IsOn() ? TRUE : FALSE;
+        settings.ShowCompressToZip = m_CtxCompressToZipToggle.IsOn() ? TRUE : FALSE;
+        settings.ShowCompressEmail = m_CtxCompressEmailToggle.IsOn() ? TRUE : FALSE;
+        settings.ShowCompressTo7zEmail = m_CtxCompressTo7zEmailToggle.IsOn() ? TRUE : FALSE;
+        settings.ShowCompressToZipEmail = m_CtxCompressToZipEmailToggle.IsOn() ? TRUE : FALSE;
+        settings.ShowHash = m_CtxHashToggle.IsOn() ? TRUE : FALSE;
+        settings.CascadedMenu = m_CtxCascadedToggle.IsOn() ? TRUE : FALSE;
+        settings.EliminateDuplicateFiles = m_CtxElimDupToggle.IsOn() ? TRUE : FALSE;
+        settings.ExtractOnOpen = m_ExtractOnOpenToggle.IsOn() ? TRUE : FALSE;
+
+        m_Callbacks.ContextMenuApply(&settings);
+    }
+
+    void SettingsPage::ApplyCompressionSettings()
+    {
+        if (!m_Callbacks.CompressionApply)
+        {
+            return;
+        }
+
+        K7_MODERN_COMPRESSION_SETTINGS settings = {};
+
+        int formatIndex = m_FormatCombo.SelectedIndex();
+        if (formatIndex >= 0 &&
+            formatIndex < static_cast<int>(ArraySize(kCompressionFormats)))
+        {
+            ::wcsncpy_s(
+                settings.ArchiveType,
+                ArraySize(settings.ArchiveType),
+                kCompressionFormats[formatIndex].ArcType.data(),
+                _TRUNCATE);
+        }
+        else
+        {
+            ::wcsncpy_s(
+                settings.ArchiveType,
+                ArraySize(settings.ArchiveType),
+                L"7z",
+                _TRUNCATE);
+        }
+
+        int levelIndex = m_LevelCombo.SelectedIndex();
+        if (levelIndex >= 0 &&
+            levelIndex < static_cast<int>(ArraySize(kCompressionLevels)))
+        {
+            settings.Level = kCompressionLevels[levelIndex].Level;
+        }
+        else
+        {
+            settings.Level = 5;
+        }
+
+        m_Callbacks.CompressionApply(&settings);
+    }
+
+    void SettingsPage::ApplyExtractionSettings()
+    {
+        if (!m_Callbacks.ExtractionApply)
+        {
+            return;
+        }
+
+        K7_MODERN_EXTRACTION_SETTINGS settings = {};
+
+        int pathModeIndex = m_PathModeCombo.SelectedIndex();
+        if (pathModeIndex >= 0 &&
+            pathModeIndex < static_cast<int>(ArraySize(kExtractionPathModes)))
+        {
+            settings.PathMode = kExtractionPathModes[pathModeIndex].Value;
+        }
+
+        int overwriteIndex = m_OverwriteModeCombo.SelectedIndex();
+        if (overwriteIndex >= 0 &&
+            overwriteIndex < static_cast<int>(ArraySize(kExtractionOverwriteModes)))
+        {
+            settings.OverwriteMode = kExtractionOverwriteModes[overwriteIndex].Value;
+        }
+
+        settings.OpenFolderAfterExtraction =
+            m_OpenFolderToggle.IsOn() ? TRUE : FALSE;
+
+        m_Callbacks.ExtractionApply(&settings);
+    }
+
+    void SettingsPage::RefreshFileAssociationList()
+    {
+        if (!m_AssociationList)
+        {
+            return;
+        }
+
+        m_AssociationList.Items().Clear();
+
+
+        for (wchar_t const* const* it = kCommonAssociationExtensions;
+            it != kCommonAssociationExtensions + ArraySize(kCommonAssociationExtensions);
+            ++it)
+        {
+            std::wstring extension(*it);
+
+
+            BOOL IsDefault = FALSE;
+            wchar_t CurrentAppName[MAX_PATH] = {};
+            try
+            {
+            ::K7ModernQueryFileAssociation(
+                extension.c_str(),
+                &IsDefault,
+                CurrentAppName,
+                static_cast<UINT32>(ArraySize(CurrentAppName)));
+            }
+            catch (...)
+            {
+            }
+
+
+            std::wstring statusText;
+            if (IsDefault)
+            {
+                statusText = std::wstring(
+                    winrt::NanaZip::Modern::GetUiString(
+                        L"SettingsPage/AssocStatusDefault.Text",
+                        L"Default app"));
+            }
+            else if (CurrentAppName[0] != L'\0')
+            {
+                std::wstring format = std::wstring(
+                    winrt::NanaZip::Modern::GetUiString(
+                        L"SettingsPage/AssocStatusOther.Text",
+                        L"Opens with {0}"));
+                statusText = ReplaceAll(format, L"{0}", CurrentAppName);
+            }
+            else
+            {
+                statusText = std::wstring(
+                    winrt::NanaZip::Modern::GetUiString(
+                        L"SettingsPage/AssocStatusNone.Text",
+                        L"No default app"));
+            }
+
+            winrt::Windows::UI::Xaml::Controls::StackPanel row;
+            row.Orientation(winrt::Windows::UI::Xaml::Controls::Orientation::Horizontal);
+            row.Spacing(12);
+
+            winrt::Windows::UI::Xaml::Controls::TextBlock extensionText;
+            extensionText.Text(winrt::hstring(extension));
+            extensionText.MinWidth(56);
+            extensionText.FontWeight(
+                winrt::Windows::UI::Text::FontWeights::SemiBold());
+            row.Children().Append(extensionText);
+
+            winrt::Windows::UI::Xaml::Controls::TextBlock statusBlock;
+            statusBlock.Text(winrt::hstring(statusText));
+            statusBlock.VerticalAlignment(VerticalAlignment::Center);
+            row.Children().Append(statusBlock);
+
+            winrt::Windows::UI::Xaml::Controls::ListViewItem item;
+            item.Content(row);
+            m_AssociationList.Items().Append(item);
+
+        }
     }
 
     void SettingsPage::PostLegacyCommand(int command)
@@ -547,7 +1178,7 @@ namespace winrt::NanaZip::Modern::implementation
 
     void SettingsPage::GeneralLegacyButtonClick(
         winrt::IInspectable const& sender,
-        winrt::RoutedEventArgs const& e)
+        winrt::Windows::UI::Xaml::RoutedEventArgs const& e)
     {
         UNREFERENCED_PARAMETER(sender);
         UNREFERENCED_PARAMETER(e);
@@ -556,7 +1187,7 @@ namespace winrt::NanaZip::Modern::implementation
 
     void SettingsPage::ExtractionFoldersButtonClick(
         winrt::IInspectable const& sender,
-        winrt::RoutedEventArgs const& e)
+        winrt::Windows::UI::Xaml::RoutedEventArgs const& e)
     {
         UNREFERENCED_PARAMETER(sender);
         UNREFERENCED_PARAMETER(e);
@@ -565,7 +1196,7 @@ namespace winrt::NanaZip::Modern::implementation
 
     void SettingsPage::ExtractionIntegrationButtonClick(
         winrt::IInspectable const& sender,
-        winrt::RoutedEventArgs const& e)
+        winrt::Windows::UI::Xaml::RoutedEventArgs const& e)
     {
         UNREFERENCED_PARAMETER(sender);
         UNREFERENCED_PARAMETER(e);
@@ -574,32 +1205,29 @@ namespace winrt::NanaZip::Modern::implementation
 
     void SettingsPage::FileAssociationsSystemButtonClick(
         winrt::IInspectable const& sender,
-        winrt::RoutedEventArgs const& e)
+        winrt::Windows::UI::Xaml::RoutedEventArgs const& e)
     {
         UNREFERENCED_PARAMETER(sender);
         UNREFERENCED_PARAMETER(e);
 
-        // 与经典 Integration 页的"打开 Windows 设置"按钮行为一致。
-        SHELLEXECUTEINFOW execInfo = {};
-        execInfo.cbSize = sizeof(SHELLEXECUTEINFOW);
-        execInfo.lpVerb = L"open";
-        execInfo.lpFile = L"ms-settings:defaultapps";
-        execInfo.nShow = SW_SHOWNORMAL;
-        ::ShellExecuteExW(&execInfo);
+        // 打开 Windows 官方"默认应用"设置页(携带当前包 AUMID),
+        // 与经典 Integration 页按钮行为一致;不绕过 Windows 11 的
+        // 用户确认机制。
+        ::K7ModernLaunchDefaultAppsSettings();
+    }
+
+    void SettingsPage::FileAssociationsRefreshButtonClick(
+        winrt::IInspectable const& sender,
+        winrt::Windows::UI::Xaml::RoutedEventArgs const& e)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(e);
+        this->RefreshFileAssociationList();
     }
 
     void SettingsPage::FileAssociationsLegacyButtonClick(
         winrt::IInspectable const& sender,
-        winrt::RoutedEventArgs const& e)
-    {
-        UNREFERENCED_PARAMETER(sender);
-        UNREFERENCED_PARAMETER(e);
-        this->PostLegacyCommand(LegacyIntegration);
-    }
-
-    void SettingsPage::ContextMenuLegacyButtonClick(
-        winrt::IInspectable const& sender,
-        winrt::RoutedEventArgs const& e)
+        winrt::Windows::UI::Xaml::RoutedEventArgs const& e)
     {
         UNREFERENCED_PARAMETER(sender);
         UNREFERENCED_PARAMETER(e);
@@ -608,7 +1236,7 @@ namespace winrt::NanaZip::Modern::implementation
 
     void SettingsPage::AppearanceLegacyButtonClick(
         winrt::IInspectable const& sender,
-        winrt::RoutedEventArgs const& e)
+        winrt::Windows::UI::Xaml::RoutedEventArgs const& e)
     {
         UNREFERENCED_PARAMETER(sender);
         UNREFERENCED_PARAMETER(e);
@@ -617,7 +1245,7 @@ namespace winrt::NanaZip::Modern::implementation
 
     void SettingsPage::AdvancedLegacyButtonClick(
         winrt::IInspectable const& sender,
-        winrt::RoutedEventArgs const& e)
+        winrt::Windows::UI::Xaml::RoutedEventArgs const& e)
     {
         UNREFERENCED_PARAMETER(sender);
         UNREFERENCED_PARAMETER(e);
@@ -626,7 +1254,7 @@ namespace winrt::NanaZip::Modern::implementation
 
     void SettingsPage::AdvancedEditorButtonClick(
         winrt::IInspectable const& sender,
-        winrt::RoutedEventArgs const& e)
+        winrt::Windows::UI::Xaml::RoutedEventArgs const& e)
     {
         UNREFERENCED_PARAMETER(sender);
         UNREFERENCED_PARAMETER(e);
@@ -635,7 +1263,7 @@ namespace winrt::NanaZip::Modern::implementation
 
     void SettingsPage::AboutDialogButtonClick(
         winrt::IInspectable const& sender,
-        winrt::RoutedEventArgs const& e)
+        winrt::Windows::UI::Xaml::RoutedEventArgs const& e)
     {
         UNREFERENCED_PARAMETER(sender);
         UNREFERENCED_PARAMETER(e);
@@ -645,8 +1273,7 @@ namespace winrt::NanaZip::Modern::implementation
 
 EXTERN_C LPVOID WINAPI K7ModernCreateSettingsPage(
     _In_opt_ HWND ParentWindowHandle,
-    _In_opt_ K7_MODERN_SETTINGS_LOAD_CALLBACK LoadCallback,
-    _In_opt_ K7_MODERN_SETTINGS_APPLY_CALLBACK ApplyCallback)
+    _In_opt_ const K7_MODERN_SETTINGS_CALLBACKS* Callbacks)
 {
     using Interface =
         winrt::NanaZip::Modern::SettingsPage;
@@ -655,7 +1282,6 @@ EXTERN_C LPVOID WINAPI K7ModernCreateSettingsPage(
 
     Interface Window = winrt::make<Implementation>(
         ParentWindowHandle,
-        LoadCallback,
-        ApplyCallback);
+        Callbacks);
     return winrt::detach_abi(Window);
 }

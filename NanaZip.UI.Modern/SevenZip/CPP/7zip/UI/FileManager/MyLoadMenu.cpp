@@ -782,7 +782,23 @@ bool OnMenuCommand(HWND hWnd, unsigned id)
     // Options 入口改为 Modern 设置窗口;classic 页仍经由
     // kMenuCmdID_Toolbar_Legacy_* 入口可达(FM.cpp ExecuteCommand),
     // 原有设置功能全部保留。
-    case IDM_OPTIONS: ::K7ModernShowSettingsDialog(hWnd, FmModernSettingsLoad, FmModernSettingsApply); break;
+    // **************** CuinZip P1-4 Modification Start ****************
+    // P1-4:全部设置分类经宿主回调读写真实配置源(见 FM.cpp)。
+    case IDM_OPTIONS:
+    {
+      K7_MODERN_SETTINGS_CALLBACKS Callbacks = {};
+      Callbacks.Load = FmModernSettingsLoad;
+      Callbacks.Apply = FmModernSettingsApply;
+      Callbacks.ContextMenuLoad = FmModernContextMenuLoad;
+      Callbacks.ContextMenuApply = FmModernContextMenuApply;
+      Callbacks.CompressionLoad = FmModernCompressionLoad;
+      Callbacks.CompressionApply = FmModernCompressionApply;
+      Callbacks.ExtractionLoad = FmModernExtractionLoad;
+      Callbacks.ExtractionApply = FmModernExtractionApply;
+      ::K7ModernShowSettingsDialog(hWnd, &Callbacks);
+      break;
+    }
+    // **************** CuinZip P1-4 Modification End ****************
     // **************** CuinZip P1-2 Modification End ****************
 
     case IDM_BENCHMARK: MyBenchmark(false); break;

@@ -224,6 +224,9 @@
       <SubType>Code</SubType>
     </ClCompile>
     <ClCompile Include="SettingsPage.cpp" />
+    <!-- CuinZip P1-4 Modification Start -->
+    <ClCompile Include="FileAssociation.cpp" />
+    <!-- CuinZip P1-4 Modification End -->
     <ClCompile Include="CompressDialogPage.cpp" />
     <ClCompile Include="ExtractDialogPage.cpp" />
     <ClCompile Include="UiStrings.cpp" />

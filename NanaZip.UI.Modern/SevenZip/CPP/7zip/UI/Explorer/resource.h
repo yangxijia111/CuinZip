@@ -12,5 +12,14 @@
 // **************** NanaZip Modification Start ****************
 #define IDS_CONTEXT_EXTRACT_HERE_SMART  2331
 // **************** NanaZip Modification End ****************
+// **************** CuinZip P1-4 Modification Start ****************
+// 平铺(一级菜单)模式的 Open 项与 Hash 组标题(接入本地化资源)。
+#define IDS_CONTEXT_OPEN_WITH           2332
+#define IDS_CONTEXT_HASH_CRC32          2333
+#define IDS_CONTEXT_HASH_CRC64          2334
+#define IDS_CONTEXT_HASH_SHA1           2335
+#define IDS_CONTEXT_HASH_SHA256         2336
+#define IDS_CONTEXT_HASH_ALL            2337
+// **************** CuinZip P1-4 Modification End ****************
 
 #define IDB_MENU_LOGO  190

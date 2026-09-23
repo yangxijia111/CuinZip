@@ -12,6 +12,7 @@
     <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
     <ClCompile Include="AddressBar.cpp" />
     <ClCompile Include="StatusBar.cpp" />
+    <ClCompile Include="FileAssociation.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />

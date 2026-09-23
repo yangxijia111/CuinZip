@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!--
     CuinZip P1-2: Modern 设置窗口文案(en)。
@@ -91,7 +91,7 @@
     <value>General</value>
   </data>
   <data name="GeneralDescription.Text" xml:space="preserve">
-    <value>Core file manager behavior options are currently provided by the classic settings pages.</value>
+    <value>Core file manager behavior options. Changes are saved immediately.</value>
   </data>
   <data name="GeneralLegacyButton.Content" xml:space="preserve">
     <value>Open classic settings (General)</value>
@@ -100,13 +100,13 @@
     <value>Compression</value>
   </data>
   <data name="CompressionDescription.Text" xml:space="preserve">
-    <value>Compression options are configured in the archive creation dialog. More options will be available in a future update.</value>
+    <value>Default format and compression level for the Add to Archive dialog. Detailed options are available in the archive creation dialog.</value>
   </data>
   <data name="ExtractionTitle.Text" xml:space="preserve">
     <value>Extraction</value>
   </data>
   <data name="ExtractionDescription.Text" xml:space="preserve">
-    <value>Choose where extracted files are placed and how extraction integrates with your system.</value>
+    <value>Default destination and overwrite behavior for the Extract dialog.</value>
   </data>
   <data name="ExtractionFoldersButton.Content" xml:space="preserve">
     <value>Working folder settings</value>
@@ -130,10 +130,7 @@
     <value>Context Menu</value>
   </data>
   <data name="ContextMenuDescription.Text" xml:space="preserve">
-    <value>Configure the entries shown in the Windows Explorer context menu.</value>
-  </data>
-  <data name="ContextMenuLegacyButton.Content" xml:space="preserve">
-    <value>Open classic settings (Context menu)</value>
+    <value>Configure the entries shown in the Windows Explorer context menu. Changes apply the next time you right-click.</value>
   </data>
   <data name="AppearanceTitle.Text" xml:space="preserve">
     <value>Appearance</value>
@@ -182,5 +179,173 @@
   </data>
   <data name="AboutDialogButton.Content" xml:space="preserve">
     <value>Open the About dialog</value>
+  </data>
+  <data name="ShowSystemMenuToggle.Header" xml:space="preserve">
+    <value>Show system menu</value>
+  </data>
+  <data name="ArcHistoryToggle.Header" xml:space="preserve">
+    <value>Keep archive history</value>
+  </data>
+  <data name="PathHistoryToggle.Header" xml:space="preserve">
+    <value>Keep path history</value>
+  </data>
+  <data name="CopyHistoryToggle.Header" xml:space="preserve">
+    <value>Keep copy history</value>
+  </data>
+  <data name="FolderHistoryToggle.Header" xml:space="preserve">
+    <value>Keep folder history</value>
+  </data>
+  <data name="CompressionNote.Text" xml:space="preserve">
+    <value>New defaults apply to the next Add to Archive dialog.</value>
+  </data>
+  <data name="FormatComboHeader.Text" xml:space="preserve">
+    <value>Default archive format</value>
+  </data>
+  <data name="LevelComboHeader.Text" xml:space="preserve">
+    <value>Default compression level</value>
+  </data>
+  <data name="Format7z.Text" xml:space="preserve">
+    <value>7z</value>
+  </data>
+  <data name="FormatZip.Text" xml:space="preserve">
+    <value>zip</value>
+  </data>
+  <data name="FormatTar.Text" xml:space="preserve">
+    <value>tar</value>
+  </data>
+  <data name="FormatGzip.Text" xml:space="preserve">
+    <value>gzip</value>
+  </data>
+  <data name="FormatBzip2.Text" xml:space="preserve">
+    <value>bzip2</value>
+  </data>
+  <data name="FormatXz.Text" xml:space="preserve">
+    <value>xz</value>
+  </data>
+  <data name="LevelStore.Text" xml:space="preserve">
+    <value>Store</value>
+  </data>
+  <data name="LevelFastest.Text" xml:space="preserve">
+    <value>Fastest</value>
+  </data>
+  <data name="LevelFast.Text" xml:space="preserve">
+    <value>Fast</value>
+  </data>
+  <data name="LevelNormal.Text" xml:space="preserve">
+    <value>Normal</value>
+  </data>
+  <data name="LevelMaximum.Text" xml:space="preserve">
+    <value>Maximum</value>
+  </data>
+  <data name="LevelUltra.Text" xml:space="preserve">
+    <value>Ultra</value>
+  </data>
+  <data name="ExtractionNote.Text" xml:space="preserve">
+    <value>New defaults apply to the next Extract dialog.</value>
+  </data>
+  <data name="PathModeComboHeader.Text" xml:space="preserve">
+    <value>Default path mode</value>
+  </data>
+  <data name="OverwriteComboHeader.Text" xml:space="preserve">
+    <value>Default overwrite mode</value>
+  </data>
+  <data name="OpenFolderToggle.Header" xml:space="preserve">
+    <value>Open folder after extraction</value>
+  </data>
+  <data name="PathModeFull.Text" xml:space="preserve">
+    <value>Full pathnames</value>
+  </data>
+  <data name="PathModeNo.Text" xml:space="preserve">
+    <value>No pathnames</value>
+  </data>
+  <data name="PathModeAbs.Text" xml:space="preserve">
+    <value>Absolute pathnames</value>
+  </data>
+  <data name="OverwriteAsk.Text" xml:space="preserve">
+    <value>Ask before overwrite</value>
+  </data>
+  <data name="OverwriteAlways.Text" xml:space="preserve">
+    <value>Overwrite without prompt</value>
+  </data>
+  <data name="OverwriteSkip.Text" xml:space="preserve">
+    <value>Skip existing files</value>
+  </data>
+  <data name="OverwriteRename.Text" xml:space="preserve">
+    <value>Auto rename</value>
+  </data>
+  <data name="OverwriteRenameOld.Text" xml:space="preserve">
+    <value>Auto rename existing files</value>
+  </data>
+  <data name="ExtractOnOpenToggle.Header" xml:space="preserve">
+    <value>Extract archives to a temporary folder when opening them</value>
+  </data>
+  <data name="AssocListHeader.Text" xml:space="preserve">
+    <value>Common archive formats</value>
+  </data>
+  <data name="AssocRefreshButton.Content" xml:space="preserve">
+    <value>Refresh status</value>
+  </data>
+  <data name="AssocStatusDefault.Text" xml:space="preserve">
+    <value>Default app</value>
+  </data>
+  <data name="AssocStatusOther.Text" xml:space="preserve">
+    <value>Opens with {0}</value>
+  </data>
+  <data name="AssocStatusNone.Text" xml:space="preserve">
+    <value>No default app</value>
+  </data>
+  <data name="ContextMenuMoreHeader.Text" xml:space="preserve">
+    <value>More items</value>
+  </data>
+  <data name="ContextMenuLayoutHeader.Text" xml:space="preserve">
+    <value>Menu layout</value>
+  </data>
+  <data name="ContextMenuCascadedNote.Text" xml:space="preserve">
+    <value>When off, the most common items appear directly in the context menu.</value>
+  </data>
+  <data name="CtxOpenToggle.Header" xml:space="preserve">
+    <value>Open archive</value>
+  </data>
+  <data name="CtxExtractHereToggle.Header" xml:space="preserve">
+    <value>Extract Here</value>
+  </data>
+  <data name="CtxExtractToToggle.Header" xml:space="preserve">
+    <value>Extract to &lt;folder&gt;</value>
+  </data>
+  <data name="CtxCompressToggle.Header" xml:space="preserve">
+    <value>Add to archive...</value>
+  </data>
+  <data name="CtxCompressTo7zToggle.Header" xml:space="preserve">
+    <value>Add to &lt;archive&gt;.7z</value>
+  </data>
+  <data name="CtxCompressToZipToggle.Header" xml:space="preserve">
+    <value>Add to &lt;archive&gt;.zip</value>
+  </data>
+  <data name="CtxTestToggle.Header" xml:space="preserve">
+    <value>Test archive</value>
+  </data>
+  <data name="CtxExtractToggle.Header" xml:space="preserve">
+    <value>Extract files...</value>
+  </data>
+  <data name="CtxExtractHereSmartToggle.Header" xml:space="preserve">
+    <value>Extract Here (Smart)</value>
+  </data>
+  <data name="CtxCompressEmailToggle.Header" xml:space="preserve">
+    <value>Compress and email...</value>
+  </data>
+  <data name="CtxCompressTo7zEmailToggle.Header" xml:space="preserve">
+    <value>Compress to &lt;archive&gt;.7z and email</value>
+  </data>
+  <data name="CtxCompressToZipEmailToggle.Header" xml:space="preserve">
+    <value>Compress to &lt;archive&gt;.zip and email</value>
+  </data>
+  <data name="CtxHashToggle.Header" xml:space="preserve">
+    <value>Hash (CRC / SHA)</value>
+  </data>
+  <data name="CtxElimDupToggle.Header" xml:space="preserve">
+    <value>Eliminate duplicate folders</value>
+  </data>
+  <data name="CtxCascadedToggle.Header" xml:space="preserve">
+    <value>Show all items under one CuinZip submenu</value>
   </data>
 </root>

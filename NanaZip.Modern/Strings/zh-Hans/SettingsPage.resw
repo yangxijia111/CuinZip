@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!--
     CuinZip P1-2: Modern 设置窗口文案(en)。
@@ -91,7 +91,7 @@
     <value>常规</value>
   </data>
   <data name="GeneralDescription.Text" xml:space="preserve">
-    <value>文件管理器的核心行为选项目前仍由经典设置页提供。</value>
+    <value>文件管理器核心行为选项。修改后立即保存。</value>
   </data>
   <data name="GeneralLegacyButton.Content" xml:space="preserve">
     <value>打开经典设置（常规）</value>
@@ -100,13 +100,13 @@
     <value>压缩</value>
   </data>
   <data name="CompressionDescription.Text" xml:space="preserve">
-    <value>压缩选项在创建压缩包的对话框中配置，更多选项将在后续版本提供。</value>
+    <value>“添加到压缩包”对话框的默认格式与压缩级别。详细选项可在压缩对话框中设置。</value>
   </data>
   <data name="ExtractionTitle.Text" xml:space="preserve">
     <value>解压</value>
   </data>
   <data name="ExtractionDescription.Text" xml:space="preserve">
-    <value>选择解压文件的存放位置，以及解压与系统的集成方式。</value>
+    <value>“解压”对话框的默认目标与覆盖行为。</value>
   </data>
   <data name="ExtractionFoldersButton.Content" xml:space="preserve">
     <value>工作文件夹设置</value>
@@ -118,7 +118,7 @@
     <value>文件关联</value>
   </data>
   <data name="FileAssociationsDescription.Text" xml:space="preserve">
-    <value>选择哪些文件类型使用 CuinZip 打开。文件关联由 Windows 管理。</value>
+    <value>选择用 CuinZip 打开的文件类型。关联由 Windows 管理。</value>
   </data>
   <data name="FileAssociationsSystemButton.Content" xml:space="preserve">
     <value>打开 Windows 设置（默认应用）</value>
@@ -130,10 +130,7 @@
     <value>右键菜单</value>
   </data>
   <data name="ContextMenuDescription.Text" xml:space="preserve">
-    <value>配置 Windows 资源管理器右键菜单中显示的条目。</value>
-  </data>
-  <data name="ContextMenuLegacyButton.Content" xml:space="preserve">
-    <value>打开经典设置（右键菜单）</value>
+    <value>配置 Windows 资源管理器右键菜单中显示的项目。更改将在下一次右键时生效。</value>
   </data>
   <data name="AppearanceTitle.Text" xml:space="preserve">
     <value>外观</value>
@@ -182,5 +179,173 @@
   </data>
   <data name="AboutDialogButton.Content" xml:space="preserve">
     <value>打开关于对话框</value>
+  </data>
+  <data name="ShowSystemMenuToggle.Header" xml:space="preserve">
+    <value>显示系统菜单</value>
+  </data>
+  <data name="ArcHistoryToggle.Header" xml:space="preserve">
+    <value>保留压缩包历史记录</value>
+  </data>
+  <data name="PathHistoryToggle.Header" xml:space="preserve">
+    <value>保留路径历史记录</value>
+  </data>
+  <data name="CopyHistoryToggle.Header" xml:space="preserve">
+    <value>保留复制历史记录</value>
+  </data>
+  <data name="FolderHistoryToggle.Header" xml:space="preserve">
+    <value>保留文件夹历史记录</value>
+  </data>
+  <data name="CompressionNote.Text" xml:space="preserve">
+    <value>新默认值将在下一次“添加到压缩包”对话框中生效。</value>
+  </data>
+  <data name="FormatComboHeader.Text" xml:space="preserve">
+    <value>默认压缩格式</value>
+  </data>
+  <data name="LevelComboHeader.Text" xml:space="preserve">
+    <value>默认压缩级别</value>
+  </data>
+  <data name="Format7z.Text" xml:space="preserve">
+    <value>7z</value>
+  </data>
+  <data name="FormatZip.Text" xml:space="preserve">
+    <value>zip</value>
+  </data>
+  <data name="FormatTar.Text" xml:space="preserve">
+    <value>tar</value>
+  </data>
+  <data name="FormatGzip.Text" xml:space="preserve">
+    <value>gzip</value>
+  </data>
+  <data name="FormatBzip2.Text" xml:space="preserve">
+    <value>bzip2</value>
+  </data>
+  <data name="FormatXz.Text" xml:space="preserve">
+    <value>xz</value>
+  </data>
+  <data name="LevelStore.Text" xml:space="preserve">
+    <value>存储</value>
+  </data>
+  <data name="LevelFastest.Text" xml:space="preserve">
+    <value>最快</value>
+  </data>
+  <data name="LevelFast.Text" xml:space="preserve">
+    <value>快速</value>
+  </data>
+  <data name="LevelNormal.Text" xml:space="preserve">
+    <value>标准</value>
+  </data>
+  <data name="LevelMaximum.Text" xml:space="preserve">
+    <value>最大</value>
+  </data>
+  <data name="LevelUltra.Text" xml:space="preserve">
+    <value>极限</value>
+  </data>
+  <data name="ExtractionNote.Text" xml:space="preserve">
+    <value>新默认值将在下一次“解压”对话框中生效。</value>
+  </data>
+  <data name="PathModeComboHeader.Text" xml:space="preserve">
+    <value>默认路径模式</value>
+  </data>
+  <data name="OverwriteComboHeader.Text" xml:space="preserve">
+    <value>默认覆盖模式</value>
+  </data>
+  <data name="OpenFolderToggle.Header" xml:space="preserve">
+    <value>解压完成后打开目标文件夹</value>
+  </data>
+  <data name="PathModeFull.Text" xml:space="preserve">
+    <value>完整路径</value>
+  </data>
+  <data name="PathModeNo.Text" xml:space="preserve">
+    <value>不含路径</value>
+  </data>
+  <data name="PathModeAbs.Text" xml:space="preserve">
+    <value>绝对路径</value>
+  </data>
+  <data name="OverwriteAsk.Text" xml:space="preserve">
+    <value>覆盖前询问</value>
+  </data>
+  <data name="OverwriteAlways.Text" xml:space="preserve">
+    <value>直接覆盖</value>
+  </data>
+  <data name="OverwriteSkip.Text" xml:space="preserve">
+    <value>跳过已存在文件</value>
+  </data>
+  <data name="OverwriteRename.Text" xml:space="preserve">
+    <value>自动重命名</value>
+  </data>
+  <data name="OverwriteRenameOld.Text" xml:space="preserve">
+    <value>自动重命名已存在文件</value>
+  </data>
+  <data name="ExtractOnOpenToggle.Header" xml:space="preserve">
+    <value>打开压缩包时先解压到临时文件夹</value>
+  </data>
+  <data name="AssocListHeader.Text" xml:space="preserve">
+    <value>常见压缩格式</value>
+  </data>
+  <data name="AssocRefreshButton.Content" xml:space="preserve">
+    <value>刷新状态</value>
+  </data>
+  <data name="AssocStatusDefault.Text" xml:space="preserve">
+    <value>默认应用</value>
+  </data>
+  <data name="AssocStatusOther.Text" xml:space="preserve">
+    <value>由 {0} 打开</value>
+  </data>
+  <data name="AssocStatusNone.Text" xml:space="preserve">
+    <value>未设置默认应用</value>
+  </data>
+  <data name="ContextMenuMoreHeader.Text" xml:space="preserve">
+    <value>更多项目</value>
+  </data>
+  <data name="ContextMenuLayoutHeader.Text" xml:space="preserve">
+    <value>菜单布局</value>
+  </data>
+  <data name="ContextMenuCascadedNote.Text" xml:space="preserve">
+    <value>关闭时，高频项目将直接显示在右键菜单中。</value>
+  </data>
+  <data name="CtxOpenToggle.Header" xml:space="preserve">
+    <value>打开压缩包</value>
+  </data>
+  <data name="CtxExtractHereToggle.Header" xml:space="preserve">
+    <value>解压到当前文件夹</value>
+  </data>
+  <data name="CtxExtractToToggle.Header" xml:space="preserve">
+    <value>解压到 &lt;文件夹&gt;</value>
+  </data>
+  <data name="CtxCompressToggle.Header" xml:space="preserve">
+    <value>添加到压缩包...</value>
+  </data>
+  <data name="CtxCompressTo7zToggle.Header" xml:space="preserve">
+    <value>添加到 &lt;压缩包&gt;.7z</value>
+  </data>
+  <data name="CtxCompressToZipToggle.Header" xml:space="preserve">
+    <value>添加到 &lt;压缩包&gt;.zip</value>
+  </data>
+  <data name="CtxTestToggle.Header" xml:space="preserve">
+    <value>测试压缩包</value>
+  </data>
+  <data name="CtxExtractToggle.Header" xml:space="preserve">
+    <value>解压文件...</value>
+  </data>
+  <data name="CtxExtractHereSmartToggle.Header" xml:space="preserve">
+    <value>解压到当前文件夹(智能)</value>
+  </data>
+  <data name="CtxCompressEmailToggle.Header" xml:space="preserve">
+    <value>压缩并发送邮件...</value>
+  </data>
+  <data name="CtxCompressTo7zEmailToggle.Header" xml:space="preserve">
+    <value>压缩为 &lt;压缩包&gt;.7z 并发送邮件</value>
+  </data>
+  <data name="CtxCompressToZipEmailToggle.Header" xml:space="preserve">
+    <value>压缩为 &lt;压缩包&gt;.zip 并发送邮件</value>
+  </data>
+  <data name="CtxHashToggle.Header" xml:space="preserve">
+    <value>哈希(CRC / SHA)</value>
+  </data>
+  <data name="CtxElimDupToggle.Header" xml:space="preserve">
+    <value>消除重复文件夹</value>
+  </data>
+  <data name="CtxCascadedToggle.Header" xml:space="preserve">
+    <value>将所有项目收进单个 CuinZip 子菜单</value>
   </data>
 </root>

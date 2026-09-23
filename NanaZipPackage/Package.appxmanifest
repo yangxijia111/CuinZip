@@ -21,7 +21,7 @@
   <Identity
     Name="Cuin.CuinZipPreview"
     Publisher="CN=D4DFD125-41D0-4903-95E0-896394D6DD55"
-    Version="7.0.1845.0" />
+    Version="7.0.1848.0" />
 
   <Properties>
     <DisplayName>CuinZip Preview</DisplayName>
@@ -158,14 +158,35 @@
               Use a low name prefix to work around our shell menu not appearing in the classic context menu.
               (https://github.com/MediaArea/MediaInfo/pull/998)
             -->
+            <!-- CuinZip P1-4: 0000 = 二级菜单根项(默认模式);0001-0006 = 平铺动词,
+                 在 Context Menu 设置关闭"二级菜单模式"时经 GetState(ECS_HIDDEN)
+                 与根项互换显隐,两个模式的菜单由同一组设置开关驱动。 -->
             <desktop4:ItemType Type="*">
               <desktop4:Verb Id="0000CuinZipShellExtension" Clsid="788F8FA7-178F-40BE-BAF5-5D5D1335C0F9" />
+              <desktop4:Verb Id="0001CuinZipOpen" Clsid="9EE110B9-828B-4B34-B631-20EED299940E" />
+              <desktop4:Verb Id="0002CuinZipExtractHere" Clsid="3FCAFA2A-D2C0-4D3F-BDC3-DD63092DD467" />
+              <desktop4:Verb Id="0003CuinZipExtractTo" Clsid="EEEA627E-E069-449D-8546-B7094E28C790" />
+              <desktop4:Verb Id="0004CuinZipCompress" Clsid="40E45AB6-96D5-470B-8C67-B052011EE44C" />
+              <desktop4:Verb Id="0005CuinZipCompressTo7z" Clsid="AD18A991-08C6-43A1-AABB-2953D8E49A0C" />
+              <desktop4:Verb Id="0006CuinZipCompressToZip" Clsid="95BA5FBD-ADD7-43A0-8FB3-63E0704C74D2" />
             </desktop4:ItemType>
             <desktop5:ItemType Type="Directory">
               <desktop5:Verb Id="0000CuinZipShellExtension" Clsid="788F8FA7-178F-40BE-BAF5-5D5D1335C0F9" />
+              <desktop5:Verb Id="0001CuinZipOpen" Clsid="9EE110B9-828B-4B34-B631-20EED299940E" />
+              <desktop5:Verb Id="0002CuinZipExtractHere" Clsid="3FCAFA2A-D2C0-4D3F-BDC3-DD63092DD467" />
+              <desktop5:Verb Id="0003CuinZipExtractTo" Clsid="EEEA627E-E069-449D-8546-B7094E28C790" />
+              <desktop5:Verb Id="0004CuinZipCompress" Clsid="40E45AB6-96D5-470B-8C67-B052011EE44C" />
+              <desktop5:Verb Id="0005CuinZipCompressTo7z" Clsid="AD18A991-08C6-43A1-AABB-2953D8E49A0C" />
+              <desktop5:Verb Id="0006CuinZipCompressToZip" Clsid="95BA5FBD-ADD7-43A0-8FB3-63E0704C74D2" />
             </desktop5:ItemType>
             <desktop10:ItemType Type="Drive">
               <desktop10:Verb Id="0000CuinZipShellExtension" Clsid="788F8FA7-178F-40BE-BAF5-5D5D1335C0F9" />
+              <desktop10:Verb Id="0001CuinZipOpen" Clsid="9EE110B9-828B-4B34-B631-20EED299940E" />
+              <desktop10:Verb Id="0002CuinZipExtractHere" Clsid="3FCAFA2A-D2C0-4D3F-BDC3-DD63092DD467" />
+              <desktop10:Verb Id="0003CuinZipExtractTo" Clsid="EEEA627E-E069-449D-8546-B7094E28C790" />
+              <desktop10:Verb Id="0004CuinZipCompress" Clsid="40E45AB6-96D5-470B-8C67-B052011EE44C" />
+              <desktop10:Verb Id="0005CuinZipCompressTo7z" Clsid="AD18A991-08C6-43A1-AABB-2953D8E49A0C" />
+              <desktop10:Verb Id="0006CuinZipCompressToZip" Clsid="95BA5FBD-ADD7-43A0-8FB3-63E0704C74D2" />
             </desktop10:ItemType>
           </desktop4:FileExplorerContextMenus>
         </desktop4:Extension>

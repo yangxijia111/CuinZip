@@ -274,9 +274,11 @@ EXTERN_C LPVOID WINAPI K7ModernCreateMainWindowToolBarPage(
 // **************** CuinZip P1-2 Modification Start ****************
 
 /**
- * @brief 外观设置项的快照。NanaZip.Modern.dll 不直接读注册表,
+ * @brief 外观 / 常规设置项的快照。NanaZip.Modern.dll 不直接读注册表,
  *        由宿主(FileManager)通过回调读写真实设置源(CFmSettings),
  *        避免双份注册表实现漂移。
+ * @remark CuinZip P1-4:General 分类的常用项(系统菜单 / 各类历史记录)
+ *        并入同一结构,真实设置源仍是 CFmSettings。
  */
 typedef struct K7_MODERN_APPEARANCE_SETTINGS
 {
@@ -286,6 +288,11 @@ typedef struct K7_MODERN_APPEARANCE_SETTINGS
     BOOL ShowGrid;
     BOOL SingleClick;
     BOOL AlternativeSelection;
+    BOOL ShowSystemMenu;
+    BOOL ArcHistory;
+    BOOL PathHistory;
+    BOOL CopyHistory;
+    BOOL FolderHistory;
 } K7_MODERN_APPEARANCE_SETTINGS;
 
 typedef void(*K7_MODERN_SETTINGS_LOAD_CALLBACK)(
@@ -295,18 +302,131 @@ typedef void(*K7_MODERN_SETTINGS_APPLY_CALLBACK)(
     _In_ const K7_MODERN_APPEARANCE_SETTINGS* Settings);
 
 /**
+ * @brief CuinZip P1-4:右键菜单设置项的快照。真实设置源是
+ *        CContextMenuInfo(HKCU\Software\CuinZip\Options),Shell 扩展
+ *        在每次弹出菜单时直接读取同一注册表,因此设置写入后下一次
+ *        右键即生效,无需重启资源管理器。
+ */
+typedef struct K7_MODERN_CONTEXT_MENU_SETTINGS
+{
+    BOOL ShowOpen;
+    BOOL ShowTest;
+    BOOL ShowExtract;
+    BOOL ShowExtractHere;
+    BOOL ShowExtractHereSmart;
+    BOOL ShowExtractTo;
+    BOOL ShowCompress;
+    BOOL ShowCompressTo7z;
+    BOOL ShowCompressToZip;
+    BOOL ShowCompressEmail;
+    BOOL ShowCompressTo7zEmail;
+    BOOL ShowCompressToZipEmail;
+    BOOL ShowHash;
+    /** 二级菜单模式:开=全部项收进单个 CuinZip 子菜单(默认);关=高频项平铺到一级。 */
+    BOOL CascadedMenu;
+    /** 解压时消除重复文件夹。 */
+    BOOL EliminateDuplicateFiles;
+    /** 双击打开压缩包时先解压再浏览(NanaZip 行为,UI 置于文件关联分类)。 */
+    BOOL ExtractOnOpen;
+} K7_MODERN_CONTEXT_MENU_SETTINGS;
+
+typedef void(*K7_MODERN_CONTEXTMENU_LOAD_CALLBACK)(
+    _Out_ K7_MODERN_CONTEXT_MENU_SETTINGS* Settings);
+
+typedef void(*K7_MODERN_CONTEXTMENU_APPLY_CALLBACK)(
+    _In_ const K7_MODERN_CONTEXT_MENU_SETTINGS* Settings);
+
+/**
+ * @brief CuinZip P1-4:压缩默认设置。真实设置源是 NCompression::CInfo
+ *        (压缩对话框 OnOK 写入的同一处),不存在第二套设置。
+ */
+typedef struct K7_MODERN_COMPRESSION_SETTINGS
+{
+    /** 默认格式 ID,与压缩对话框一致:"7z" / "Zip" / "Tar" / "GZip" / "BZip2" / "xz"。 */
+    WCHAR ArchiveType[16];
+    /** 压缩级别 0 / 1 / 3 / 5 / 7 / 9。 */
+    UINT32 Level;
+} K7_MODERN_COMPRESSION_SETTINGS;
+
+typedef void(*K7_MODERN_COMPRESSION_LOAD_CALLBACK)(
+    _Out_ K7_MODERN_COMPRESSION_SETTINGS* Settings);
+
+typedef void(*K7_MODERN_COMPRESSION_APPLY_CALLBACK)(
+    _In_ const K7_MODERN_COMPRESSION_SETTINGS* Settings);
+
+/**
+ * @brief CuinZip P1-4:解压默认设置。真实设置源是 NExtract::CInfo
+ *        (解压对话框 OnOK 写入的同一处)。
+ */
+typedef struct K7_MODERN_EXTRACTION_SETTINGS
+{
+    /** NExtract::NPathMode::EEnum。 */
+    UINT32 PathMode;
+    /** NExtract::NOverwriteMode::EEnum。 */
+    UINT32 OverwriteMode;
+    /** 解压完成后打开目标文件夹。 */
+    BOOL OpenFolderAfterExtraction;
+} K7_MODERN_EXTRACTION_SETTINGS;
+
+typedef void(*K7_MODERN_EXTRACTION_LOAD_CALLBACK)(
+    _Out_ K7_MODERN_EXTRACTION_SETTINGS* Settings);
+
+typedef void(*K7_MODERN_EXTRACTION_APPLY_CALLBACK)(
+    _In_ const K7_MODERN_EXTRACTION_SETTINGS* Settings);
+
+/**
+ * @brief CuinZip P1-4:Modern 设置窗口的全部宿主回调。NanaZip.Modern.dll
+ *        不直接访问注册表,所有设置均经由宿主(FileManager)读写真实配置源。
+ */
+typedef struct K7_MODERN_SETTINGS_CALLBACKS
+{
+    K7_MODERN_SETTINGS_LOAD_CALLBACK Load;
+    K7_MODERN_SETTINGS_APPLY_CALLBACK Apply;
+    K7_MODERN_CONTEXTMENU_LOAD_CALLBACK ContextMenuLoad;
+    K7_MODERN_CONTEXTMENU_APPLY_CALLBACK ContextMenuApply;
+    K7_MODERN_COMPRESSION_LOAD_CALLBACK CompressionLoad;
+    K7_MODERN_COMPRESSION_APPLY_CALLBACK CompressionApply;
+    K7_MODERN_EXTRACTION_LOAD_CALLBACK ExtractionLoad;
+    K7_MODERN_EXTRACTION_APPLY_CALLBACK ExtractionApply;
+} K7_MODERN_SETTINGS_CALLBACKS, *PK7_MODERN_SETTINGS_CALLBACKS;
+
+/**
  * @brief Show the modern Settings window.
  * @param ParentWindowHandle A handle to the owner window of the dialog to be
  *                           created. If this parameter is nullptr, the dialog
  *                           has no owner window.
- * @param LoadCallback The callback to load the current appearance settings.
- * @param ApplyCallback The callback to apply the changed appearance settings.
+ * @param Callbacks The host callbacks used to load and apply the real settings
+ *                  sources. If this parameter is nullptr, the settings window
+ *                  runs without host-backed settings.
  * @return The message loop exit code of the dialog.
  */
 EXTERN_C INT WINAPI K7ModernShowSettingsDialog(
     _In_opt_ HWND ParentWindowHandle,
-    _In_opt_ K7_MODERN_SETTINGS_LOAD_CALLBACK LoadCallback,
-    _In_opt_ K7_MODERN_SETTINGS_APPLY_CALLBACK ApplyCallback);
+    _In_opt_ const K7_MODERN_SETTINGS_CALLBACKS* Callbacks);
+
+/**
+ * @brief CuinZip P1-4:查询指定扩展名当前是否由 CuinZip 作为默认应用打开。
+ * @param Extension 形如 ".7z" 的扩展名(含点)。
+ * @param IsDefault 接收查询结果:TRUE 表示 CuinZip 是当前默认应用。
+ * @param CurrentAppName 接收当前默认打开方式的显示名(可传 nullptr)。
+ * @param CurrentAppNameLength CurrentAppName 缓冲区容量(wchar 数)。
+ * @return 查询是否成功(与 IsDefault 无关,仅表示能否读到状态)。
+ * @remark 只读取 Windows 官方的 UserChoice / Progid 状态,不写入任何
+ *         默认应用设置(Windows 11 的用户确认机制不被绕过)。
+ */
+EXTERN_C BOOL WINAPI K7ModernQueryFileAssociation(
+    _In_ LPCWSTR Extension,
+    _Out_ BOOL* IsDefault,
+    _Out_writes_opt_(CurrentAppNameLength) LPWSTR CurrentAppName,
+    _In_ UINT32 CurrentAppNameLength);
+
+/**
+ * @brief CuinZip P1-4:打开 Windows 官方的"默认应用"设置页(携带当前
+ *        包 AUMID,直接定位到 CuinZip 条目),与经典 Integration 页的
+ *        "打开 Windows 设置"按钮行为一致。
+ * @return 是否成功唤起设置页。
+ */
+EXTERN_C BOOL WINAPI K7ModernLaunchDefaultAppsSettings();
 
 /**
  * @brief Get a localized UI string from the modern resource file.

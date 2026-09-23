@@ -1,4 +1,4 @@
-#include "resource.h"
+﻿#include "resource.h"
 
 STRINGTABLE
 BEGIN
@@ -16,4 +16,13 @@ BEGIN
   IDS_CONTEXT_COMPRESS_TO "Add to {0}"
   IDS_CONTEXT_COMPRESS_EMAIL "Compress and email..."
   IDS_CONTEXT_COMPRESS_TO_EMAIL "Compress to {0} and email"
+// **************** CuinZip P1-4 Modification Start ****************
+// 平铺(一级菜单)模式的 Open 项与 Hash 组标题。
+  IDS_CONTEXT_OPEN_WITH   "Open with CuinZip"
+  IDS_CONTEXT_HASH_CRC32  "CRC-32"
+  IDS_CONTEXT_HASH_CRC64  "CRC-64"
+  IDS_CONTEXT_HASH_SHA1   "SHA-1"
+  IDS_CONTEXT_HASH_SHA256 "SHA-256"
+  IDS_CONTEXT_HASH_ALL    "*"
+// **************** CuinZip P1-4 Modification End ****************
 END

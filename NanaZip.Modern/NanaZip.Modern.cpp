@@ -654,8 +654,7 @@ EXTERN_C LPCWSTR WINAPI K7ModernGetCopyLocationDialogPath(
 
 EXTERN_C INT WINAPI K7ModernShowSettingsDialog(
     _In_opt_ HWND ParentWindowHandle,
-    _In_opt_ K7_MODERN_SETTINGS_LOAD_CALLBACK LoadCallback,
-    _In_opt_ K7_MODERN_SETTINGS_APPLY_CALLBACK ApplyCallback)
+    _In_opt_ const K7_MODERN_SETTINGS_CALLBACKS* Callbacks)
 {
     HWND WindowHandle = ::K7ModernCreateXamlDialog(ParentWindowHandle);
     if (!WindowHandle)
@@ -670,13 +669,12 @@ EXTERN_C INT WINAPI K7ModernShowSettingsDialog(
 
     Interface Window = winrt::make<Implementation>(
         WindowHandle,
-        LoadCallback,
-        ApplyCallback);
+        Callbacks);
 
     int Result = ::K7ModernShowXamlDialog(
         WindowHandle,
-        640,
-        480,
+        760,
+        600,
         winrt::get_abi(Window),
         ParentWindowHandle);
 

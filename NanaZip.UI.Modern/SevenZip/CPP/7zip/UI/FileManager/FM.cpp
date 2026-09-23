@@ -42,6 +42,9 @@
 #include "../Common/ZipRegistry.h"
 #include "../Common/CompressCall.h"
 // **************** NanaZip Modification End ****************
+// **************** CuinZip P1-4 Modification Start ****************
+#include "../Explorer/ContextMenuFlags.h"
+// **************** CuinZip P1-4 Modification End ****************
 
 using namespace NWindows;
 using namespace NFile;
@@ -844,9 +847,10 @@ static void SaveWindowInfo(HWND aWnd)
 }
 
 // **************** CuinZip P1-2 Modification Start ****************
-// Modern 设置窗口(Appearance 分类)的读 / 应用回调:
-// 真实设置源仍是 CFmSettings(注册表),NanaZip.Modern.dll 不直接
-// 访问注册表,避免双份实现漂移;应用后立即刷新列表。
+// Modern 设置窗口的读 / 应用回调:
+// 真实设置源仍是 CFmSettings / CContextMenuInfo / NCompression::CInfo /
+// NExtract::CInfo(注册表),NanaZip.Modern.dll 不直接访问注册表,
+// 避免双份实现漂移;Shell 扩展与压缩/解压对话框读取的也是同一处。
 // 应用回调在主线程执行(设置窗口跑在主线程模态循环),可安全
 // 访问 g_App。
 #include "RegistryUtils.h"
@@ -861,6 +865,14 @@ void FmModernSettingsLoad(K7_MODERN_APPEARANCE_SETTINGS *settings)
   settings->ShowGrid = st.ShowGrid ? TRUE : FALSE;
   settings->SingleClick = st.SingleClick ? TRUE : FALSE;
   settings->AlternativeSelection = st.AlternativeSelection ? TRUE : FALSE;
+  // **************** CuinZip P1-4 Modification Start ****************
+  // General 分类(同一 CFmSettings 配置源)。
+  settings->ShowSystemMenu = st.ShowSystemMenu ? TRUE : FALSE;
+  settings->ArcHistory = st.ArcHistory ? TRUE : FALSE;
+  settings->PathHistory = st.PathHistory ? TRUE : FALSE;
+  settings->CopyHistory = st.CopyHistory ? TRUE : FALSE;
+  settings->FolderHistory = st.FolderHistory ? TRUE : FALSE;
+  // **************** CuinZip P1-4 Modification End ****************
 }
 
 void FmModernSettingsApply(const K7_MODERN_APPEARANCE_SETTINGS *settings)
@@ -873,11 +885,136 @@ void FmModernSettingsApply(const K7_MODERN_APPEARANCE_SETTINGS *settings)
   st.ShowGrid = (settings->ShowGrid != FALSE);
   st.SingleClick = (settings->SingleClick != FALSE);
   st.AlternativeSelection = (settings->AlternativeSelection != FALSE);
+  // **************** CuinZip P1-4 Modification Start ****************
+  // General 分类。ShowSystemMenu 在面板/窗口创建时读取,对新窗口生效;
+  // 历史记录类选项实时生效。
+  st.ShowSystemMenu = (settings->ShowSystemMenu != FALSE);
+  st.ArcHistory = (settings->ArcHistory != FALSE);
+  st.PathHistory = (settings->PathHistory != FALSE);
+  st.CopyHistory = (settings->CopyHistory != FALSE);
+  st.FolderHistory = (settings->FolderHistory != FALSE);
+  // **************** CuinZip P1-4 Modification End ****************
   st.Save();
   g_App.SetListSettings();
   g_App.RefreshAllPanels();
 }
 // **************** CuinZip P1-2 Modification End ****************
+
+// **************** CuinZip P1-4 Modification Start ****************
+// 右键菜单设置回调:真实设置源是 CContextMenuInfo(Shell 扩展每次弹出
+// 菜单时读取同一注册表),写入后下一次右键即生效。
+void FmModernContextMenuLoad(K7_MODERN_CONTEXT_MENU_SETTINGS *settings)
+{
+  CContextMenuInfo ci;
+  ci.Load();
+  settings->ShowOpen = (ci.Flags & NContextMenuFlags::kOpen) ? TRUE : FALSE;
+  settings->ShowTest = (ci.Flags & NContextMenuFlags::kTest) ? TRUE : FALSE;
+  settings->ShowExtract = (ci.Flags & NContextMenuFlags::kExtract) ? TRUE : FALSE;
+  settings->ShowExtractHere = (ci.Flags & NContextMenuFlags::kExtractHere) ? TRUE : FALSE;
+  settings->ShowExtractHereSmart =
+    (ci.Flags & NContextMenuFlags::kExtractHereSmart) ? TRUE : FALSE;
+  settings->ShowExtractTo = (ci.Flags & NContextMenuFlags::kExtractTo) ? TRUE : FALSE;
+  settings->ShowCompress = (ci.Flags & NContextMenuFlags::kCompress) ? TRUE : FALSE;
+  settings->ShowCompressTo7z =
+    (ci.Flags & NContextMenuFlags::kCompressTo7z) ? TRUE : FALSE;
+  settings->ShowCompressToZip =
+    (ci.Flags & NContextMenuFlags::kCompressToZip) ? TRUE : FALSE;
+  settings->ShowCompressEmail =
+    (ci.Flags & NContextMenuFlags::kCompressEmail) ? TRUE : FALSE;
+  settings->ShowCompressTo7zEmail =
+    (ci.Flags & NContextMenuFlags::kCompressTo7zEmail) ? TRUE : FALSE;
+  settings->ShowCompressToZipEmail =
+    (ci.Flags & NContextMenuFlags::kCompressToZipEmail) ? TRUE : FALSE;
+  settings->ShowHash = (ci.Flags & NContextMenuFlags::kCRC) ? TRUE : FALSE;
+  settings->CascadedMenu = ci.Cascaded.Val ? TRUE : FALSE;
+  settings->EliminateDuplicateFiles = ci.ElimDup.Val ? TRUE : FALSE;
+  settings->ExtractOnOpen = ci.ExtractOnOpen.Val ? TRUE : FALSE;
+}
+
+void FmModernContextMenuApply(const K7_MODERN_CONTEXT_MENU_SETTINGS *settings)
+{
+  CContextMenuInfo ci;
+  ci.Load();
+
+  UInt32 flags = 0;
+  if (settings->ShowOpen) flags |= NContextMenuFlags::kOpen;
+  if (settings->ShowTest) flags |= NContextMenuFlags::kTest;
+  if (settings->ShowExtract) flags |= NContextMenuFlags::kExtract;
+  if (settings->ShowExtractHere) flags |= NContextMenuFlags::kExtractHere;
+  if (settings->ShowExtractHereSmart) flags |= NContextMenuFlags::kExtractHereSmart;
+  if (settings->ShowExtractTo) flags |= NContextMenuFlags::kExtractTo;
+  if (settings->ShowCompress) flags |= NContextMenuFlags::kCompress;
+  if (settings->ShowCompressTo7z) flags |= NContextMenuFlags::kCompressTo7z;
+  if (settings->ShowCompressToZip) flags |= NContextMenuFlags::kCompressToZip;
+  if (settings->ShowCompressEmail) flags |= NContextMenuFlags::kCompressEmail;
+  if (settings->ShowCompressTo7zEmail) flags |= NContextMenuFlags::kCompressTo7zEmail;
+  if (settings->ShowCompressToZipEmail) flags |= NContextMenuFlags::kCompressToZipEmail;
+  if (settings->ShowHash) flags |= NContextMenuFlags::kCRC;
+  ci.Flags = flags;
+  ci.Flags_Def = true;
+
+  ci.Cascaded.Val = (settings->CascadedMenu != FALSE);
+  ci.Cascaded.Def = true;
+  ci.ElimDup.Val = (settings->EliminateDuplicateFiles != FALSE);
+  ci.ElimDup.Def = true;
+  ci.ExtractOnOpen.Val = (settings->ExtractOnOpen != FALSE);
+  ci.ExtractOnOpen.Def = true;
+
+  ci.Save();
+}
+
+// 压缩默认设置回调:真实设置源是 NCompression::CInfo(压缩对话框 OnOK
+// 写入的同一处)。Load 后改两个字段再 Save,其余字段原样保留。
+void FmModernCompressionLoad(K7_MODERN_COMPRESSION_SETTINGS *settings)
+{
+  NCompression::CInfo info;
+  info.Load();
+  UString type = info.ArcType;
+  ::wcsncpy_s(
+      settings->ArchiveType,
+      sizeof(settings->ArchiveType) / sizeof(settings->ArchiveType[0]),
+      type.Ptr(),
+      _TRUNCATE);
+  settings->Level = info.Level;
+}
+
+void FmModernCompressionApply(const K7_MODERN_COMPRESSION_SETTINGS *settings)
+{
+  NCompression::CInfo info;
+  info.Load();
+  info.ArcType = settings->ArchiveType;
+  info.Level = settings->Level;
+  info.Save();
+}
+
+// 解压默认设置回调:真实设置源是 NExtract::CInfo(解压对话框 OnOK
+// 写入的同一处)。Force 语义与对话框一致:显式设置后成为持久默认。
+void FmModernExtractionLoad(K7_MODERN_EXTRACTION_SETTINGS *settings)
+{
+  NExtract::CInfo info;
+  info.Load();
+  // 未显式设置时 Load 得到 kCurPaths,对话框同样按 Full paths 处理。
+  settings->PathMode = (info.PathMode == NExtract::NPathMode::kCurPaths)
+      ? static_cast<UINT32>(NExtract::NPathMode::kFullPaths)
+      : static_cast<UINT32>(info.PathMode);
+  settings->OverwriteMode = static_cast<UINT32>(info.OverwriteMode);
+  settings->OpenFolderAfterExtraction = info.OpenFolder.Val ? TRUE : FALSE;
+}
+
+void FmModernExtractionApply(const K7_MODERN_EXTRACTION_SETTINGS *settings)
+{
+  NExtract::CInfo info;
+  info.Load();
+  info.PathMode = static_cast<NExtract::NPathMode::EEnum>(settings->PathMode);
+  info.PathMode_Force = true;
+  info.OverwriteMode =
+      static_cast<NExtract::NOverwriteMode::EEnum>(settings->OverwriteMode);
+  info.OverwriteMode_Force = true;
+  info.OpenFolder.Val = (settings->OpenFolderAfterExtraction != FALSE);
+  info.OpenFolder.Def = true;
+  info.Save();
+}
+// **************** CuinZip P1-4 Modification End ****************
 
 static void ExecuteCommand(UINT commandID)
 {

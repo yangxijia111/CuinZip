@@ -1,4 +1,4 @@
-# CuinZip UI / UX 计划(P1-1)
+﻿# CuinZip UI / UX 计划(P1-1)
 
 日期:2026-09-21,基线 `fea047c4`。
 约束:不改压缩核心 / ABI / Package Identity / Shell CLSID / LangUtils 匹配键 / Mile.* /
@@ -237,3 +237,85 @@ LangUtils `"NanaZip"` 匹配键、`Mile.*`、第三方许可证、内部二进�
 - Advanced 分区内的 Options(时间戳/NTFS)子对话框 Modern 化;
 - Classic 对话框(非 Modern 回退路径)的深色/视觉打磨;
 - P2 Search。
+
+
+# CuinZip UI / UX 计划(P1-4 实施记录)
+
+日期:2026-09-23,基线 `723d047a`(安全标签 `p1-4-pre-integration`)。
+范围:Settings 全分类真实化 / 文件关联状态管理 / Explorer 右键菜单
+(Windows 11 体验)。不修改压缩核心。
+
+## 设计原则
+
+1. **单一配置源**:所有 Modern 设置经宿主(FileManager)回调读写既有真实
+   配置源(CFmSettings / CContextMenuInfo / NCompression::CInfo /
+   NExtract::CInfo),Modern DLL 不直接访问注册表,不存在第二套设置;
+   Shell 扩展与压缩/解压对话框读取的是同一处注册表。
+2. **官方机制优先**:文件关联的默认应用变更一律走 Windows 官方路径
+   (ms-settings:defaultapps?registeredAUMID=…),只读查询 UserChoice /
+   Progid 状态,不绕过 Windows 11 用户确认机制,不做危险注册表抢占。
+3. **不删除原有功能**:经典设置页全部保留为直达入口(WM_COMMAND
+   1075-1078),复杂高级参数继续跳转经典页。
+4. **CLSID 自有**:新平铺动词使用全新生成的 CuinZip GUID,与上游
+   NanaZip 不重复,保证 CuinZip 与 NanaZip 理论可共存。
+
+## Settings 信息架构(P1-4 后)
+
+| 分类 | 真实配置源 | 生效时机 |
+| --- | --- | --- |
+| General | CFmSettings(系统菜单/四类历史) | 历史类实时;系统菜单对新窗口生效 |
+| Compression | NCompression::CInfo(默认格式/级别) | 下一次压缩对话框 |
+| Extraction | NExtract::CInfo(路径模式/覆盖模式/完成后打开文件夹) | 下一次解压对话框 |
+| File Associations | 只读查询(Windows UserChoice) + CContextMenuInfo.ExtractOnOpen | 状态实时;默认应用经 Windows 设置 |
+| Context Menu | CContextMenuInfo(13 项开关 + 二级菜单模式 + 消除重复 + 打开时解压) | 下一次右键 |
+| Appearance | CFmSettings(6 开关) | 即时 |
+| Advanced | 经典页直达 | - |
+| About | About 对话框直达 | - |
+
+## 右键菜单双模式(Windows 11)
+
+- **二级菜单模式(默认)**:单个 "CuinZip" 根项(ECF_HASSUBCOMMANDS),
+  子命令按选择场景过滤(Open 仅单压缩包;Extract 系仅当选中含压缩包;
+  Compress 系任意选择可用;Hash 组)。
+- **平铺模式**:6 个高频动词直接出现在一级菜单,各自带图标与本地化标题
+  ("Extract to <name>\" / "Add to <name>.7z" 等动态名实时计算);
+  Extract/Open 类在不含压缩包的选择下经 GetState 返回 ECS_HIDDEN。
+- 两种模式由同一 `CascadedMenu` 设置互换:平铺模式隐藏根项,二级模式
+  隐藏全部平铺动词;Explorer 不显示空壳菜单。
+- 平铺动词 CLSID(Preview 与 Release 构建共用,均为 CuinZip 自有):
+  Open 9EE110B9-… / ExtractHere 3FCAFA2A-… / ExtractTo EEEA627E-… /
+  Compress 40E45AB6-… / CompressTo7z AD18A991-… / CompressToZip 95BA5FBD-…;
+  二级菜单根项沿用 P0-3 的 788F8FA7-…。
+- manifest 在 */Directory/Drive 三个 ItemType 各注册 7 个动词
+  (0000 根项 + 0001-0006 平铺),Verb Id 唯一,不出现重复菜单。
+
+## 本地化(P1-4)
+
+- `SettingsPage.resw` 96 键(en + zh-Hans,其余语言回退 English),
+  覆盖全部新增分类文案/开关/组合框项/关联状态;
+- 右键菜单新字符串(Open with CuinZip、Hash 组五项)进入 Explorer
+  STRINGTABLE(English 基线 + Lang 文件覆盖机制,与既有菜单字符串一致);
+- 未新增散落硬编码 UI 文案。
+
+## 验证(P1-4,2026-09-23 完成)
+
+- 构建:BuildAllTargets(Debug+Release × x64+arm64 + MSIX bundle)0 错误;
+  MSIX 包内 manifest 验证 7 动词 × 3 ItemType + 6 新 CLSID + 关联声明齐全;
+- Settings 页 UIA 驱动 18/18 PASS(经 Universal exe 临时钩子承载 XAML
+  环境,验证后钩子已移除):八分类导航 + 各设置组写真实配置源逐一断言;
+- Shell 扩展 COM 驱动测试 43/43 PASS(`p14_shelltest`,DllGetClassObject
+  创建各动词 + 真实 IShellItemArray):双模式显隐、设置开关过滤、多选、
+  Invoke 全链路(Add to ZIP 多文件 / Add to 7z / Extract Here /
+  Extract to Folder / Open)与 SHA-256 往返;
+- 文件关联 9/9 PASS:每用户 Progid 注册后 .7z/.zip 双击拉起 CuinZip;
+  查询如实反映 UserChoice 真实状态(不谎报/不抢占);测试注册已清理;
+- CLI 矩阵 PASS:.7z / .zip / .7z(AES+加密文件名)SHA-256 一致;
+- Classic UI 冒烟 PASS。
+
+## 已知限制
+
+- Win32 FM / Shell 扩展的菜单字符串本地化经 Lang 文件机制,仓库不随包
+  发布 Lang 文件(与上游一致),zh-Hans 菜单名需用户自备 Lang 文件;
+  Modern 设置 UI 的 zh-Hans 经 resw 完整覆盖。
+- Modern MSIX 部署实测仍被 Developer Mode 关闭阻塞(不修改系统策略),
+  与 P1-1/P1-2/P1-3 相同。

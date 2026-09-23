@@ -17,5 +17,9 @@ K7ModernGetCopyLocationDialogPath
 K7ModernCreateMainWindowToolBarPage
 K7ModernShowSettingsDialog
 K7ModernGetUiString
+; CuinZip P1-4 Modification Start
+K7ModernQueryFileAssociation
+K7ModernLaunchDefaultAppsSettings
+; CuinZip P1-4 Modification End
 K7ModernShowCompressDialog
 K7ModernShowExtractDialog

@@ -32,6 +32,44 @@
 #include "../SevenZip/CPP/7zip/UI/Explorer/ContextMenuFlags.h"
 #include "../SevenZip/CPP/7zip/UI/Explorer/resource.h"
 
+// **************** CuinZip P1-4 Modification Start ****************
+// 命令 ID 枚举前置:匿名命名空间中的选择分析 / 标题 / 显隐辅助函数需要引用。
+namespace NanaZip::ShellExtension
+{
+    namespace CommandID
+    {
+        enum
+        {
+            None,
+
+            Open,
+            Test,
+
+            Extract,
+            ExtractHere,
+            ExtractHereSmart,
+            ExtractTo,
+
+            Compress,
+            CompressTo7z,
+            CompressToZip,
+
+            CompressEmail,
+            CompressTo7zEmail,
+            CompressToZipEmail,
+
+            HashCRC32,
+            HashCRC64,
+            HashSHA1,
+            HashSHA256,
+            HashAll,
+
+            Maximum
+        };
+    }
+}
+// **************** CuinZip P1-4 Modification End ****************
+
 namespace
 {
     static const char* const kExtractExcludeExtensions =
@@ -169,42 +207,264 @@ namespace
     {
         return fs2us(NWindows::NDLL::GetModuleDirPrefix()) + L"NanaZip.Modern.FileManager.exe";
     }
+
+    // **************** CuinZip P1-4 Modification Start ****************
+    // 选择分析:一次收集供 GetState / GetTitle / Invoke 复用的事实
+    // (文件清单、是否含压缩包、解压目标子文件夹名、压缩包基名与所在目录)。
+    struct SelectionInfo
+    {
+        std::vector<std::wstring> FilePaths;
+        bool NeedExtract = false;
+        std::wstring SpecFolder = L"*";   // "Name\" 或 "*\"(多选/混合时)
+        std::wstring BaseFolder;
+        std::wstring ArchiveName;         // 不含扩展名
+        bool Valid = false;
+    };
+
+    void CollectFilePaths(
+        _In_opt_ IShellItemArray* psiItemArray,
+        std::vector<std::wstring>& FilePaths)
+    {
+        if (!psiItemArray)
+        {
+            return;
+        }
+        DWORD Count = 0;
+        if (FAILED(psiItemArray->GetCount(&Count)))
+        {
+            return;
+        }
+        for (DWORD i = 0; i < Count; ++i)
+        {
+            winrt::com_ptr<IShellItem> Item;
+            if (SUCCEEDED(psiItemArray->GetItemAt(i, Item.put())))
+            {
+                LPWSTR DisplayName = nullptr;
+                if (SUCCEEDED(Item->GetDisplayName(
+                    SIGDN_FILESYSPATH,
+                    &DisplayName)))
+                {
+                    FilePaths.push_back(std::wstring(DisplayName));
+                    ::CoTaskMemFree(DisplayName);
+                }
+            }
+        }
+    }
+
+    SelectionInfo AnalyzeSelection(_In_opt_ IShellItemArray* psiItemArray)
+    {
+        SelectionInfo Info;
+        CollectFilePaths(psiItemArray, Info.FilePaths);
+        if (Info.FilePaths.empty())
+        {
+            return Info;
+        }
+
+        for (std::wstring const& FilePath : Info.FilePaths)
+        {
+            DWORD FileAttributes = ::GetFileAttributesW(FilePath.c_str());
+            if (FileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+            {
+                continue;
+            }
+            if (DoNeedExtract(::PathFindFileNameW(FilePath.c_str())))
+            {
+                Info.NeedExtract = true;
+                break;
+            }
+        }
+
+        if (Info.NeedExtract)
+        {
+            if (Info.FilePaths.size() == 1)
+            {
+                Info.SpecFolder = GetSubFolderNameForExtract(
+                    ::PathFindFileNameW(Info.FilePaths[0].c_str()));
+            }
+            Info.SpecFolder += L'\\';
+        }
+
+        UStringVector FileNames;
+        for (std::wstring const& FilePath : Info.FilePaths)
+        {
+            FileNames.Add(FilePath.c_str());
+        }
+
+        NWindows::NFile::NFind::CFileInfo FileInfo0;
+        const UString& FileName = FileNames.Front();
+
+        if (NWindows::NFile::NName::IsDevicePath(us2fs(FileName)))
+        {
+            // CFileInfo::Find can be slow for device files. So we don't call
+            // it. We need only name here.
+            FileInfo0.Name = us2fs(FileName.Ptr(
+                NWindows::NFile::NName::kDevicePathPrefixSize));
+            Info.BaseFolder = L"C:\\";
+        }
+        else
+        {
+            if (!FileInfo0.Find(us2fs(FileName)))
+            {
+                return Info;
+            }
+            FString FolderPrefix;
+            NWindows::NFile::NDir::GetOnlyDirPrefix(
+                us2fs(FileName),
+                FolderPrefix);
+            Info.BaseFolder = std::wstring(FolderPrefix.Ptr(), FolderPrefix.Len());
+        }
+
+        const UString Name = CreateArchiveName(
+            FileNames,
+            FileNames.Size() == 1 ? &FileInfo0 : nullptr);
+        Info.ArchiveName = std::wstring(Name.Ptr(), Name.Len());
+        Info.Valid = true;
+        return Info;
+    }
+
+    // CuinZip P1-4:平铺(非二级菜单)动词的本地化标题。二级子菜单内的
+    // Open 沿用 IDS_CONTEXT_OPEN("Open archive"),平铺时用
+    // IDS_CONTEXT_OPEN_WITH("Open with CuinZip")语义更清晰。
+    std::wstring GetLocalizedFlatTitle(
+        DWORD CommandID,
+        SelectionInfo const& Info)
+    {
+        LoadLangOneTime();
+
+        UString TranslatedString;
+        switch (CommandID)
+        {
+        case NanaZip::ShellExtension::CommandID::Open:
+            LangString(IDS_CONTEXT_OPEN_WITH, TranslatedString);
+            break;
+        case NanaZip::ShellExtension::CommandID::ExtractHere:
+            LangString(IDS_CONTEXT_EXTRACT_HERE, TranslatedString);
+            break;
+        case NanaZip::ShellExtension::CommandID::ExtractTo:
+            LangString(IDS_CONTEXT_EXTRACT_TO, TranslatedString);
+            MyFormatNew_ReducedName(TranslatedString, Info.SpecFolder.c_str());
+            break;
+        case NanaZip::ShellExtension::CommandID::Compress:
+            LangString(IDS_CONTEXT_COMPRESS, TranslatedString);
+            break;
+        case NanaZip::ShellExtension::CommandID::CompressTo7z:
+            LangString(IDS_CONTEXT_COMPRESS_TO, TranslatedString);
+            MyFormatNew_ReducedName(
+                TranslatedString,
+                (Info.ArchiveName + L".7z").c_str());
+            break;
+        case NanaZip::ShellExtension::CommandID::CompressToZip:
+            LangString(IDS_CONTEXT_COMPRESS_TO, TranslatedString);
+            MyFormatNew_ReducedName(
+                TranslatedString,
+                (Info.ArchiveName + L".zip").c_str());
+            break;
+        default:
+            break;
+        }
+        return std::wstring(TranslatedString.Ptr(), TranslatedString.Len());
+    }
+
+    // 平铺动词是否适用于当前选择(与二级子菜单的过滤规则一致)。
+    bool IsFlatCommandApplicable(DWORD CommandID, SelectionInfo const& Info)
+    {
+        if (!Info.Valid)
+        {
+            return false;
+        }
+        switch (CommandID)
+        {
+        case NanaZip::ShellExtension::CommandID::Open:
+            return Info.NeedExtract && Info.FilePaths.size() == 1;
+        case NanaZip::ShellExtension::CommandID::ExtractHere:
+        case NanaZip::ShellExtension::CommandID::ExtractTo:
+            return Info.NeedExtract;
+        case NanaZip::ShellExtension::CommandID::Compress:
+        case NanaZip::ShellExtension::CommandID::CompressTo7z:
+        case NanaZip::ShellExtension::CommandID::CompressToZip:
+            return true;
+        default:
+            return false;
+        }
+    }
+
+    // 平铺动词对应的设置开关(ContextMenu 设置页驱动)。
+    bool IsFlatCommandEnabledBySettings(
+        DWORD CommandID,
+        CContextMenuInfo const& Info)
+    {
+        switch (CommandID)
+        {
+        case NanaZip::ShellExtension::CommandID::Open:
+            return (Info.Flags & NContextMenuFlags::kOpen) != 0;
+        case NanaZip::ShellExtension::CommandID::ExtractHere:
+            return (Info.Flags & NContextMenuFlags::kExtractHere) != 0;
+        case NanaZip::ShellExtension::CommandID::ExtractTo:
+            return (Info.Flags & NContextMenuFlags::kExtractTo) != 0;
+        case NanaZip::ShellExtension::CommandID::Compress:
+            return (Info.Flags & NContextMenuFlags::kCompress) != 0;
+        case NanaZip::ShellExtension::CommandID::CompressTo7z:
+            return (Info.Flags & NContextMenuFlags::kCompressTo7z) != 0;
+        case NanaZip::ShellExtension::CommandID::CompressToZip:
+            return (Info.Flags & NContextMenuFlags::kCompressToZip) != 0;
+        default:
+            return false;
+        }
+    }
+
+    // CuinZip P1-4:平铺动词 CLSID 表(全新 GUID,不与上游 NanaZip 复用,
+    // 保证 CuinZip 与 NanaZip 可共存)。
+    struct FlatVerbEntry
+    {
+        GUID const& Clsid;
+        DWORD CommandID;
+    };
+
+    GUID const kFlatOpenClsid =
+    {
+        0x9EE110B9, 0x828B, 0x4B34,
+        { 0xB6, 0x31, 0x20, 0xEE, 0xD2, 0x99, 0x94, 0x0E }
+    };
+    GUID const kFlatExtractHereClsid =
+    {
+        0x3FCAFA2A, 0xD2C0, 0x4D3F,
+        { 0xBD, 0xC3, 0xDD, 0x63, 0x09, 0x2D, 0xD4, 0x67 }
+    };
+    GUID const kFlatExtractToClsid =
+    {
+        0xEEEA627E, 0xE069, 0x449D,
+        { 0x85, 0x46, 0xB7, 0x09, 0x4E, 0x28, 0xC7, 0x90 }
+    };
+    GUID const kFlatCompressClsid =
+    {
+        0x40E45AB6, 0x96D5, 0x470B,
+        { 0x8C, 0x67, 0xB0, 0x52, 0x01, 0x1E, 0xE4, 0x4C }
+    };
+    GUID const kFlatCompressTo7zClsid =
+    {
+        0xAD18A991, 0x08C6, 0x43A1,
+        { 0xAA, 0xBB, 0x29, 0x53, 0xD8, 0xE4, 0x9A, 0x0C }
+    };
+    GUID const kFlatCompressToZipClsid =
+    {
+        0x95BA5FBD, 0xADD7, 0x43A0,
+        { 0x8F, 0xB3, 0x63, 0xE0, 0x70, 0x4C, 0x74, 0xD2 }
+    };
+
+    FlatVerbEntry const kFlatVerbs[] =
+    {
+        { kFlatOpenClsid,          NanaZip::ShellExtension::CommandID::Open },
+        { kFlatExtractHereClsid,   NanaZip::ShellExtension::CommandID::ExtractHere },
+        { kFlatExtractToClsid,     NanaZip::ShellExtension::CommandID::ExtractTo },
+        { kFlatCompressClsid,      NanaZip::ShellExtension::CommandID::Compress },
+        { kFlatCompressTo7zClsid,  NanaZip::ShellExtension::CommandID::CompressTo7z },
+        { kFlatCompressToZipClsid, NanaZip::ShellExtension::CommandID::CompressToZip },
+    };
+    // **************** CuinZip P1-4 Modification End ****************
 }
 
 namespace NanaZip::ShellExtension
 {
-    namespace CommandID
-    {
-        enum
-        {
-            None,
-
-            Open,
-            Test,
-
-            Extract,
-            ExtractHere,
-            ExtractHereSmart,
-            ExtractTo,
-
-            Compress,
-            CompressTo7z,
-            CompressToZip,
-
-            CompressEmail,
-            CompressTo7zEmail,
-            CompressToZipEmail,
-
-            HashCRC32,
-            HashCRC64,
-            HashSHA1,
-            HashSHA256,
-            HashAll,
-
-            Maximum
-        };
-    }
-
     using SubCommandList = std::vector<winrt::com_ptr<IExplorerCommand>>;
     using SubCommandListIterator = SubCommandList::const_iterator;
 
@@ -218,6 +478,11 @@ namespace NanaZip::ShellExtension
 
         DWORD m_CommandID;
         bool m_IsSeparator;
+        // **************** CuinZip P1-4 Modification Start ****************
+        // true 表示平铺动词(直接出现在一级右键菜单),其显隐与标题由
+        // 当前选择 + Context Menu 设置实时决定。
+        bool m_IsFlat;
+        // **************** CuinZip P1-4 Modification End ****************
         CBoolPair m_ElimDup;
         UInt32 m_WriteZone;
 
@@ -227,11 +492,17 @@ namespace NanaZip::ShellExtension
             std::wstring const& Title = std::wstring(),
             DWORD CommandID = CommandID::None,
             CBoolPair const& ElimDup = CBoolPair(),
-            UInt32 const& WriteZone = static_cast<UInt32>(-1)) :
+            UInt32 const& WriteZone = static_cast<UInt32>(-1),
+            // **************** CuinZip P1-4 Modification Start ****************
+            bool IsFlat = false) :
+            // **************** CuinZip P1-4 Modification End ****************
             m_Title(Title),
             m_CommandID(CommandID),
             m_ElimDup(ElimDup),
-            m_WriteZone(WriteZone)
+            m_WriteZone(WriteZone),
+            // **************** CuinZip P1-4 Modification Start ****************
+            m_IsFlat(IsFlat)
+            // **************** CuinZip P1-4 Modification End ****************
         {
             this->m_IsSeparator = (this->m_CommandID == CommandID::None);
         }
@@ -242,6 +513,21 @@ namespace NanaZip::ShellExtension
             _In_opt_ IShellItemArray* psiItemArray,
             _Outptr_ LPWSTR* ppszName)
         {
+            // **************** CuinZip P1-4 Modification Start ****************
+            // 平铺动词的标题依赖当前选择(解压目标/压缩包名),实时计算。
+            if (this->m_IsFlat)
+            {
+                SelectionInfo Info = AnalyzeSelection(psiItemArray);
+                std::wstring Title = GetLocalizedFlatTitle(this->m_CommandID, Info);
+                if (Title.empty())
+                {
+                    *ppszName = nullptr;
+                    return E_NOTIMPL;
+                }
+                return ::SHStrDupW(Title.c_str(), ppszName);
+            }
+            // **************** CuinZip P1-4 Modification End ****************
+
             UNREFERENCED_PARAMETER(psiItemArray);
 
             if (this->m_IsSeparator)
@@ -258,6 +544,17 @@ namespace NanaZip::ShellExtension
             _Outptr_ LPWSTR* ppszIcon)
         {
             UNREFERENCED_PARAMETER(psiItemArray);
+
+            // **************** CuinZip P1-4 Modification Start ****************
+            // 平铺动词显示 CuinZip 文件管理器图标(与二级菜单根项一致)。
+            if (this->m_IsFlat)
+            {
+                UString Path = ::GetNanaZipPath();
+                std::wstring Icon = std::wstring(Path.Ptr(), Path.Len());
+                Icon += L",-1";
+                return ::SHStrDupW(Icon.c_str(), ppszIcon);
+            }
+            // **************** CuinZip P1-4 Modification End ****************
 
             *ppszIcon = nullptr;
             return E_NOTIMPL;
@@ -284,8 +581,33 @@ namespace NanaZip::ShellExtension
             _In_ BOOL fOkToBeSlow,
             _Out_ EXPCMDSTATE* pCmdState)
         {
-            UNREFERENCED_PARAMETER(psiItemArray);
             UNREFERENCED_PARAMETER(fOkToBeSlow);
+
+            // **************** CuinZip P1-4 Modification Start ****************
+            // 平铺动词:二级菜单模式开启、对应设置关闭或不适于当前选择时隐藏。
+            if (this->m_IsFlat)
+            {
+                CContextMenuInfo ContextMenuInfo;
+                ContextMenuInfo.Load();
+                if (ContextMenuInfo.Cascaded.Val)
+                {
+                    *pCmdState = ECS_HIDDEN;
+                    return S_OK;
+                }
+                if (!IsFlatCommandEnabledBySettings(this->m_CommandID, ContextMenuInfo))
+                {
+                    *pCmdState = ECS_HIDDEN;
+                    return S_OK;
+                }
+                SelectionInfo Info = AnalyzeSelection(psiItemArray);
+                *pCmdState = IsFlatCommandApplicable(this->m_CommandID, Info)
+                    ? ECS_ENABLED
+                    : ECS_HIDDEN;
+                return S_OK;
+            }
+            // **************** CuinZip P1-4 Modification End ****************
+
+            UNREFERENCED_PARAMETER(psiItemArray);
             *pCmdState = ECS_ENABLED;
             return S_OK;
         }
@@ -887,30 +1209,34 @@ namespace NanaZip::ShellExtension
                         winrt::make<ExplorerCommandBase>());
                 }
 
-                this->m_SubCommands.push_back(
-                    winrt::make<ExplorerCommandBase>(
-                        L"CRC-32",
-                        CommandID::HashCRC32));
+                // **************** CuinZip P1-4 Modification Start ****************
+                // Hash 项标题接入本地化资源,不再散落硬编码。
+                struct HashItem
+                {
+                    UINT32 LangID;
+                    DWORD CommandID;
+                };
+                static HashItem const kHashItems[] =
+                {
+                    { IDS_CONTEXT_HASH_CRC32,  CommandID::HashCRC32 },
+                    { IDS_CONTEXT_HASH_CRC64,  CommandID::HashCRC64 },
+                    { IDS_CONTEXT_HASH_SHA1,   CommandID::HashSHA1 },
+                    { IDS_CONTEXT_HASH_SHA256, CommandID::HashSHA256 },
+                    { IDS_CONTEXT_HASH_ALL,    CommandID::HashAll },
+                };
 
-                this->m_SubCommands.push_back(
-                    winrt::make<ExplorerCommandBase>(
-                        L"CRC-64",
-                        CommandID::HashCRC64));
-
-                this->m_SubCommands.push_back(
-                    winrt::make<ExplorerCommandBase>(
-                        L"SHA-1",
-                        CommandID::HashSHA1));
-
-                this->m_SubCommands.push_back(
-                    winrt::make<ExplorerCommandBase>(
-                        L"SHA-256",
-                        CommandID::HashSHA256));
-
-                this->m_SubCommands.push_back(
-                    winrt::make<ExplorerCommandBase>(
-                        L"*",
-                        CommandID::HashAll));
+                for (HashItem const& Item : kHashItems)
+                {
+                    UString TranslatedString;
+                    LangString(Item.LangID, TranslatedString);
+                    this->m_SubCommands.push_back(
+                        winrt::make<ExplorerCommandBase>(
+                            std::wstring(
+                                TranslatedString.Ptr(),
+                                TranslatedString.Len()),
+                            Item.CommandID));
+                }
+                // **************** CuinZip P1-4 Modification End ****************
             }
         }
 
@@ -973,10 +1299,25 @@ namespace NanaZip::ShellExtension
             _In_ BOOL fOkToBeSlow,
             _Out_ EXPCMDSTATE* pCmdState)
         {
-            UNREFERENCED_PARAMETER(psiItemArray);
             UNREFERENCED_PARAMETER(fOkToBeSlow);
-            *pCmdState = ECS_ENABLED;
+
+            // **************** CuinZip P1-4 Modification Start ****************
+            // 平铺模式(二级菜单模式关闭)时隐藏二级菜单根项,避免空壳菜单;
+            // 二级菜单模式下若无任何可用子命令也同样隐藏。
+            CContextMenuInfo ContextMenuInfo;
+            ContextMenuInfo.Load();
+            if (ContextMenuInfo.Cascaded.Val == false)
+            {
+                *pCmdState = ECS_HIDDEN;
+                return S_OK;
+            }
+
+            this->Initialize(psiItemArray);
+            *pCmdState = this->m_SubCommands.empty()
+                ? ECS_HIDDEN
+                : ECS_ENABLED;
             return S_OK;
+            // **************** CuinZip P1-4 Modification End ****************
         }
 
         HRESULT STDMETHODCALLTYPE Invoke(
@@ -1054,7 +1395,7 @@ namespace NanaZip::ShellExtension
         }
 
         HRESULT STDMETHODCALLTYPE Clone(
-            _Out_ IEnumExplorerCommand** ppenum)
+            _Outptr_ IEnumExplorerCommand** ppenum)
         {
             *ppenum = nullptr;
             return E_NOTIMPL;
@@ -1072,7 +1413,7 @@ namespace NanaZip::ShellExtension
         HRESULT STDMETHODCALLTYPE CreateInstance(
             _In_opt_ IUnknown* pUnkOuter,
             _In_ REFIID riid,
-            _COM_Outptr_ void** ppvObject) noexcept override
+            _Outptr_ void** ppvObject) noexcept override
         {
             UNREFERENCED_PARAMETER(pUnkOuter);
 
@@ -1102,6 +1443,61 @@ namespace NanaZip::ShellExtension
             return S_OK;
         }
     };
+
+    // **************** CuinZip P1-4 Modification Start ****************
+    // 平铺动词的类厂:每个 CLSID 对应一个固定命令,标题/显隐在选择变化时
+    // 由 ExplorerCommandBase 实时计算。
+    struct FlatVerbClassFactory : public winrt::implements<
+        FlatVerbClassFactory, IClassFactory>
+    {
+    private:
+
+        DWORD m_CommandID;
+
+    public:
+
+        FlatVerbClassFactory(DWORD CommandID) : m_CommandID(CommandID)
+        {
+        }
+
+        HRESULT STDMETHODCALLTYPE CreateInstance(
+            _In_opt_ IUnknown* pUnkOuter,
+            _In_ REFIID riid,
+            _Outptr_ void** ppvObject) noexcept override
+        {
+            UNREFERENCED_PARAMETER(pUnkOuter);
+
+            try
+            {
+                return winrt::make<ExplorerCommandBase>(
+                    std::wstring(),
+                    this->m_CommandID,
+                    CBoolPair(),
+                    static_cast<UInt32>(-1),
+                    true)->QueryInterface(riid, ppvObject);
+            }
+            catch (...)
+            {
+                return winrt::to_hresult();
+            }
+        }
+
+        HRESULT STDMETHODCALLTYPE LockServer(
+            _In_ BOOL fLock) noexcept override
+        {
+            if (fLock)
+            {
+                ++winrt::get_module_lock();
+            }
+            else
+            {
+                --winrt::get_module_lock();
+            }
+
+            return S_OK;
+        }
+    };
+    // **************** CuinZip P1-4 Modification End ****************
 }
 
 EXTERN_C HRESULT STDAPICALLTYPE DllCanUnloadNow()
@@ -1129,6 +1525,25 @@ EXTERN_C HRESULT STDAPICALLTYPE DllGetClassObject(
     {
         return E_NOINTERFACE;
     }
+
+    // **************** CuinZip P1-4 Modification Start ****************
+    // 平铺动词 CLSID(与二级菜单根项 CLSID 一样均为 CuinZip 自有 GUID)。
+    for (FlatVerbEntry const& Entry : kFlatVerbs)
+    {
+        if (rclsid == Entry.Clsid)
+        {
+            try
+            {
+                return winrt::make<NanaZip::ShellExtension::FlatVerbClassFactory>(
+                    Entry.CommandID)->QueryInterface(riid, ppv);
+            }
+            catch (...)
+            {
+                return winrt::to_hresult();
+            }
+        }
+    }
+    // **************** CuinZip P1-4 Modification End ****************
 
     if (rclsid != __uuidof(NanaZip::ShellExtension::ClassFactory))
     {
