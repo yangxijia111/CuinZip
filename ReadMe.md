@@ -57,30 +57,31 @@ Download the latest preview from the
 
 | Artifact | For |
 | --- | --- |
-| `CuinZip_<version>_x64_Portable.zip` | x64, no install — unzip and run `NanaZip.Universal.Windows.exe` (Modern UI) or `NanaZip.Universal.Console.exe` (CLI). |
+| `CuinZip_<version>_x64_Portable.zip` | x64, no install — unzip and run `NanaZip.Modern.FileManager.exe` (Modern file manager) or `NanaZip.Universal.Console.exe` (CLI). |
 | `CuinZip_<version>_x64_Setup.exe` | x64 per-user installer (no administrator rights required). Unsigned preview build. |
 | `CuinZipPreview_<version>_x64_arm64.msixbundle` | MSIX package with full Windows 11 integration (context menu, file associations, tiles). Sideloading requires Developer Mode or a trusted certificate. |
 
 Notes:
 
-- The portable and installer builds run unpackaged: the Modern UI is hosted by
-  `NanaZip.Universal.Windows.exe`, and the Explorer context menu is **not**
-  available in this mode (it is delivered by the MSIX package).
+- The portable and installer builds run unpackaged: the Modern file manager and
+  dialogs work, but the Explorer context menu is **not** available in this mode
+  (it is delivered by the MSIX package).
 - File associations are never registered silently by the installer. Use
   Windows Settings → Default apps, or the File Associations page inside
   CuinZip Settings.
 
 ## Screenshots
 
-Modern compression dialog and classic file manager (light / dark):
+Modern file manager, opening a .7z archive, Settings, and the compression
+dialog (all captured from the portable x64 build):
 
-| Modern compression dialog | Classic file manager |
+| File manager | Opening a .7z archive |
 | --- | --- |
-| ![Compress dialog](Docs/Screenshots/P1-3/compress-dialog-light.png) | ![Classic file manager](Docs/Screenshots/P1-1/ClassicFileManager_Light.png) |
+| ![File manager](Docs/Screenshots/P1-5/modern-filemanager.png) | ![Open 7z](Docs/Screenshots/P1-5/modern-open-7z.png) |
 
-| Opening a .7z archive | Modern extraction dialog |
+| Settings | Compression dialog |
 | --- | --- |
-| ![Open archive](Docs/Screenshots/P1-2/classic-open-archive.png) | ![Extract dialog](Docs/Screenshots/P1-3/extract-dialog-light.png) |
+| ![Settings](Docs/Screenshots/P1-5/modern-settings.png) | ![Compress dialog](Docs/Screenshots/P1-5/modern-compress-dialog.png) |
 
 ## Known Limitations
 

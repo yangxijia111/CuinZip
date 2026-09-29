@@ -2,7 +2,7 @@
 #define AppPublisher "CuinZip Project"
 #define AppCopyright "© CuinZip Project and Contributors. Based on NanaZip (M2-Team) and 7-Zip (Igor Pavlov). All rights reserved."
 #define AppURL "https://github.com/yangxijia111/CuinZip"
-#define AppExeName "NanaZip.Universal.Windows.exe"
+#define AppExeName "NanaZip.Modern.FileManager.exe"
 
 #ifndef AppVersion
 #define AppVersion "0.1.0.0"

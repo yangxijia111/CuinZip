@@ -1,4 +1,4 @@
-# CuinZip CI smoke tests
+﻿# CuinZip CI smoke tests
 # 验证 x64 Release 构建的基本功能未回归:
 #   CLI 压缩/解压(.7z/.zip/AES)、分卷、SHA-256、品牌标识(manifest/文件属性)
 # 用法: smoke-tests.ps1 -BinDir <x64 产物目录>
@@ -63,10 +63,14 @@ try {
         throw "SHA-256 mismatch. Expected $Expected, got: $HashOutput"
     }
 
-    # 品牌标识:MSIX manifest 身份
-    $Manifest = Get-Content -LiteralPath (Join-Path $BinDir 'AppxManifest.xml') -Raw
-    if ($Manifest -notmatch 'Cuin\.CuinZipPreview') { throw 'AppxManifest identity is not CuinZip' }
-    if ($Manifest -notmatch 'fileExplorerContextMenus') { throw 'AppxManifest is missing Explorer context menu declarations' }
+    # 品牌标识:MSIX manifest 身份(便携/安装目录无此文件时跳过,
+    # CI 的包暂存目录一定存在)
+    $ManifestPath = Join-Path $BinDir 'AppxManifest.xml'
+    if (Test-Path -LiteralPath $ManifestPath) {
+        $Manifest = Get-Content -LiteralPath $ManifestPath -Raw
+        if ($Manifest -notmatch 'Cuin\.CuinZipPreview') { throw 'AppxManifest identity is not CuinZip' }
+        if ($Manifest -notmatch 'fileExplorerContextMenus') { throw 'AppxManifest is missing Explorer context menu declarations' }
+    }
 
     # 品牌标识:文件属性
     foreach ($exe in @('NanaZip.Universal.Windows.exe', 'NanaZip.Modern.FileManager.exe')) {

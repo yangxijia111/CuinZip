@@ -43,9 +43,9 @@ based on [NanaZip](https://github.com/M2Team/NanaZip) and
 - The MSIX bundle is unsigned as well, so sideloading it requires Developer
   Mode. Without it, use the portable ZIP or the per-user installer. The
   Explorer context menu is only available through the MSIX package.
-- The Modern file manager UI runs unpackaged via `NanaZip.Universal.Windows.exe`
-  in portable/installer mode; some integration features (context menu, file
-  associations, tiles) require the MSIX package.
+- **Portable / installer mode**: the Modern file manager and dialogs run
+  unpackaged via `NanaZip.Modern.FileManager.exe`; integration features
+  (context menu, file associations, tiles) require the MSIX package.
 - This is a preview: settings layouts, menu structures, and internal APIs may
   change in future builds.
 

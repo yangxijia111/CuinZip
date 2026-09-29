@@ -1,12 +1,11 @@
 # CuinZip Progress
 
 ## Current Phase
-P1-5 UI 收尾 + v0.1 Preview Release Hardening
+P2 CuinZip 独有功能(Search / 智能解压 / 安全能力)——待启动
 
 ## Status
-IN PROGRESS(2026-09-29,安全标签 `p1-5-pre-release`,基线 `3e0243a9`)
-P1-4 已 DONE(2026-09-23,安全标签 `p1-4-pre-integration`,基线 `723d047a`,
-详见下方 P1-4 节)
+P1-5 DONE(2026-09-29,`v0.1.0-preview.1` 已发布;安全标签 `p1-5-pre-release`,
+基线 `3e0243a9`,详见下方 P1-5 节)
 
 ## Completed
 - P0-1 Fork / Git / License Audit
@@ -36,31 +35,52 @@ P1-4 已 DONE(2026-09-23,安全标签 `p1-4-pre-integration`,基线 `723d047a`,
   - RefreshVersion 自动改动（Version.props / manifest 版本号）已回滚，未污染 Git
 
 ## Current Task
-P1-5 UI 收尾 + Release Hardening 实施中(详见下方 P1-5 节)
+P1-5 已完成;下一步 P2(Search / 智能解压 / 安全能力)
 
 ## P1-5 UI 收尾 + v0.1 Preview Release Hardening
-IN PROGRESS(2026-09-29,安全标签 `p1-5-pre-release`,基线 `3e0243a9`):
-- 阶段收口:P1-4 标记 DONE;冻结新功能,仅做收尾与硬化
-- **品牌/UI 收尾(已完成)**:用户可见区域全量检查;清理 NanaZip 遗留
-  (Browse/Diagnostic 对话框标题、About 菜单与对话框、FM 内置右键菜单名、
-  内存上限状态串、LoadCodecs 错误信息);经典 FM 窗口图标由上游图标切换为
-  CuinZip 图标;保留全部 attribution、内部兼容名称与许可证
-- **正式版 CuinZip 原创图标(已完成)**:拉链 Z 标记 + 渐变蓝底,生成 MSIX
-  全尺寸资产(Preview/Release 两套 × 370 文件)与 ico(应用/SFX × 15 尺寸),
-  生成器 `Assets/GenerateCuinZipAssets.py` 入库;未改上游 CC BY-ND 图标
-- **版本体系(已完成)**:改为 CuinZip 自有 Major.Minor.Build 版本号
-  (0.1.0.0),manifest/安装器/文件属性统一;DisplayVersion 0.1.0-preview.1
-- **仓库公开信息(进行中)**:README 重写(介绍/功能/安装/截图/已知限制/
-  attribution)、Documents/CuinZipReleaseNotes.md、Repository description /
-  Homepage / Preview 状态标记
-- **Release 构建 `v0.1.0-preview.1`**:x64 Portable ZIP + x64 Setup(每用户,
-  Unsigned Preview Build 明确标记)+ MSIX bundle;安装器接入 BuildAllTargets
-  打包后链(StagePortable → BuildPortableZip → BuildInstaller)
-- Release Gate:干净环境验证(启动/打开/压缩/解压/AES/分卷/SHA-256/关联/右键/
-  多文件/Settings/安装/卸载/无残留)
-- CI:最小 GitHub Actions(cuinzip-ci.yml:Restore + x64 Release + smoke tests);
-  上游全矩阵 BuildBinaries.yml 收敛为 main/tag/手动触发
-- 收口:合并 main(禁 force)、tag `v0.1.0-preview.1`、GitHub Pre-release
+DONE(2026-09-29,安全标签 `p1-5-pre-release`,基线 `3e0243a9`,发布
+`v0.1.0-preview.1`):
+- **品牌/UI 收尾**:清理用户可见 NanaZip 遗留(Browse/Diagnostic 对话框标题、
+  About 菜单与对话框、FM 内置右键菜单名、内存上限状态串、LoadCodecs 错误
+  信息);经典 FM 窗口图标由上游图标切换为 CuinZip 图标;保留全部
+  attribution、内部兼容名称与许可证
+- **正式版原创图标**:拉链 Z 标记 + 渐变蓝底,MSIX 全尺寸资产(Preview/Release
+  × 370 文件)+ ico(应用/SFX × 15 尺寸);生成器 `Assets/GenerateCuinZipAssets.py`
+  入库;未改上游 CC BY-ND 图标;修复 Python 银行家舍入导致的 APPX1619
+  (SmallTile 107/StoreLogo 63 尺寸约定)
+- **版本体系**:CuinZip 自有 Major.Minor.Build(0.1.0.0),不再沿用上游天数
+  构建号;DisplayVersion 0.1.0-preview.1;manifest/安装器/文件属性统一
+- **仓库公开信息**:README 重写(Modal FM 实拍截图/安装/已知限制/attribution)、
+  Documents/CuinZipReleaseNotes.md、Security/CONTRIBUTING/ISSUE_TEMPLATE/
+  FUNDING 指向 CuinZip;gh description/homepage/topics 已设为 CuinZip+Preview
+- **Release 构建**:BuildAllTargets 0 错误(Debug+Release × x64+arm64 + MSIX
+  bundle);产物 `CuinZip_0.1.0.0_x64_Portable.zip`(顶层版本文件夹)、
+  `CuinZip_0.1.0.0_x64_Setup.exe`(每用户 Inno 安装器,Unsigned Preview
+  Build 标记)、`CuinZipPreview_0.1.0.0_x64_arm64.msixbundle`;
+  BuildAllTargets 新增 StagePortable→BuildPortableZip→BuildInstaller 链
+- **CI**:`cuinzip-ci.yml`(Restore + x64 Release 构建 Modern FM/Classic +
+  smoke tests:.7z/.zip/AES 往返、分卷、SHA-256、品牌标识);上游全矩阵
+  `BuildBinaries.yml` 收敛为 main/tag/手动;smoke 脚本 `.github/scripts/smoke-tests.ps1`
+- **Release Gate(153 PASS / 0 FAIL,干净临时目录)**:
+  - Portable ZIP 结构(18 运行时文件 + 3 文档);Modern FM 与 Universal 宿主
+    均启动,标题 CuinZip;控制台横幅 CuinZip 0.1 Preview
+  - .7z/.zip 打开(窗口标题含包名);CLI 压缩/解压/AES(.7z -mhe +
+    .zip AES256)/分卷(-v10k)/多文件/SHA-256 全部与 .NET 一致
+  - GUI 压缩/解压对话框(UIA 驱动 OK/Extract,产物 SHA-256 往返一致)
+  - Settings:经 IDM_OPTIONS 命令打开 Modern 设置,8 分类全部可见
+  - 文件关联:K7ModernQueryFileAssociation 如实反映 UserChoice;自有扩展名
+    Progid 注册后报告 CuinZip 为默认;.cuzgate 双击拉起 FM(本机 .7z/.zip
+    UserChoice 为 Bandizip,受 Windows 保护,不抢占)
+  - Explorer 右键菜单:Shell 扩展 COM 驱动 43/43(二级/平铺、开关、多选、
+    Invoke 全链路 SHA-256 一致);MSIX manifest 7 CLSID × 3 ItemType +
+    fileTypeAssociation/fileExplorerContextMenus + 新 ArchiveFile 图标
+  - 安装/卸载:每用户静默安装(文件/快捷方式/卸载项/版本信息),安装后
+    启动,静默卸载全部移除,无失效注册残留(0 项)
+- **gate 经验**:便携/安装模式下 Modern FM(NanaZip.Modern.FileManager.exe)
+  完整可用(主启动器);UIA Invoke 对工具栏 AppBarButton 无效(键盘/鼠标
+  正常),gate 用 WM_COMMAND 驱动;UIA 根节点扫描对部分 Mile 窗口不可见,
+  用 EnumWindows;.iss/ps1 需 UTF-8 BOM;7z 控制台打包用 `a -r` 从上级目录
+  调用可保留顶层文件夹
 
 ## P1-4 Settings / File Associations / Explorer Context Menu
 DONE（2026-09-23，安全标签 `p1-4-pre-integration`，基线 `723d047a`，
