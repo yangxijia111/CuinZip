@@ -34,6 +34,15 @@ DOC_BODY = (255, 255, 255)
 DOC_BORDER = (203, 212, 224)
 DOC_FOLD = (233, 238, 245)
 
+def scaled_px(base, scale):
+    """按 scale 百分比计算像素尺寸,四舍五入(.5 进位)。
+
+    Windows 资产校验要求精确尺寸(如 SmallTile 71x71 @150% 必须为 107x107),
+     Python 的 round() 为银行家舍入(round(106.5)==106),必须用 floor(x+0.5)。
+    """
+    return int(base * scale / 100 + 0.5)
+
+
 TILE_SIZES = [16, 20, 24, 30, 32, 36, 40, 48, 60, 64, 72, 90, 96, 128, 256]
 ICO_SIZES = [(s, s) for s in TILE_SIZES]
 
@@ -289,7 +298,7 @@ def main():
         # 磁贴 / 徽标:scale 系列
         for name, b in tile_bases.items():
             for sc in scales:
-                px = int(round(b * sc / 100))
+                px = scaled_px(b, sc)
                 p = os.path.join(base, "%s.scale-%d" % (name, sc))
                 if name == "LargeTile":
                     save(app_tile(px, fill_ratio=0.72), p + ".png")
@@ -302,8 +311,8 @@ def main():
 
         # Wide310x150Logo:左侧居中标志
         for sc in scales:
-            w = int(round(310 * sc / 100))
-            h = int(round(150 * sc / 100))
+            w = scaled_px(310, sc)
+            h = scaled_px(150, sc)
             canvas = Image.new("RGBA", (w, h), (0, 0, 0, 0))
             tile = app_tile(int(h * 0.80))
             canvas.paste(tile, (int(w * 0.5 - h * 0.40), int(h * 0.10)), tile)
