@@ -1,37 +1,37 @@
-﻿# NanaZip Security Policy
+﻿# CuinZip Security Policy
 
-NanaZip takes security seriously. Since NanaZip is not a full-time project,
+CuinZip takes security seriously. Since CuinZip is not a full-time project,
 maintained by community volunteers with promising at least one major stable
 version per year, we have adopted the following development policies to
 minimize potential vulnerabilities.
 
 ## Support Scope
 
-In the current stage, NanaZip mainly cares about the vulnerability type of
+In the current stage, CuinZip mainly cares about the vulnerability type of
 running unauthorized logics like shellcode, create new process, or etc. Other
-vulnerability types like crypto algorithm vulnerabilities will beyond NanaZip
+vulnerability types like crypto algorithm vulnerabilities will beyond CuinZip
 development team's abilities, and it will be the upstream issues in most
 scenarios.
 
 ## Support Policy
 
 - Only the latest stable and preview are supported.
-- If you met the security vulnerabilities caused by NanaZip dependencies, you
+- If you met the security vulnerabilities caused by CuinZip dependencies, you
   should also to report to the upstream if you can also reproduce that in the
   upstream.
-- NanaZip development team will try their best to fix the issue because NanaZip
-  is a community-driven project.
+- The CuinZip development team will try their best to fix the issue because
+  CuinZip is a community-driven project.
 
 ## Report Policy
 
 - Ensure the issue can be reproduced by the latest stable and/or preview of
-  NanaZip. Because NanaZip introduces several security mitigations, maybe the
+  CuinZip. Because CuinZip introduces several security mitigations, maybe the
   issue you have found will not be reproduced.
 - Prefer making a fix PR directly because we believe you may have a better
   workaround solution than us, but you need to follow the rules, which are
-  mentioned in https://github.com/M2Team/NanaZip/blob/main/CONTRIBUTING.md. You
-  should read that word by word first.
-  - To minimize the vulnerability window, please coordinate with the NanaZip
+  mentioned in https://github.com/yangxijia111/CuinZip/blob/main/CONTRIBUTING.md.
+  You should read that word by word first.
+  - To minimize the vulnerability window, please coordinate with the CuinZip
     maintainers to publish the fixed source code, fixed release and advisory
     at the same time. This is especially important for high-severity
     vulnerabilities (e.g. path traversal or code execution).
@@ -63,16 +63,16 @@ scenarios.
 Read https://en.wikipedia.org/wiki/Principle_of_least_privilege if you don't
 know what is the principle of least privilege.
 
-NanaZip follows the principle of least privilege with considering the user
+CuinZip follows the principle of least privilege with considering the user
 requirements and experience. So, here are some policies we are using.
 
 - Enable several security mitigations to reduce the attack surface.
   - Disable dynamic code generation in Release builds for scenarios without
     isolations prevents generating malicious code at runtime.
   - Disable child process creation if the component doesn't need that. For
-    example, NanaZip CLI and Self Extracting Executables. (Except installer mode
+    example, CuinZip CLI and Self Extracting Executables. (Except installer mode
     of Self Extracting Executables, which compiled binaries is not provided in
-    the NanaZip MSIX package.)
+    the CuinZip MSIX package.)
 - Prefer the isolation mechanisms without exposing native platform details like
   WebAssembly for hosting untrusted third-party contents like external plugins.
 
@@ -80,6 +80,6 @@ requirements and experience. So, here are some policies we are using.
 
 AMAP a.k.a. As Microsoft As Possible.
 
-NanaZip will use more implementations from Windows APIs, especially the
+CuinZip will use more implementations from Windows APIs, especially the
 cryptographic algorithm implementations, which can reduce the attack surface
 and the binary size.

@@ -1,5 +1,5 @@
-blank_issues_enabled: true
+﻿blank_issues_enabled: true
 contact_links:
   - name: Report a security vulnerability
-    url: https://github.com/M2Team/NanaZip/security/advisories/new
+    url: https://github.com/yangxijia111/CuinZip/security/advisories/new
     about: Don't open a GitHub issue to report a vulnerability. Please create a new security advisory instead.

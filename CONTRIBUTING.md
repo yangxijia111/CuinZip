@@ -26,7 +26,7 @@
 - Feedback suggestions and bugs.
   - We use GitHub issues to track bugs and features.
   - For bugs and general issues please 
-    [file a new issue](https://github.com/M2Team/NanaZip/issues/new).
+    [file a new issue](https://github.com/yangxijia111/CuinZip/issues/new).
 
 ## Code contribution guidelines
 
@@ -66,7 +66,7 @@ plugin.
 #### Modifications for inherited 7-Zip mainline source code
 
 > [!NOTE]
-> Read https://github.com/M2Team/NanaZip/blob/main/License.md first for knowing
+> Read https://github.com/yangxijia111/CuinZip/blob/main/License.md first for knowing
 > which files whether belong to inherited 7-Zip mainline source code.**
 
 > [!NOTE]

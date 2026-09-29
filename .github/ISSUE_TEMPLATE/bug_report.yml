@@ -1,4 +1,4 @@
-name: Bug report
+﻿name: Bug report
 description: Something isn't working as expected.
 labels: ["bug"]
 body:
@@ -7,7 +7,7 @@ body:
       label: Prerequisite checks
       description: These items are required before submitting the bug report.
       options:
-      - label: My system fulfills [the minimum software requirements](https://github.com/M2Team/NanaZip?tab=readme-ov-file#system-requirements).
+      - label: My system fulfills [the minimum software requirements](https://github.com/yangxijia111/CuinZip?tab=readme-ov-file#system-requirements).
         required: true
       - label: I have downloaded NanaZip from an official source (GitHub, Microsoft Store, My Digital Life Forums, SourceForge, and Windows App Community)
         required: true
