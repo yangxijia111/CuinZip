@@ -1,10 +1,12 @@
 # CuinZip Progress
 
 ## Current Phase
-P1-4 Settings / File Associations / Explorer Context Menu(系统集成体验)
+P1-5 UI 收尾 + v0.1 Preview Release Hardening
 
 ## Status
-IN PROGRESS(2026-09-23,安全标签 `p1-4-pre-integration`,基线 `723d047a`)
+IN PROGRESS(2026-09-29,安全标签 `p1-5-pre-release`,基线 `3e0243a9`)
+P1-4 已 DONE(2026-09-23,安全标签 `p1-4-pre-integration`,基线 `723d047a`,
+详见下方 P1-4 节)
 
 ## Completed
 - P0-1 Fork / Git / License Audit
@@ -34,12 +36,26 @@ IN PROGRESS(2026-09-23,安全标签 `p1-4-pre-integration`,基线 `723d047a`)
   - RefreshVersion 自动改动（Version.props / manifest 版本号）已回滚，未污染 Git
 
 ## Current Task
-P1-4 Settings / File Associations / Explorer Context Menu 实施中(实现已完成,
-验证与构建进行中)
+P1-5 UI 收尾 + Release Hardening 实施中(详见下方 P1-5 节)
+
+## P1-5 UI 收尾 + v0.1 Preview Release Hardening
+IN PROGRESS(2026-09-29,安全标签 `p1-5-pre-release`,基线 `3e0243a9`):
+- 阶段收口:P1-4 标记 DONE;冻结新功能,仅做收尾与硬化
+- 品牌/UI 收尾:用户可见区域全量检查(名称/图标/About/Settings/压缩解压窗口/
+  右键菜单/安装器/文件属性),清理明显 NanaZip 遗留,保留 attribution/
+  内部兼容名/许可证
+- 正式版 CuinZip 原创图标(替换 P0-3 占位图标),覆盖 MSIX 全尺寸
+- 仓库公开信息:README 重写 / Repository description / Homepage / Preview 状态
+- Release 构建 `v0.1.0-preview.1`(Portable ZIP / Installer / MSIX bundle,
+  Unsigned Preview Build 明确标记)
+- Release Gate:干净环境验证(启动/打开/压缩/解压/AES/分卷/SHA-256/关联/右键/
+  多文件/Settings/安装/卸载/无残留)
+- CI:最小 GitHub Actions(Restore + x64 Release + smoke tests)
+- 收口:合并 main(禁 force)、tag `v0.1.0-preview.1`、GitHub Pre-release
 
 ## P1-4 Settings / File Associations / Explorer Context Menu
-IN PROGRESS(2026-09-23,安全标签 `p1-4-pre-integration`,基线 `723d047a`,
-计划见 `Docs/CUINZIP_UI_PLAN.md` P1-4 节):
+DONE（2026-09-23，安全标签 `p1-4-pre-integration`，基线 `723d047a`，
+计划见 `Docs/CUINZIP_UI_PLAN.md` P1-4 节）:
 - **Settings 全分类真实化**:Modern 设置窗口 8 个分类全部接入真实配置源
   (经宿主回调读写,Modern DLL 不直接访问注册表,无第二套设置):
   General/Appearance → `CFmSettings`(即时生效);Compression →
