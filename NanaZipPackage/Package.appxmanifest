@@ -21,7 +21,7 @@
   <Identity
     Name="Cuin.CuinZipPreview"
     Publisher="CN=D4DFD125-41D0-4903-95E0-896394D6DD55"
-    Version="7.0.1848.0" />
+    Version="0.1.0.0" />
 
   <Properties>
     <DisplayName>CuinZip Preview</DisplayName>

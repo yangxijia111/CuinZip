@@ -1,14 +1,24 @@
 ﻿name: Build Binaries
 
+# 完整构建矩阵(Debug+Release × x64+arm64 + MSIX bundle + 打包 + 安装器)。
+# 成本高,仅在 main、版本 tag 与手动触发时运行;日常 PR/push 的基本构建回归
+# 由 cuinzip-ci.yml(x64 Release + smoke tests)承担。
 on:
   push:
+    branches:
+      - main
+    tags:
+      - 'v*'
     paths-ignore:
       - 'Documents/**'
       - '**/*.md'
   pull_request:
+    branches:
+      - main
     paths-ignore:
       - 'Documents/**'
       - '**/*.md'
+  workflow_dispatch:
 
 jobs:
   build:
@@ -27,26 +37,31 @@ jobs:
     - name: Upload MSIX Bundle
       uses: actions/upload-artifact@v7
       with:
-        name: NanaZip_Mainline_ApplicationPackages
+        name: CuinZip_Mainline_ApplicationPackages
         path: Output/Binaries/AppPackages
-    - name: Upload Extension Package Installer
+    - name: Upload Portable Binaries ZIP
       uses: actions/upload-artifact@v7
       with:
-        name: NanaZip_Mainline_ExtensionPackageInstaller
-        path: Output/NanaZip.ExtensionPackage_*.exe
+        name: CuinZip_Mainline_PortableZip
+        path: Output/CuinZip_*_x64_Portable.zip
+    - name: Upload Installer
+      uses: actions/upload-artifact@v7
+      with:
+        name: CuinZip_Mainline_Installer
+        path: Output/CuinZip_*_x64_Setup.exe
     - name: Upload MSBuild Build Process Binary Log
       uses: actions/upload-artifact@v7
       if: '!cancelled()'
       with:
-        name: NanaZip_Mainline_BuildBinaryLog
+        name: CuinZip_Mainline_BuildBinaryLog
         path: Output/BuildAllTargets.binlog
-    - name: Upload Portable Binaries
+    - name: Upload Upstream Binaries Set
       uses: actions/upload-artifact@v7
       with:
-        name: NanaZip_Mainline_PortableBinaries
+        name: CuinZip_Mainline_UpstreamBinaries
         path: Output/Binaries/Root/Binaries
     - name: Upload Debug Symbols
       uses: actions/upload-artifact@v7
       with:
-        name: NanaZip_Mainline_DebugSymbols
+        name: CuinZip_Mainline_DebugSymbols
         path: Output/Binaries/Root/Symbols

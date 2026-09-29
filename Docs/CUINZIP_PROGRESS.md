@@ -41,16 +41,25 @@ P1-5 UI 收尾 + Release Hardening 实施中(详见下方 P1-5 节)
 ## P1-5 UI 收尾 + v0.1 Preview Release Hardening
 IN PROGRESS(2026-09-29,安全标签 `p1-5-pre-release`,基线 `3e0243a9`):
 - 阶段收口:P1-4 标记 DONE;冻结新功能,仅做收尾与硬化
-- 品牌/UI 收尾:用户可见区域全量检查(名称/图标/About/Settings/压缩解压窗口/
-  右键菜单/安装器/文件属性),清理明显 NanaZip 遗留,保留 attribution/
-  内部兼容名/许可证
-- 正式版 CuinZip 原创图标(替换 P0-3 占位图标),覆盖 MSIX 全尺寸
-- 仓库公开信息:README 重写 / Repository description / Homepage / Preview 状态
-- Release 构建 `v0.1.0-preview.1`(Portable ZIP / Installer / MSIX bundle,
-  Unsigned Preview Build 明确标记)
+- **品牌/UI 收尾(已完成)**:用户可见区域全量检查;清理 NanaZip 遗留
+  (Browse/Diagnostic 对话框标题、About 菜单与对话框、FM 内置右键菜单名、
+  内存上限状态串、LoadCodecs 错误信息);经典 FM 窗口图标由上游图标切换为
+  CuinZip 图标;保留全部 attribution、内部兼容名称与许可证
+- **正式版 CuinZip 原创图标(已完成)**:拉链 Z 标记 + 渐变蓝底,生成 MSIX
+  全尺寸资产(Preview/Release 两套 × 370 文件)与 ico(应用/SFX × 15 尺寸),
+  生成器 `Assets/GenerateCuinZipAssets.py` 入库;未改上游 CC BY-ND 图标
+- **版本体系(已完成)**:改为 CuinZip 自有 Major.Minor.Build 版本号
+  (0.1.0.0),manifest/安装器/文件属性统一;DisplayVersion 0.1.0-preview.1
+- **仓库公开信息(进行中)**:README 重写(介绍/功能/安装/截图/已知限制/
+  attribution)、Documents/CuinZipReleaseNotes.md、Repository description /
+  Homepage / Preview 状态标记
+- **Release 构建 `v0.1.0-preview.1`**:x64 Portable ZIP + x64 Setup(每用户,
+  Unsigned Preview Build 明确标记)+ MSIX bundle;安装器接入 BuildAllTargets
+  打包后链(StagePortable → BuildPortableZip → BuildInstaller)
 - Release Gate:干净环境验证(启动/打开/压缩/解压/AES/分卷/SHA-256/关联/右键/
   多文件/Settings/安装/卸载/无残留)
-- CI:最小 GitHub Actions(Restore + x64 Release + smoke tests)
+- CI:最小 GitHub Actions(cuinzip-ci.yml:Restore + x64 Release + smoke tests);
+  上游全矩阵 BuildBinaries.yml 收敛为 main/tag/手动触发
 - 收口:合并 main(禁 force)、tag `v0.1.0-preview.1`、GitHub Pre-release
 
 ## P1-4 Settings / File Associations / Explorer Context Menu

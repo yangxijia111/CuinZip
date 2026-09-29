@@ -1,18 +1,21 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <!--
-  PROJECT:    NanaZip
+  PROJECT:    CuinZip
   FILE:       NanaZip.Project.Version.props
-  PURPOSE:    MSBuild Properties for project version configurations for NanaZip
+  PURPOSE:    MSBuild Properties for project version configurations for CuinZip
 
   LICENSE:    The MIT License
 
-  MAINTAINER: MouriNaruto (Kenji.Mouri@outlook.com)
+  MAINTAINER: CuinZip Project (derived from NanaZip by M2-Team)
 -->
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <NanaZipMajorVersion>7</NanaZipMajorVersion>
-    <NanaZipMinorVersion>0</NanaZipMinorVersion>
-    <NanaZipBuildNumberDate>2026-09-19</NanaZipBuildNumberDate>
-    <NanaZipDisplayVersion>2609.3</NanaZipDisplayVersion>
+    <!-- CuinZip 自有版本号(Major.Minor.Build.Revision),不再沿用上游
+         NanaZip 的"距 2021-08-31 天数"构建号规则;Build 随每次发布手动递增。 -->
+    <NanaZipMajorVersion>0</NanaZipMajorVersion>
+    <NanaZipMinorVersion>1</NanaZipMinorVersion>
+    <NanaZipBuildNumber>0</NanaZipBuildNumber>
+    <NanaZipBuildNumberDate>2026-09-29</NanaZipBuildNumberDate>
+    <NanaZipDisplayVersion>0.1.0-preview.1</NanaZipDisplayVersion>
   </PropertyGroup>
 </Project>

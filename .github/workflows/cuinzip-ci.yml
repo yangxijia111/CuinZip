@@ -1,0 +1,48 @@
+name: cuinzip-ci
+
+# CuinZip 最小 CI:Restore + x64 Release 构建 + 关键 smoke tests。
+# 完整的全架构矩阵由 BuildBinaries.yml 承担(仅 main / tag / 手动触发)。
+on:
+  push:
+    branches:
+      - cuinzip-dev
+      - main
+    paths-ignore:
+      - 'Documents/**'
+      - '**/*.md'
+  pull_request:
+    branches:
+      - cuinzip-dev
+      - main
+    paths-ignore:
+      - 'Documents/**'
+      - '**/*.md'
+  workflow_dispatch:
+
+jobs:
+  build-x64:
+    runs-on: windows-latest
+    env:
+      POWERSHELL_TELEMETRY_OPTOUT: 1
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+
+      - uses: microsoft/setup-msbuild@v3
+
+      - name: Clear local NuGet cache (workaround for failed restores on windows-latest)
+        run: dotnet nuget locals all --clear
+
+      - name: Restore
+        run: MSBuild -t:Restore BuildAllTargets.proj
+
+      - name: Build x64 Release (MSIX package staging)
+        run: MSBuild -m NanaZipPackage\NanaZipPackage.wapproj -t:Build -p:Configuration=Release -p:Platform=x64
+
+      - name: Build x64 Release (classic file manager)
+        run: MSBuild NanaZip.UI.Classic\NanaZip.vcxproj -t:Build -p:Configuration=Release -p:Platform=x64
+
+      - name: Smoke tests (CLI round-trips, hash, volumes, branding)
+        shell: pwsh
+        run: .github/scripts/smoke-tests.ps1 -BinDir Output/Binaries/Release/NanaZipPackage/x64

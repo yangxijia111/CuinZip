@@ -698,7 +698,7 @@ HRESULT CCodecs::LoadDll(const FString &dllPath, bool needCheckDll, bool *loaded
     {
       CCodecError &error = Errors.AddNew();
       error.Path = dllPath;
-      error.Message = "no NanaZip code";
+      error.Message = "no CuinZip code";
     }
     */
   }

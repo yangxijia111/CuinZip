@@ -912,7 +912,7 @@ STDMETHODIMP CZipContextMenu::QueryContextMenu(HMENU hMenu, UINT indexMenu,
     CMenu menu;
     menu.Attach(hMenu);
     menuDestroyer.Disable();
-    MyAddSubMenu(_commandMap, kMainVerb, menu, indexMenu++, currentCommandID++, (UString)"NanaZip",
+    MyAddSubMenu(_commandMap, kMainVerb, menu, indexMenu++, currentCommandID++, (UString)"CuinZip",
         popupMenu, // popupMenu.Detach(),
         bitmap);
   }
@@ -1542,10 +1542,10 @@ STDMETHODIMP CZipExplorerCommand::GetTitle(IShellItemArray *psiItemArray, LPWSTR
   if (IsRoot)
   {
     LoadItems(psiItemArray);
-    name = "NanaZip"; //  "New"
+    name = "CuinZip"; //  "New"
   }
   else
-    name = "NanaZip item";
+    name = "CuinZip item";
 
   if (!_commandMap_Cur.IsEmpty())
   {

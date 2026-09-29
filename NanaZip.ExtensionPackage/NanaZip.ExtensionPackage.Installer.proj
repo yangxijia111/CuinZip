@@ -5,6 +5,8 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <Version>$(MileProjectVersion)</Version>
     <InstallerOutputPath>$(MSBuildThisFileDirectory)..\Output</InstallerOutputPath>
+    <!-- BuildAllTargets 的 BuildInstaller 目标传入:Portable 暂存目录 -->
+    <AppSourceDir Condition="'$(AppSourceDir)' == ''">$(MSBuildThisFileDirectory)..\Output\Binaries\Root\CuinZip_$(MileProjectVersion)_x64</AppSourceDir>
   </PropertyGroup>
 
   <!-- NOTE: verify Tools.InnoSetup package binaries with official binaries every upgrade -->
@@ -13,6 +15,6 @@
   </ItemGroup>
 
   <Target Name="BuildInstaller" BeforeTargets="AfterBuild">
-    <Exec Command='"$(InnoSetupCompiler)" "$(MSBuildProjectName).iss" "/DAppVersion=$(Version)" "/O$(InstallerOutputPath)"' />
+    <Exec Command='"$(InnoSetupCompiler)" "$(MSBuildProjectName).iss" "/DAppVersion=$(Version)" "/DAppSourceDir=$(AppSourceDir)" "/O$(InstallerOutputPath)"' />
   </Target>
 </Project>
