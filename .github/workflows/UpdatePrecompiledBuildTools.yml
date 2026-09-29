@@ -1,12 +1,9 @@
 ﻿name: Update Precompiled Build Tools
 
+# 上游的构建工具自动提交机器人流程;CuinZip 不发布预编译构建工具,
+# 改为仅手动触发(自动触发在无变更时 git commit 失败,产生噪音)。
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'NanaZip.Build.Tasks/**'
-      - '.github/workflows/UpdatePrecompiledBuildTools.yml'
+  workflow_dispatch:
 
 jobs:
   build:
