@@ -176,7 +176,8 @@
     <Copy SourceFiles="$(MSBuildThisFileDirectory)Documents\CuinZipReleaseNotes.md" DestinationFiles="$(PortableDir)ReleaseNotes.txt" />
   </Target>
   <Target Name="BuildPortableZip" AfterTargets="StagePortable">
-    <Exec Command="&quot;$(InputBinariesPath)NanaZipPackage\x64\NanaZip.Universal.Console.exe&quot; a -r .\Output\CuinZip_$(MileProjectVersion)_x64_Portable.zip .\Output\Binaries\Root\CuinZip_$(MileProjectVersion)_x64\*" WorkingDirectory="$(MSBuildThisFileDirectory)"/>
+    <!-- 在 Root 目录下打包,使 ZIP 内含 CuinZip_<版本>_x64 顶层文件夹 -->
+    <Exec Command="&quot;$(InputBinariesPath)NanaZipPackage\x64\NanaZip.Universal.Console.exe&quot; a -r ..\..\CuinZip_$(MileProjectVersion)_x64_Portable.zip CuinZip_$(MileProjectVersion)_x64\*" WorkingDirectory="$(MSBuildThisFileDirectory)Output\Binaries\Root\"/>
   </Target>
   <Target Name="BuildInstaller" AfterTargets="BuildPortableZip">
     <MSBuild
