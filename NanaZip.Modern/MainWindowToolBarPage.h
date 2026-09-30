@@ -76,6 +76,9 @@ namespace winrt::NanaZip::Modern::implementation
         // The upstream sponsor acquisition flow (relaunching with
         // --AcquireSponsorEdition and querying the Microsoft Store) was
         // removed together with its license state caching.
+        // CuinZip P1-6: context-aware toolbar state.
+        void UpdateContextState(UINT32 ContextFlags);
+
         void OpenSourceButtonClick(
             winrt::IInspectable const& sender,
             winrt::RoutedEventArgs const& e);

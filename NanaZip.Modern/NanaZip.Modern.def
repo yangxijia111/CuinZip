@@ -23,3 +23,7 @@ K7ModernLaunchDefaultAppsSettings
 ; CuinZip P1-4 Modification End
 K7ModernShowCompressDialog
 K7ModernShowExtractDialog
+; CuinZip P1-6 Modification Start
+K7ModernUpdateMainWindowToolBarState
+K7ModernShowStartWindow
+; CuinZip P1-6 Modification End

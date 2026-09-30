@@ -16,6 +16,7 @@
 #include "App.h"
 #include "Panel.h"
 #include "FormatUtils.h"
+#include "RegistryUtils.h"
 
 // **************** CuinZip P1-2 Modification Start ****************
 // K7ModernGetUiString:状态栏文案本地化(English 兜底)。
@@ -859,5 +860,17 @@ void CPanel::Refresh_StatusBar()
     }
   }
   _statusBarControl.TextArchive(archiveInfo.Ptr());
+
+  // **************** CuinZip P1-6 Modification Start ****************
+  // 列表 / 选择变化的风向标:同步推送工具栏场景状态(Context-aware)。
+  // 无论哪个面板触发刷新,状态始终按"聚焦面板"计算,与工具栏命令
+  // 的作用对象一致。压缩包打开动作也必然经过一次状态栏刷新,因此
+  // RecentArchives 记录也挂在这里(打开压缩包 → 列表重建 → 此处)。
+  g_App.UpdateToolBarContextState();
+  if (!_parentFolders.IsEmpty())
+  {
+    SaveRecentArchive(fs2us(_parentFolders[0].FilePath));
+  }
+  // **************** CuinZip P1-6 Modification End ****************
 }
 // **************** CuinZip P1-2 Modification End ****************

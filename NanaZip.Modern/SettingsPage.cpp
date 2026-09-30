@@ -14,6 +14,7 @@
 #include <string>
 
 #include <winrt/Windows.UI.Text.h>
+#include <winrt/Windows.UI.Xaml.Automation.h>
 #include <winrt/Windows.UI.Xaml.Media.h>
 
 // CuinZip P1-4: 经典设置页入口命令 ID。
@@ -29,15 +30,17 @@ namespace
         LegacyEditor = 1078          // Editor 页(外部编辑器)
     };
 
-    // 分类索引(与 m_Panels 数组一致)。
+    // 分类索引(与 m_Panels 数组一致)。CuinZip P1-6:外观类设置前移,
+    // 顺序为 General / Appearance / Compression / Extraction /
+    // File Associations / Context Menu / Advanced / About。
     enum CategoryIndex
     {
         CategoryGeneral = 0,
+        CategoryAppearance,
         CategoryCompression,
         CategoryExtraction,
         CategoryFileAssociations,
         CategoryContextMenu,
-        CategoryAppearance,
         CategoryAdvanced,
         CategoryAbout
     };
@@ -273,7 +276,7 @@ namespace winrt::NanaZip::Modern::implementation
         navigation.Margin(UniformThickness(0));
 
         navigation.Children().Append(MakeText(
-            L"SettingsPage/SettingsTitle.Text",
+                L"SettingsPage/SettingsTitle.Text",
             L"Settings",
             20, true, false, LengthsThickness(16, 16, 8, 8)));
 
@@ -291,11 +294,11 @@ namespace winrt::NanaZip::Modern::implementation
         static NavItem const navItems[8] =
         {
             { L"SettingsPage/NavGeneralText.Text",          L"General",           L"\xE713" },
+            { L"SettingsPage/NavAppearanceText.Text",       L"Appearance",        L"\xE790" },
             { L"SettingsPage/NavCompressionText.Text",      L"Compression",       L"\xE8C8" },
             { L"SettingsPage/NavExtractionText.Text",       L"Extraction",        L"\xE8E5" },
             { L"SettingsPage/NavFileAssociationsText.Text", L"File Associations", L"\xE8A7" },
             { L"SettingsPage/NavContextMenuText.Text",      L"Context Menu",      L"\xE700" },
-            { L"SettingsPage/NavAppearanceText.Text",       L"Appearance",        L"\xE790" },
             { L"SettingsPage/NavAdvancedText.Text",         L"Advanced",          L"\xE9D9" },
             { L"SettingsPage/NavAboutText.Text",            L"About",             L"\xE946" },
         };
@@ -323,6 +326,11 @@ namespace winrt::NanaZip::Modern::implementation
             host.Children().Append(label);
 
             container.Content(host);
+            // CuinZip P1-6:导航项内容为组合面板,UIA 名称需显式设置
+            // (无障碍名称与自动化驱动均依赖它)。
+            winrt::Windows::UI::Xaml::Automation::AutomationProperties::SetName(
+                container,
+                winrt::NanaZip::Modern::GetUiString(item.Key, item.Fallback));
             m_NavList.Items().Append(container);
         }
 
@@ -356,31 +364,51 @@ namespace winrt::NanaZip::Modern::implementation
                 panel,
                 L"SettingsPage/ShowSystemMenuToggle.Header",
                 L"Show system menu",
+                L"SettingsPage/ShowSystemMenuToggle.Description",
+            L"Show the system menu in windows.",
                 m_Appearance.ShowSystemMenu != FALSE,
                 [this]() { this->ApplyAppearanceSettings(); });
             m_ArcHistoryToggle = this->BuildToggle(
                 panel,
                 L"SettingsPage/ArcHistoryToggle.Header",
                 L"Keep archive history",
+                L"SettingsPage/ArcHistoryToggle.Description",
+            L"Remember recently used archive names.",
                 m_Appearance.ArcHistory != FALSE,
                 [this]() { this->ApplyAppearanceSettings(); });
             m_PathHistoryToggle = this->BuildToggle(
                 panel,
                 L"SettingsPage/PathHistoryToggle.Header",
                 L"Keep path history",
+                L"SettingsPage/PathHistoryToggle.Description",
+            L"Remember recently used paths.",
                 m_Appearance.PathHistory != FALSE,
                 [this]() { this->ApplyAppearanceSettings(); });
             m_CopyHistoryToggle = this->BuildToggle(
                 panel,
                 L"SettingsPage/CopyHistoryToggle.Header",
                 L"Keep copy history",
+                L"SettingsPage/CopyHistoryToggle.Description",
+            L"Remember recently used copy destinations.",
                 m_Appearance.CopyHistory != FALSE,
                 [this]() { this->ApplyAppearanceSettings(); });
             m_FolderHistoryToggle = this->BuildToggle(
                 panel,
                 L"SettingsPage/FolderHistoryToggle.Header",
                 L"Keep folder history",
+                L"SettingsPage/FolderHistoryToggle.Description",
+                L"Remember recently visited folders.",
                 m_Appearance.FolderHistory != FALSE,
+                [this]() { this->ApplyAppearanceSettings(); });
+
+            // CuinZip P1-6:启动时显示 Home / Start 引导页(默认开)。
+            m_StartPageToggle = this->BuildToggle(
+                panel,
+                L"SettingsPage/ShowStartPageToggle.Header",
+                L"Show the Start page on launch",
+                L"SettingsPage/ShowStartPageToggle.Description",
+                L"Show quick actions and recent archives when CuinZip starts.",
+                m_Appearance.ShowStartPage != FALSE,
                 [this]() { this->ApplyAppearanceSettings(); });
 
             this->BuildButton(
@@ -518,6 +546,8 @@ namespace winrt::NanaZip::Modern::implementation
                 panel,
                 L"SettingsPage/OpenFolderToggle.Header",
                 L"Open folder after extraction",
+                L"SettingsPage/OpenFolderToggle.Description",
+            L"Open the destination folder when done.",
                 m_Extraction.OpenFolderAfterExtraction != FALSE,
                 [this]() { this->ApplyExtractionSettings(); });
 
@@ -557,8 +587,10 @@ namespace winrt::NanaZip::Modern::implementation
                 panel,
                 L"SettingsPage/ExtractOnOpenToggle.Header",
                 L"Extract archives to a temporary folder when opening them",
+                L"SettingsPage/ExtractOnOpenToggle.Description",
+            L"Extract instead of browsing when opening an archive.",
                 m_ContextMenu.ExtractOnOpen != FALSE,
-                [this]() { this->ApplyContextMenuSettings(); });
+                [this]() { this->ApplyContextMenuSettings(); }, true);
 
             panel.Children().Append(MakeText(
                 L"SettingsPage/AssocListHeader.Text",
@@ -606,36 +638,48 @@ namespace winrt::NanaZip::Modern::implementation
                 panel,
                 L"SettingsPage/CtxOpenToggle.Header",
                 L"Open archive",
+                L"SettingsPage/CtxOpenToggle.Description",
+            L"Add \"Open archive\" to the context menu.",
                 m_ContextMenu.ShowOpen != FALSE,
                 [this]() { this->ApplyContextMenuSettings(); });
             m_CtxExtractHereToggle = this->BuildToggle(
                 panel,
                 L"SettingsPage/CtxExtractHereToggle.Header",
                 L"Extract Here",
+                L"SettingsPage/CtxExtractHereToggle.Description",
+            L"Add \"Extract Here\" to the context menu.",
                 m_ContextMenu.ShowExtractHere != FALSE,
                 [this]() { this->ApplyContextMenuSettings(); });
             m_CtxExtractToToggle = this->BuildToggle(
                 panel,
                 L"SettingsPage/CtxExtractToToggle.Header",
                 L"Extract to <folder>",
+                L"SettingsPage/CtxExtractToToggle.Description",
+            L"Add \"Extract to <folder>\" to the context menu.",
                 m_ContextMenu.ShowExtractTo != FALSE,
                 [this]() { this->ApplyContextMenuSettings(); });
             m_CtxCompressToggle = this->BuildToggle(
                 panel,
                 L"SettingsPage/CtxCompressToggle.Header",
                 L"Add to archive...",
+                L"SettingsPage/CtxCompressToggle.Description",
+            L"Add \"Add to archive...\" to the context menu.",
                 m_ContextMenu.ShowCompress != FALSE,
                 [this]() { this->ApplyContextMenuSettings(); });
             m_CtxCompressTo7zToggle = this->BuildToggle(
                 panel,
                 L"SettingsPage/CtxCompressTo7zToggle.Header",
                 L"Add to <archive>.7z",
+                L"SettingsPage/CtxCompressTo7zToggle.Description",
+            L"One-click \"Add to <archive>.7z\" entry.",
                 m_ContextMenu.ShowCompressTo7z != FALSE,
                 [this]() { this->ApplyContextMenuSettings(); });
             m_CtxCompressToZipToggle = this->BuildToggle(
                 panel,
                 L"SettingsPage/CtxCompressToZipToggle.Header",
                 L"Add to <archive>.zip",
+                L"SettingsPage/CtxCompressToZipToggle.Description",
+            L"One-click \"Add to <archive>.zip\" entry.",
                 m_ContextMenu.ShowCompressToZip != FALSE,
                 [this]() { this->ApplyContextMenuSettings(); });
 
@@ -648,50 +692,66 @@ namespace winrt::NanaZip::Modern::implementation
                 panel,
                 L"SettingsPage/CtxTestToggle.Header",
                 L"Test archive",
+                L"SettingsPage/CtxTestToggle.Description",
+            L"Add \"Test archive\" to the context menu.",
                 m_ContextMenu.ShowTest != FALSE,
                 [this]() { this->ApplyContextMenuSettings(); });
             m_CtxExtractToggle = this->BuildToggle(
                 panel,
                 L"SettingsPage/CtxExtractToggle.Header",
                 L"Extract files...",
+                L"SettingsPage/CtxExtractToggle.Description",
+            L"Add \"Extract files...\" to the context menu.",
                 m_ContextMenu.ShowExtract != FALSE,
                 [this]() { this->ApplyContextMenuSettings(); });
             m_CtxExtractHereSmartToggle = this->BuildToggle(
                 panel,
                 L"SettingsPage/CtxExtractHereSmartToggle.Header",
                 L"Extract Here (Smart)",
+                L"SettingsPage/CtxExtractHereSmartToggle.Description",
+            L"Extract Here without creating duplicate folders.",
                 m_ContextMenu.ShowExtractHereSmart != FALSE,
-                [this]() { this->ApplyContextMenuSettings(); });
+                [this]() { this->ApplyContextMenuSettings(); }, true);
             m_CtxCompressEmailToggle = this->BuildToggle(
                 panel,
                 L"SettingsPage/CtxCompressEmailToggle.Header",
                 L"Compress and email...",
+                L"SettingsPage/CtxCompressEmailToggle.Description",
+            L"Compress and attach to an email.",
                 m_ContextMenu.ShowCompressEmail != FALSE,
-                [this]() { this->ApplyContextMenuSettings(); });
+                [this]() { this->ApplyContextMenuSettings(); }, true);
             m_CtxCompressTo7zEmailToggle = this->BuildToggle(
                 panel,
                 L"SettingsPage/CtxCompressTo7zEmailToggle.Header",
                 L"Compress to <archive>.7z and email",
+                L"SettingsPage/CtxCompressTo7zEmailToggle.Description",
+            L"Compress to .7z and attach to an email.",
                 m_ContextMenu.ShowCompressTo7zEmail != FALSE,
-                [this]() { this->ApplyContextMenuSettings(); });
+                [this]() { this->ApplyContextMenuSettings(); }, true);
             m_CtxCompressToZipEmailToggle = this->BuildToggle(
                 panel,
                 L"SettingsPage/CtxCompressToZipEmailToggle.Header",
                 L"Compress to <archive>.zip and email",
+                L"SettingsPage/CtxCompressToZipEmailToggle.Description",
+            L"Compress to .zip and attach to an email.",
                 m_ContextMenu.ShowCompressToZipEmail != FALSE,
-                [this]() { this->ApplyContextMenuSettings(); });
+                [this]() { this->ApplyContextMenuSettings(); }, true);
             m_CtxHashToggle = this->BuildToggle(
                 panel,
                 L"SettingsPage/CtxHashToggle.Header",
                 L"Hash (CRC / SHA)",
+                L"SettingsPage/CtxHashToggle.Description",
+            L"Add checksum (CRC / SHA) entries.",
                 m_ContextMenu.ShowHash != FALSE,
                 [this]() { this->ApplyContextMenuSettings(); });
             m_CtxElimDupToggle = this->BuildToggle(
                 panel,
                 L"SettingsPage/CtxElimDupToggle.Header",
                 L"Eliminate duplicate folders",
+                L"SettingsPage/CtxElimDupToggle.Description",
+            L"Skip duplicate folders created on extraction.",
                 m_ContextMenu.EliminateDuplicateFiles != FALSE,
-                [this]() { this->ApplyContextMenuSettings(); });
+                [this]() { this->ApplyContextMenuSettings(); }, true);
 
             panel.Children().Append(MakeText(
                 L"SettingsPage/ContextMenuLayoutHeader.Text",
@@ -702,6 +762,8 @@ namespace winrt::NanaZip::Modern::implementation
                 panel,
                 L"SettingsPage/CtxCascadedToggle.Header",
                 L"Show all items under one CuinZip submenu",
+                L"SettingsPage/CtxCascadedToggle.Description",
+            L"Group entries under one CuinZip submenu.",
                 m_ContextMenu.CascadedMenu != FALSE,
                 [this]() { this->ApplyContextMenuSettings(); });
             panel.Children().Append(MakeText(
@@ -729,36 +791,48 @@ namespace winrt::NanaZip::Modern::implementation
                 panel,
                 L"SettingsPage/ShowDotsToggle.Header",
                 L"Show \"..\" item",
+                L"SettingsPage/ShowDotsToggle.Description",
+                L"Show the \"..\" parent folder item.",
                 m_Appearance.ShowDots != FALSE,
                 [this]() { this->ApplyAppearanceSettings(); });
             m_ShowRealFileIconsToggle = this->BuildToggle(
                 panel,
                 L"SettingsPage/ShowRealFileIconsToggle.Header",
                 L"Show real file icons",
+                L"SettingsPage/ShowRealFileIconsToggle.Description",
+            L"Use system icons for files inside archives.",
                 m_Appearance.ShowRealFileIcons != FALSE,
                 [this]() { this->ApplyAppearanceSettings(); });
             m_FullRowToggle = this->BuildToggle(
                 panel,
                 L"SettingsPage/FullRowToggle.Header",
                 L"Full row select",
+                L"SettingsPage/FullRowToggle.Description",
+            L"Select an item by clicking anywhere on its row.",
                 m_Appearance.FullRow != FALSE,
                 [this]() { this->ApplyAppearanceSettings(); });
             m_ShowGridToggle = this->BuildToggle(
                 panel,
                 L"SettingsPage/ShowGridToggle.Header",
                 L"Show grid lines",
+                L"SettingsPage/ShowGridToggle.Description",
+            L"Draw grid lines in the file list.",
                 m_Appearance.ShowGrid != FALSE,
                 [this]() { this->ApplyAppearanceSettings(); });
             m_SingleClickToggle = this->BuildToggle(
                 panel,
                 L"SettingsPage/SingleClickToggle.Header",
                 L"Single-click to open an item",
+                L"SettingsPage/SingleClickToggle.Description",
+            L"Open items with a single click.",
                 m_Appearance.SingleClick != FALSE,
                 [this]() { this->ApplyAppearanceSettings(); });
             m_AlternativeSelectionToggle = this->BuildToggle(
                 panel,
                 L"SettingsPage/AlternativeSelectionToggle.Header",
                 L"Alternative selection mode",
+                L"SettingsPage/AlternativeSelectionToggle.Description",
+            L"Use Ctrl / Shift free selection mode.",
                 m_Appearance.AlternativeSelection != FALSE,
                 [this]() { this->ApplyAppearanceSettings(); });
 
@@ -776,9 +850,16 @@ namespace winrt::NanaZip::Modern::implementation
             auto& panel = m_Panels[CategoryAdvanced];
             panel.Spacing(8);
             panel.Visibility(Visibility::Collapsed);
-            panel.Children().Append(MakeText(
-                L"SettingsPage/AdvancedTitle.Text", L"Advanced",
-                18, true, false, UniformThickness(0)));
+            {
+                // CuinZip P1-6:Advanced 分类标题 + 徽章。
+                winrt::StackPanel titleRow;
+                titleRow.Orientation(Orientation::Horizontal);
+                titleRow.Children().Append(MakeText(
+                    L"SettingsPage/AdvancedTitle.Text", L"Advanced",
+                    18, true, false, UniformThickness(0)));
+                titleRow.Children().Append(this->BuildAdvancedBadge());
+                panel.Children().Append(titleRow);
+            }
             panel.Children().Append(MakeText(
                 L"SettingsPage/AdvancedDescription.Text",
                 L"System menu, memory pages, history and other advanced options.",
@@ -814,6 +895,12 @@ namespace winrt::NanaZip::Modern::implementation
                 L"SettingsPage/AboutDialogButton.Content",
                 L"Open the About dialog",
                 { this, &SettingsPage::AboutDialogButtonClick });
+            // CuinZip P1-6:开源项目入口(原工具栏 Open Source 按钮迁入)。
+            this->BuildButton(
+                panel,
+                L"SettingsPage/AboutOpenSourceButton.Content",
+                L"View open source projects",
+                { this, &SettingsPage::AboutOpenSourceButtonClick });
         }
         content.Children().Append(m_Panels[CategoryAbout]);
 
@@ -867,16 +954,88 @@ namespace winrt::NanaZip::Modern::implementation
         }
     }
 
+    // CuinZip P1-6:"Advanced" 徽章 —— 小号文本 + 圆角边框,
+    // 中性次级配色(Light / Dark 均随主题),提示普通用户谨慎修改。
+    winrt::Windows::UI::Xaml::Controls::Border SettingsPage::BuildAdvancedBadge()
+    {
+        winrt::TextBlock label;
+        label.Text(winrt::NanaZip::Modern::GetUiString(
+                L"SettingsPage/AdvancedBadgeText.Text", L"Advanced"));
+        label.FontSize(11.0);
+        label.VerticalAlignment(VerticalAlignment::Center);
+
+        winrt::Windows::UI::Xaml::Controls::Border badge;
+        badge.Padding(LengthsThickness(6, 1, 6, 1));
+        badge.CornerRadius(
+            winrt::Windows::UI::Xaml::CornerRadiusHelper::FromUniformRadius(4));
+        badge.Child(label);
+        badge.VerticalAlignment(VerticalAlignment::Center);
+        badge.Margin(LengthsThickness(8, 0, 0, 0));
+        try
+        {
+            auto brush = winrt::Windows::UI::Xaml::Application::Current()
+                .Resources().TryLookup(winrt::box_value(winrt::hstring(
+                    L"TextFillColorSecondaryBrush")))
+                .try_as<winrt::Windows::UI::Xaml::Media::Brush>();
+            if (brush)
+            {
+                label.Foreground(brush);
+            }
+            auto borderBrush = winrt::Windows::UI::Xaml::Application::Current()
+                .Resources().TryLookup(winrt::box_value(winrt::hstring(
+                    L"ControlStrokeColorDefaultBrush")))
+                .try_as<winrt::Windows::UI::Xaml::Media::Brush>();
+            if (borderBrush)
+            {
+                badge.BorderBrush(borderBrush);
+                badge.BorderThickness(
+                    winrt::Windows::UI::Xaml::ThicknessHelper::FromUniformLength(1));
+            }
+        }
+        catch (...)
+        {
+        }
+        return badge;
+    }
+
     winrt::Windows::UI::Xaml::Controls::ToggleSwitch SettingsPage::BuildToggle(
         winrt::Windows::UI::Xaml::Controls::Panel const& parent,
         std::wstring_view const& headerKey,
         std::wstring_view const& headerFallback,
+        std::wstring_view const& descriptionKey,
+        std::wstring_view const& descriptionFallback,
         bool isOn,
-        std::function<void()> const& applyHandler)
+        std::function<void()> const& applyHandler,
+        bool advanced)
     {
         winrt::Windows::UI::Xaml::Controls::ToggleSwitch toggle;
-        toggle.Header(winrt::box_value(
-            winrt::NanaZip::Modern::GetUiString(headerKey, headerFallback)));
+
+        // 标题(+ 可选 Advanced 徽章)+ 一行说明
+        winrt::StackPanel header;
+        header.Spacing(2);
+        {
+            winrt::StackPanel titleRow;
+            titleRow.Orientation(Orientation::Horizontal);
+            titleRow.Spacing(4);
+
+            winrt::TextBlock title;
+            title.Text(winrt::NanaZip::Modern::GetUiString(
+                headerKey, headerFallback));
+            title.VerticalAlignment(VerticalAlignment::Center);
+            titleRow.Children().Append(title);
+
+            if (advanced)
+            {
+                titleRow.Children().Append(this->BuildAdvancedBadge());
+            }
+
+            header.Children().Append(titleRow);
+        }
+        header.Children().Append(MakeText(
+            descriptionKey, descriptionFallback, 12, false, true,
+            winrt::Windows::UI::Xaml::ThicknessHelper::FromUniformLength(0)));
+
+        toggle.Header(winrt::box_value(header));
         toggle.Margin(winrt::Windows::UI::Xaml::ThicknessHelper::FromLengths(0, 4, 0, 0));
         toggle.IsOn(isOn);
         toggle.Toggled([this, applyHandler](
@@ -982,6 +1141,8 @@ namespace winrt::NanaZip::Modern::implementation
         settings.PathHistory = m_PathHistoryToggle.IsOn() ? TRUE : FALSE;
         settings.CopyHistory = m_CopyHistoryToggle.IsOn() ? TRUE : FALSE;
         settings.FolderHistory = m_FolderHistoryToggle.IsOn() ? TRUE : FALSE;
+        // CuinZip P1-6
+        settings.ShowStartPage = m_StartPageToggle.IsOn() ? TRUE : FALSE;
 
         m_Callbacks.Apply(&settings);
     }
@@ -1268,6 +1429,16 @@ namespace winrt::NanaZip::Modern::implementation
         UNREFERENCED_PARAMETER(sender);
         UNREFERENCED_PARAMETER(e);
         ::K7ModernShowAboutDialog(this->m_WindowHandle, nullptr);
+    }
+
+    // CuinZip P1-6:打开开源项目页(原工具栏 Open Source 按钮的行为)。
+    void SettingsPage::AboutOpenSourceButtonClick(
+        winrt::IInspectable const& sender,
+        winrt::Windows::UI::Xaml::RoutedEventArgs const& e)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(e);
+        ::K7ModernShowSponsorDialog(this->m_WindowHandle);
     }
 }
 

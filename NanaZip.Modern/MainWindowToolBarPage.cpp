@@ -386,6 +386,20 @@ namespace winrt::NanaZip::Modern::implementation
         // sponsor acquisition flow. The dialog runs its own modal loop.
         ::K7ModernShowSponsorDialog(this->m_WindowHandle);
     }
+
+    // CuinZip P1-6: context-aware toolbar state.
+    void MainWindowToolBarPage::UpdateContextState(UINT32 ContextFlags)
+    {
+        const bool showExtract =
+            (ContextFlags & K7_TOOLBAR_CONTEXT_IN_ARCHIVE) ||
+            (ContextFlags & K7_TOOLBAR_CONTEXT_SELECTION_ARCHIVES);
+        this->ExtractButton().Visibility(showExtract
+            ? winrt::Windows::UI::Xaml::Visibility::Visible
+            : winrt::Windows::UI::Xaml::Visibility::Collapsed);
+        this->TestButton().Visibility(showExtract
+            ? winrt::Windows::UI::Xaml::Visibility::Visible
+            : winrt::Windows::UI::Xaml::Visibility::Collapsed);
+    }
 }
 
 EXTERN_C LPVOID WINAPI K7ModernCreateMainWindowToolBarPage(
@@ -401,4 +415,29 @@ EXTERN_C LPVOID WINAPI K7ModernCreateMainWindowToolBarPage(
         ParentWindowHandle,
         MoreMenuHandle);
     return winrt::detach_abi(Window);
+}
+
+// CuinZip P1-6: context-aware toolbar state.
+EXTERN_C VOID WINAPI K7ModernUpdateMainWindowToolBarState(
+    _In_ LPVOID PageInstance,
+    _In_ UINT32 ContextFlags)
+{
+    if (!PageInstance)
+    {
+        return;
+    }
+
+    using Interface =
+        winrt::NanaZip::Modern::MainWindowToolBarPage;
+    using Implementation =
+        winrt::NanaZip::Modern::implementation::MainWindowToolBarPage;
+
+    Interface InstanceObject = nullptr;
+    winrt::copy_from_abi(InstanceObject, PageInstance);
+    if (!InstanceObject)
+    {
+        return;
+    }
+    winrt::get_self<Implementation>(InstanceObject)->UpdateContextState(
+        ContextFlags);
 }

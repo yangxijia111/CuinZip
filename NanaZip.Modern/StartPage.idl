@@ -1,0 +1,12 @@
+﻿namespace NanaZip.Modern
+{
+    // CuinZip P1-6:Home / Start 启动首屏(纯代码构建 UI,规避旧版 XAML
+    // 编译管道对新 x:Class 页面的绑定注册缺陷,同 SettingsPage)。
+    // 四个主操作 + Recent Archives + 拖放;动作结果经
+    // K7_MODERN_START_RESULT 返回宿主(FileManager)。
+    [Windows.UI.Xaml.Data.Bindable]
+    [default_interface]
+    runtimeclass StartPage : Windows.UI.Xaml.Controls.Page
+    {
+    }
+}

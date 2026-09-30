@@ -77,7 +77,10 @@ bool CPanelCallbackImp::OnCopyOrExtract() {
 // **************** NanaZip Modification End ****************
 void CPanelCallbackImp::OnSetSameFolder() { _app->OnSetSameFolder(_index); }
 void CPanelCallbackImp::OnSetSubFolder()  { _app->OnSetSubFolder(_index); }
-void CPanelCallbackImp::PanelWasFocused() { _app->SetFocusedPanel(_index); _app->RefreshTitlePanel(_index); }
+// **************** CuinZip P1-6 Modification Start ****************
+// 面板焦点变化时刷新工具栏场景状态(Extract/Test 的显隐跟随聚焦面板)。
+void CPanelCallbackImp::PanelWasFocused() { _app->SetFocusedPanel(_index); _app->RefreshTitlePanel(_index); _app->UpdateToolBarContextState(); }
+// **************** CuinZip P1-6 Modification End ****************
 void CPanelCallbackImp::DragBegin() { _app->DragBegin(_index); }
 void CPanelCallbackImp::DragEnd() { _app->DragEnd(); }
 void CPanelCallbackImp::RefreshTitle(bool always) { _app->RefreshTitlePanel(_index, always); }
@@ -194,7 +197,12 @@ HRESULT CApp::Create(HWND hwnd, const UString &mainPath, const UString &arcForma
       hwnd,
       nullptr,
       nullptr,
-      ::K7ModernCreateMainWindowToolBarPage(hwnd, g_MoreMenu));
+      // **************** CuinZip P1-6 Modification Start ****************
+      // 保留页面实例指针,供场景状态推送(Context-aware 工具栏)。
+      this->m_ToolBarPage = ::K7ModernCreateMainWindowToolBarPage(
+          hwnd,
+          g_MoreMenu));
+      // **************** CuinZip P1-6 Modification End ****************
 
   g_K7ControlList.insert(g_K7ControlList.begin(), this->m_ToolBar);
 
@@ -945,3 +953,30 @@ void CFolderHistory::AddString(const UString &s)
   AddUniqueStringToHead(Strings, s);
   Normalize();
 }
+
+// **************** CuinZip P1-6 Modification Start ****************
+// Context-aware 工具栏:把聚焦面板的场景状态推送给 XAML 工具栏。
+// Extract / Test 仅在"压缩包内"或"选中项全部为压缩包文件"时显示。
+void CApp::UpdateToolBarContextState()
+{
+  if (!m_ToolBarPage)
+    return;
+
+  const CPanel &panel = GetFocusedPanel();
+
+  UINT32 flags = 0;
+  if (!panel._parentFolders.IsEmpty())
+    flags |= K7_TOOLBAR_CONTEXT_IN_ARCHIVE;
+
+  CRecordVector<UInt32> indices;
+  panel.GetOperatedItemIndices(indices);
+  if (indices.Size() > 0)
+  {
+    flags |= K7_TOOLBAR_CONTEXT_HAS_SELECTION;
+    if (panel._parentFolders.IsEmpty() && panel.SelectionAreArchives(indices))
+      flags |= K7_TOOLBAR_CONTEXT_SELECTION_ARCHIVES;
+  }
+
+  ::K7ModernUpdateMainWindowToolBarState(m_ToolBarPage, flags);
+}
+// **************** CuinZip P1-6 Modification End ****************

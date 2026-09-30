@@ -348,4 +348,106 @@
   <data name="CtxCascadedToggle.Header" xml:space="preserve">
     <value>将所有项目收进单个 CuinZip 子菜单</value>
   </data>
+  <!--
+    CuinZip P1-6: per-setting descriptions.
+  -->
+  <data name="ShowSystemMenuToggle.Description" xml:space="preserve">
+    <value>在窗口中显示系统菜单。</value>
+  </data>
+  <data name="ArcHistoryToggle.Description" xml:space="preserve">
+    <value>记住最近使用的压缩包名称。</value>
+  </data>
+  <data name="PathHistoryToggle.Description" xml:space="preserve">
+    <value>记住最近使用的路径。</value>
+  </data>
+  <data name="CopyHistoryToggle.Description" xml:space="preserve">
+    <value>记住最近使用的复制目标。</value>
+  </data>
+  <data name="FolderHistoryToggle.Description" xml:space="preserve">
+    <value>记住最近访问的文件夹。</value>
+  </data>
+  <data name="ExtractOnOpenToggle.Description" xml:space="preserve">
+    <value>打开压缩包时直接解压而不是浏览。</value>
+  </data>
+  <data name="CtxOpenToggle.Description" xml:space="preserve">
+    <value>在右键菜单中添加“打开压缩包”。</value>
+  </data>
+  <data name="CtxTestToggle.Description" xml:space="preserve">
+    <value>在右键菜单中添加“测试压缩包”。</value>
+  </data>
+  <data name="CtxExtractToggle.Description" xml:space="preserve">
+    <value>在右键菜单中添加“解压文件...”。</value>
+  </data>
+  <data name="CtxExtractHereToggle.Description" xml:space="preserve">
+    <value>在右键菜单中添加“解压到当前位置”。</value>
+  </data>
+  <data name="CtxExtractHereSmartToggle.Description" xml:space="preserve">
+    <value>解压到当前位置并避免重复文件夹。</value>
+  </data>
+  <data name="CtxExtractToToggle.Description" xml:space="preserve">
+    <value>在右键菜单中添加“解压到 &lt;文件夹&gt;”。</value>
+  </data>
+  <data name="CtxCompressToggle.Description" xml:space="preserve">
+    <value>在右键菜单中添加“添加到压缩包...”。</value>
+  </data>
+  <data name="CtxCompressTo7zToggle.Description" xml:space="preserve">
+    <value>一键“添加到 &lt;压缩包&gt;.7z”入口。</value>
+  </data>
+  <data name="CtxCompressToZipToggle.Description" xml:space="preserve">
+    <value>一键“添加到 &lt;压缩包&gt;.zip”入口。</value>
+  </data>
+  <data name="CtxCompressEmailToggle.Description" xml:space="preserve">
+    <value>压缩并作为邮件附件发送。</value>
+  </data>
+  <data name="CtxCompressTo7zEmailToggle.Description" xml:space="preserve">
+    <value>压缩为 .7z 并作为邮件附件发送。</value>
+  </data>
+  <data name="CtxCompressToZipEmailToggle.Description" xml:space="preserve">
+    <value>压缩为 .zip 并作为邮件附件发送。</value>
+  </data>
+  <data name="CtxHashToggle.Description" xml:space="preserve">
+    <value>添加校验和(CRC / SHA)条目。</value>
+  </data>
+  <data name="CtxElimDupToggle.Description" xml:space="preserve">
+    <value>解压时跳过重复创建的文件夹。</value>
+  </data>
+  <data name="CtxCascadedToggle.Description" xml:space="preserve">
+    <value>将全部条目收进单个 CuinZip 子菜单。</value>
+  </data>
+  <data name="ShowDotsToggle.Description" xml:space="preserve">
+    <value>显示“..”上级文件夹项。</value>
+  </data>
+  <data name="ShowRealFileIconsToggle.Description" xml:space="preserve">
+    <value>为压缩包内文件显示系统图标。</value>
+  </data>
+  <data name="FullRowToggle.Description" xml:space="preserve">
+    <value>点击整行任意位置即可选中。</value>
+  </data>
+  <data name="ShowGridToggle.Description" xml:space="preserve">
+    <value>在文件列表中显示网格线。</value>
+  </data>
+  <data name="SingleClickToggle.Description" xml:space="preserve">
+    <value>单击即可打开项目。</value>
+  </data>
+  <data name="AlternativeSelectionToggle.Description" xml:space="preserve">
+    <value>使用无 Ctrl / Shift 的自由选择模式。</value>
+  </data>
+  <data name="OpenFolderToggle.Description" xml:space="preserve">
+    <value>解压完成后打开目标文件夹。</value>
+  </data>
+  <!--
+    CuinZip P1-6: Start page toggle, advanced badge, open source entry.
+  -->
+  <data name="AdvancedBadgeText.Text" xml:space="preserve">
+    <value>高级</value>
+  </data>
+  <data name="ShowStartPageToggle.Header" xml:space="preserve">
+    <value>启动时显示开始页</value>
+  </data>
+  <data name="ShowStartPageToggle.Description" xml:space="preserve">
+    <value>CuinZip 启动时显示快捷操作和最近打开的压缩包。</value>
+  </data>
+  <data name="AboutOpenSourceButton.Content" xml:space="preserve">
+    <value>查看开源项目</value>
+  </data>
 </root>

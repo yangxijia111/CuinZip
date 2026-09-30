@@ -34,6 +34,13 @@ static LPCTSTR const kAlternativeSelection = TEXT("AlternativeSelection");
 
 static LPCTSTR const kShowSystemMenu = TEXT("ShowSystemMenu");
 
+// **************** CuinZip P1-6 Modification Start ****************
+// 启动时显示 Home / Start 页(默认开,普通用户保持引导首屏)。
+static LPCTSTR const kShowStartPage = TEXT("ShowStartPage");
+// 最近打开的压缩包(Home 页 Recent Archives;REG_MULTI_SZ,最新在前)。
+static LPCWSTR const kRecentArchives = L"RecentArchives";
+static const unsigned kRecentArchivesMax = 10;
+// **************** CuinZip P1-6 Modification End ****************
 // static LPCTSTR const kLockMemoryAdd = TEXT("LockMemoryAdd");
 static LPCTSTR const kLargePages = TEXT("LargePages");
 
@@ -155,6 +162,10 @@ void CFmSettings::Save() const
   // SaveOption(kUnderline, Underline);
 
   SaveOption(kShowSystemMenu, ShowSystemMenu);
+
+  // **************** CuinZip P1-6 Modification Start ****************
+  SaveOption(kShowStartPage, ShowStartPage);
+  // **************** CuinZip P1-6 Modification End ****************
 }
 
 void CFmSettings::Load()
@@ -174,6 +185,10 @@ void CFmSettings::Load()
 
   ShowSystemMenu = false;
 
+  // **************** CuinZip P1-6 Modification Start ****************
+  ShowStartPage = true; // 默认显示 Home / Start 引导页
+  // **************** CuinZip P1-6 Modification End ****************
+
   CKey key;
   if (key.Open(HKEY_CURRENT_USER, kCU_FMPath, KEY_READ) == ERROR_SUCCESS)
   {
@@ -191,6 +206,10 @@ void CFmSettings::Load()
     // ReadOption(key, kUnderline, Underline);
 
     ReadOption(key, kShowSystemMenu, ShowSystemMenu );
+
+    // **************** CuinZip P1-6 Modification Start ****************
+    ReadOption(key, kShowStartPage, ShowStartPage);
+    // **************** CuinZip P1-6 Modification End ****************
   }
 }
 
@@ -229,3 +248,99 @@ bool ReadFlatView(UInt32 panelIndex)
 void Save_ShowDeleted(bool enable) { SaveOption(kShowDeletedFiles, enable); }
 bool Read_ShowDeleted() { return ReadOption(kShowDeletedFiles, false); }
 */
+
+// **************** CuinZip P1-6 Modification Start ****************
+// Recent Archives(Home / Start 页数据源)。
+// 存储:HKCU\Software\CuinZip\FM\RecentArchives(REG_MULTI_SZ,最新在前,
+// 上限 kRecentArchivesMax 条)。记录点为面板状态栏刷新(打开压缩包
+// 后必然触发),SaveRecentArchive 幂等:头部为同一路径时直接返回,
+// 避免每次刷新写注册表。
+
+void ReadRecentArchives(UStringVector &paths)
+{
+  paths.Clear();
+
+  HKEY key = 0;
+  if (::RegOpenKeyExW(
+      HKEY_CURRENT_USER, kCU_FMPath, 0, KEY_READ, &key) != ERROR_SUCCESS)
+    return;
+
+  DWORD type = 0;
+  DWORD size = 0;
+  if (::RegQueryValueExW(
+      key, kRecentArchives, nullptr, &type, nullptr, &size) == ERROR_SUCCESS
+      && type == REG_MULTI_SZ && size >= sizeof(wchar_t) * 2)
+  {
+    CByteArr data(size);
+    if (::RegQueryValueExW(
+        key, kRecentArchives, nullptr, nullptr, data, &size) == ERROR_SUCCESS)
+    {
+      const wchar_t *cur = (const wchar_t *)(void *)(BYTE *)data;
+      const wchar_t *end = cur + size / sizeof(wchar_t);
+      while (cur < end && *cur != 0)
+      {
+        // 每段以 NUL 结尾,直接构造
+        paths.Add(UString(cur));
+        while (cur < end && *cur != 0)
+          cur++;
+        cur++;
+      }
+    }
+  }
+
+  ::RegCloseKey(key);
+}
+
+void SaveRecentArchive(const UString &path)
+{
+  if (path.IsEmpty())
+    return;
+
+  UStringVector paths;
+  ReadRecentArchives(paths);
+
+  // 幂等:已是最新的则不写(状态栏刷新高频调用)。
+  if (paths.Size() > 0 && paths[0].IsEqualTo_NoCase(path))
+    return;
+
+  for (unsigned i = 0; i < paths.Size();)
+  {
+    if (path.IsEqualTo_NoCase(paths[i]))
+      paths.Delete(i);
+    else
+      i++;
+  }
+  paths.Insert(0, path);
+  if (paths.Size() > kRecentArchivesMax)
+    paths.DeleteFrom(kRecentArchivesMax);
+
+  // 组装 REG_MULTI_SZ(双 NUL 结尾)。
+  size_t total = 1;
+  for (unsigned i = 0; i < paths.Size(); i++)
+    total += paths[i].Len() + 1;
+  total *= sizeof(wchar_t);
+
+  CByteArr data(total);
+  wchar_t *cur = (wchar_t *)(void *)(BYTE *)data;
+  for (unsigned i = 0; i < paths.Size(); i++)
+  {
+    const UString &s = paths[i];
+    const size_t len = s.Len();
+    memcpy(cur, (const wchar_t *)s, len * sizeof(wchar_t));
+    cur += len;
+    *cur++ = 0;
+  }
+  *cur = 0;
+
+  HKEY key = 0;
+  if (::RegCreateKeyExW(
+      HKEY_CURRENT_USER, kCU_FMPath, 0, nullptr, 0, KEY_WRITE, nullptr,
+      &key, nullptr) == ERROR_SUCCESS)
+  {
+    ::RegSetValueExW(
+        key, kRecentArchives, 0, REG_MULTI_SZ, (const BYTE *)(void *)data,
+        static_cast<DWORD>(total));
+    ::RegCloseKey(key);
+  }
+}
+// **************** CuinZip P1-6 Modification End ****************

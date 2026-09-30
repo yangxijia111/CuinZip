@@ -34,6 +34,11 @@ struct CFmSettings
 
   bool ShowSystemMenu;
 
+  // **************** CuinZip P1-6 Modification Start ****************
+  // 启动时显示 Home / Start 页(默认 true)。
+  bool ShowStartPage;
+  // **************** CuinZip P1-6 Modification End ****************
+
   void Save() const;
   void Load();
 };
@@ -52,6 +57,13 @@ bool WantLowercaseHashes();
 
 void SaveFlatView(UInt32 panelIndex, bool enable);
 bool ReadFlatView(UInt32 panelIndex);
+
+// **************** CuinZip P1-6 Modification Start ****************
+// 最近打开的压缩包(Home / Start 页 Recent Archives)。
+// REG_MULTI_SZ 存储,最新在前,上限 10 条;SaveRecentArchive 幂等。
+void ReadRecentArchives(UStringVector &paths);
+void SaveRecentArchive(const UString &path);
+// **************** CuinZip P1-6 Modification End ****************
 
 /*
 void Save_ShowDeleted(bool enable);

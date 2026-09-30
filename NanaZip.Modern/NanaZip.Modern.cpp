@@ -22,6 +22,9 @@
 #include "ProgressPage.h"
 #include "CopyLocationPage.h"
 #include "SettingsPage.h"
+// **************** CuinZip P1-6 Modification Start ****************
+#include "StartPage.h"
+// **************** CuinZip P1-6 Modification End ****************
 // **************** CuinZip P1-3 Modification Start ****************
 #include "CompressDialogPage.h"
 #include "ExtractDialogPage.h"
@@ -748,7 +751,7 @@ EXTERN_C INT WINAPI K7ModernShowCompressDialog(
     int Result = ::K7ModernShowXamlDialog(
         WindowHandle,
         560,
-        640,
+        560,
         winrt::get_abi(Window),
         ParentWindowHandle);
 
@@ -792,7 +795,7 @@ EXTERN_C INT WINAPI K7ModernShowExtractDialog(
     int Result = ::K7ModernShowXamlDialog(
         WindowHandle,
         500,
-        480,
+        440,
         winrt::get_abi(Window),
         ParentWindowHandle);
 
@@ -800,3 +803,38 @@ EXTERN_C INT WINAPI K7ModernShowExtractDialog(
 }
 
 // **************** CuinZip P1-3 Modification End ****************
+
+// **************** CuinZip P1-6 Modification Start ****************
+
+EXTERN_C INT WINAPI K7ModernShowStartWindow(
+    _In_opt_ HWND ParentWindowHandle,
+    _In_opt_ K7_START_GET_RECENT_CALLBACK GetRecent,
+    _In_opt_ K7_MODERN_START_RESULT* Result)
+{
+    HWND WindowHandle = ::K7ModernCreateXamlDialog(ParentWindowHandle);
+    if (!WindowHandle)
+    {
+        return -1;
+    }
+
+    using Interface =
+        winrt::NanaZip::Modern::StartPage;
+    using Implementation =
+        winrt::NanaZip::Modern::implementation::StartPage;
+
+    Interface Window = winrt::make<Implementation>(
+        WindowHandle,
+        GetRecent,
+        Result);
+
+    int ResultCode = ::K7ModernShowXamlDialog(
+        WindowHandle,
+        640,
+        560,
+        winrt::get_abi(Window),
+        ParentWindowHandle);
+
+    return ResultCode;
+}
+
+// **************** CuinZip P1-6 Modification End ****************

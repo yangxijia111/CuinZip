@@ -271,6 +271,73 @@ EXTERN_C LPVOID WINAPI K7ModernCreateMainWindowToolBarPage(
     _In_ HWND ParentWindowHandle,
     _In_ HMENU MoreMenuHandle);
 
+// **************** CuinZip P1-6 Modification Start ****************
+
+/**
+ * @brief 主窗口工具栏的场景状态标志(K7ModernUpdateMainWindowToolBarState)。
+ * @remark Extract / Test 按钮仅在"当前面板位于压缩包内"或"选中项全部为
+ *         压缩包文件"时显示,其余场景隐藏(无意义操作不出现)。
+ */
+#define K7_TOOLBAR_CONTEXT_IN_ARCHIVE         0x00000001
+#define K7_TOOLBAR_CONTEXT_HAS_SELECTION      0x00000002
+#define K7_TOOLBAR_CONTEXT_SELECTION_ARCHIVES 0x00000004
+
+/**
+ * @brief 更新主窗口工具栏的场景状态(Context-aware UI)。
+ * @param PageInstance K7ModernCreateMainWindowToolBarPage 返回的实例指针。
+ * @param ContextFlags K7_TOOLBAR_CONTEXT_* 标志的组合。
+ */
+EXTERN_C VOID WINAPI K7ModernUpdateMainWindowToolBarState(
+    _In_ LPVOID PageInstance,
+    _In_ UINT32 ContextFlags);
+
+/**
+ * @brief CuinZip P1-6:Home / Start 窗口(启动首屏)。
+ * @remark 四个主操作(Open Archive / Extract / Create / Open Folder)
+ *         + Recent Archives 列表 + 拖放(压缩包直接打开,普通文件
+ *         进入创建压缩包模式)。最近列表经宿主回调读取真实数据源
+ *         (FM 注册表),Modern DLL 不直接访问注册表。
+ */
+#define K7_START_ACTION_NONE          0
+#define K7_START_ACTION_OPEN_ARCHIVE  1
+#define K7_START_ACTION_EXTRACT       2
+#define K7_START_ACTION_CREATE        3
+#define K7_START_ACTION_OPEN_FOLDER   4
+
+#define K7_START_RECENT_MAX 10
+#define K7_START_PATH_MAX   1024
+
+typedef struct K7_MODERN_START_RECENT_LIST
+{
+    UINT32 Count;
+    WCHAR Paths[K7_START_RECENT_MAX][K7_START_PATH_MAX];
+} K7_MODERN_START_RECENT_LIST, *PK7_MODERN_START_RECENT_LIST;
+
+typedef VOID(WINAPI *K7_START_GET_RECENT_CALLBACK)(
+    _Out_ K7_MODERN_START_RECENT_LIST* Recent);
+
+typedef struct K7_MODERN_START_RESULT
+{
+    INT32 Action;                 // K7_START_ACTION_*
+    INT32 PathCount;              // 实际写入 PathBuffer 的路径数
+    UINT32 PathBufferCapacity;    // PathBuffer 容量(wchar 数,调用方提供)
+    LPWSTR PathBuffer;            // NUL 分隔、双 NUL 结尾的路径列表
+} K7_MODERN_START_RESULT, *PK7_MODERN_START_RESULT;
+
+/**
+ * @brief 显示 Home / Start 窗口(模态)。
+ * @param ParentWindowHandle 宿主窗口(启动首屏传 nullptr)。
+ * @param GetRecent 宿主回调,填充最近打开的压缩包列表(可 nullptr)。
+ * @param Result 接收用户动作与路径(可 nullptr,仅浏览)。
+ * @return 消息循环退出码。
+ */
+EXTERN_C INT WINAPI K7ModernShowStartWindow(
+    _In_opt_ HWND ParentWindowHandle,
+    _In_opt_ K7_START_GET_RECENT_CALLBACK GetRecent,
+    _In_opt_ K7_MODERN_START_RESULT* Result);
+
+// **************** CuinZip P1-6 Modification End ****************
+
 // **************** CuinZip P1-2 Modification Start ****************
 
 /**
@@ -293,6 +360,8 @@ typedef struct K7_MODERN_APPEARANCE_SETTINGS
     BOOL PathHistory;
     BOOL CopyHistory;
     BOOL FolderHistory;
+    // CuinZip P1-6:启动时显示 Home / Start 页(默认开)。
+    BOOL ShowStartPage;
 } K7_MODERN_APPEARANCE_SETTINGS;
 
 typedef void(*K7_MODERN_SETTINGS_LOAD_CALLBACK)(

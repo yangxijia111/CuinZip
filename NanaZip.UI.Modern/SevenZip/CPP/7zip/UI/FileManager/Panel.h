@@ -702,6 +702,14 @@ public:
   bool IsArcFolder() const;
   bool IsHashFolder() const;
 
+  // **************** CuinZip P1-6 Modification Start ****************
+  // 选中项是否全部为"常见压缩包格式"的文件(不含目录)。
+  // 用于 Context-aware 工具栏:普通文件夹中 Extract/Test 仅在
+  // 选中压缩包文件时显示。按扩展名近似判断,覆盖常见格式;
+  // 7-Zip 支持的其余冷门格式双击进入压缩包后按钮自然显示。
+  bool SelectionAreArchives(const CRecordVector<UInt32> &indices) const;
+  // **************** CuinZip P1-6 Modification End ****************
+
   /*
     c:\Dir
     Computer\

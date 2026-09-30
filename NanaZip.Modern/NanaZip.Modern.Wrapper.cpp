@@ -331,6 +331,64 @@ EXTERN_C LPVOID WINAPI K7ModernCreateMainWindowToolBarPage(
     return nullptr;
 }
 
+// **************** CuinZip P1-6 Modification Start ****************
+// 主窗口工具栏场景状态转发(Context-aware UI)。
+
+EXTERN_C VOID WINAPI K7ModernUpdateMainWindowToolBarState(
+    _In_ LPVOID PageInstance,
+    _In_ UINT32 ContextFlags)
+{
+    using ProcType = decltype(::K7ModernUpdateMainWindowToolBarState)*;
+
+    static ProcType ProcAddress = reinterpret_cast<ProcType>([]() -> FARPROC
+    {
+        HMODULE ModuleHandle = ::GetNanaZipModernModuleHandle();
+        if (ModuleHandle)
+        {
+            return ::GetProcAddress(
+                ModuleHandle,
+                "K7ModernUpdateMainWindowToolBarState");
+        }
+        return nullptr;
+    }());
+
+    if (ProcAddress)
+    {
+        ProcAddress(PageInstance, ContextFlags);
+    }
+}
+
+// Home / Start 启动首屏转发(FileManager 启动时显示)。
+
+EXTERN_C INT WINAPI K7ModernShowStartWindow(
+    _In_opt_ HWND ParentWindowHandle,
+    _In_opt_ K7_START_GET_RECENT_CALLBACK GetRecent,
+    _In_opt_ K7_MODERN_START_RESULT* Result)
+{
+    using ProcType = decltype(::K7ModernShowStartWindow)*;
+
+    static ProcType ProcAddress = reinterpret_cast<ProcType>([]() -> FARPROC
+    {
+        HMODULE ModuleHandle = ::GetNanaZipModernModuleHandle();
+        if (ModuleHandle)
+        {
+            return ::GetProcAddress(
+                ModuleHandle,
+                "K7ModernShowStartWindow");
+        }
+        return nullptr;
+    }());
+
+    if (ProcAddress)
+    {
+        return ProcAddress(ParentWindowHandle, GetRecent, Result);
+    }
+
+    return -1;
+}
+
+// **************** CuinZip P1-6 Modification End ****************
+
 // **************** CuinZip P1-3 Modification Start ****************
 // 压缩/解压 Modern 对话框转发。与上面的函数一样经 GetProcAddress
 // 动态转发,宿主 EXE(NanaZip.Universal.Windows)不产生对

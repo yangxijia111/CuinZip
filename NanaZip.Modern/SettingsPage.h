@@ -48,12 +48,20 @@ namespace winrt::NanaZip::Modern::implementation
             std::wstring_view const& textFallback,
             winrt::Windows::UI::Xaml::RoutedEventHandler const& handler);
 
+        // CuinZip P1-6:每个开关带一行简短说明;advanced 为真时标题旁
+        // 附加 "Advanced" 徽章(提示普通用户谨慎修改)。
         winrt::Windows::UI::Xaml::Controls::ToggleSwitch BuildToggle(
             winrt::Windows::UI::Xaml::Controls::Panel const& parent,
             std::wstring_view const& headerKey,
             std::wstring_view const& headerFallback,
+            std::wstring_view const& descriptionKey,
+            std::wstring_view const& descriptionFallback,
             bool isOn,
-            std::function<void()> const& applyHandler);
+            std::function<void()> const& applyHandler,
+            bool advanced = false);
+
+        // "Advanced" 徽章(小号、中性色、圆角)
+        winrt::Windows::UI::Xaml::Controls::Border BuildAdvancedBadge();
 
         winrt::Windows::UI::Xaml::Controls::ComboBox BuildCombo(
             winrt::Windows::UI::Xaml::Controls::Panel const& parent,
@@ -120,6 +128,11 @@ namespace winrt::NanaZip::Modern::implementation
             winrt::IInspectable const& sender,
             winrt::Windows::UI::Xaml::RoutedEventArgs const& e);
 
+        // CuinZip P1-6:打开开源项目页。
+        void AboutOpenSourceButtonClick(
+            winrt::IInspectable const& sender,
+            winrt::Windows::UI::Xaml::RoutedEventArgs const& e);
+
         HWND m_WindowHandle;
         K7_MODERN_SETTINGS_CALLBACKS m_Callbacks = {};
         bool m_Initializing = true;
@@ -150,6 +163,8 @@ namespace winrt::NanaZip::Modern::implementation
         winrt::Windows::UI::Xaml::Controls::ToggleSwitch m_PathHistoryToggle{ nullptr };
         winrt::Windows::UI::Xaml::Controls::ToggleSwitch m_CopyHistoryToggle{ nullptr };
         winrt::Windows::UI::Xaml::Controls::ToggleSwitch m_FolderHistoryToggle{ nullptr };
+        // CuinZip P1-6:启动时显示 Home / Start 页。
+        winrt::Windows::UI::Xaml::Controls::ToggleSwitch m_StartPageToggle{ nullptr };
 
         // Compression。
         winrt::Windows::UI::Xaml::Controls::ComboBox m_FormatCombo{ nullptr };

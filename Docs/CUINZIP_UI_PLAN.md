@@ -319,3 +319,137 @@ LangUtils `"NanaZip"` 匹配键、`Mile.*`、第三方许可证、内部二进�
   Modern 设置 UI 的 zh-Hans 经 resw 完整覆盖。
 - Modern MSIX 部署实测仍被 Developer Mode 关闭阻塞(不修改系统策略),
   与 P1-1/P1-2/P1-3 相同。
+
+# CuinZip UI / UX 计划(P1-6 实施记录)
+
+日期:2026-09-30,基线 `e4e133c9`(v0.1.0-preview.1)。
+范围:UI Usability Redesign —— 信息架构 / 入口 / 交互重构;不新增压缩
+功能,不修改 Core/Codecs,原功能与快捷键零删除。
+
+## 1. Home / Start 启动首屏(新)
+
+- 新页面 `StartPage`(纯代码 UI,规避 XAML 管道坑,同 SettingsPage);
+  新导出 `K7ModernShowStartWindow`(def + Wrapper 动态转发)。
+- 布局:欢迎标题 + 副标题(首次启动即简洁空状态)+ 四个操作卡
+  (2×2:Open Archive / Extract Archive / Create Archive / Open Folder,
+  图标 + 标题 + 一句描述,整卡可点、键盘可达)+
+  Recent Archives 列表(文件名 + 完整路径小字,点击即打开;
+  无记录时整区隐藏)。
+- FM 接线(`FM.cpp` WinMain2):无路径参数且非文件类型处理器、且
+  `CFmSettings.ShowStartPage`(默认开,Settings > General 可关)时显示;
+  动作结果经 `K7_MODERN_START_RESULT` 返回:Open Archive / Open Folder
+  → 设置主窗口路径进入文件管理器;Extract → 直接进入解压流程;
+  Create → 以所选文件清单打开压缩对话框(自动命名);关闭窗口 →
+  默认行为进入文件管理器。
+- Recent Archives 数据源:FM 注册表 `HKCU\Software\CuinZip\FM\`
+  `RecentArchives`(REG_MULTI_SZ,最新在前,上限 10 条),记录点在
+  面板状态栏刷新(打开压缩包必然触发),`SaveRecentArchive` 幂等
+  (头部相同直接返回);Modern DLL 经宿主回调读取,不直接访问注册表。
+- 拖放:拖入单个常见压缩包 → 直接打开;普通文件/多文件/文件夹 →
+  切换到"创建压缩包"待确认面板(文件清单 + Create Archive 主按钮)。
+
+## 2. 主界面工具栏重组
+
+- `MainWindowToolBarPage`:CommandBar 按钮改为 **图标 + 文字**
+  (`DefaultLabelPosition="Right"`,48px 工具栏高度不变);
+  常驻按钮:`Add / Extract / Test / Delete / More`;右侧独立齿轮
+  按钮打开 Modern 设置(原 Options 按钮语义);Info / Copy / Move /
+  Benchmark / About 全部收进 More(FM 主菜单,F5/F6 等快捷键不变);
+  Open Source 按钮从工具栏移除,入口迁至 Settings > About
+  ("View open source projects")。
+- 按钮 Label / Tooltip / AutomationName 沿用 Legacy 资源本地化。
+
+## 3. Context-aware 工具栏
+
+- 新导出 `K7ModernUpdateMainWindowToolBarState(page, flags)`:
+  `K7_TOOLBAR_CONTEXT_IN_ARCHIVE / HAS_SELECTION / SELECTION_ARCHIVES`。
+- FM 侧挂点:`CPanel::Refresh_StatusBar`(列表/选择变化的风向标,
+  状态始终按聚焦面板计算)与 `PanelWasFocused`(焦点切换)。
+- 显隐规则:Extract / Test 仅在"当前面板位于压缩包内"或"选中项
+  全部为常见压缩包文件"(扩展名近似判断,`CPanel::SelectionAreArchives`)
+  时显示;Add / Delete / More 常驻。普通文件夹中选中文件时 Add
+  自然成为唯一主操作。
+- `CApp::m_ToolBarPage` 保存页面实例指针供状态推送。
+
+## 4. 压缩窗口简化(CompressDialogPage)
+
+- Basic 区(始终可见):压缩包名(可编辑组合框)+ 所在目录(只读
+  小字)+ Browse + 压缩格式 + 压缩级别 + 密码(输入 + 确认两框)。
+- "More options" 折叠区(默认收起,原功能零删除):更新模式 / 路径
+  模式 / SFX / 方法 / 字典 / 词大小 / 固实 / 线程 / 内存上限 +
+  压缩/解压内存数值 / 显示密码 / 加密文件名 / 加密方法 / 分卷 /
+  参数 / 共享 / 压缩后删除 / Options(时间戳-NTFS 子对话框)。
+- 主按钮文案 OK → **Create**(Accent 样式保持);窗口 560×640 →
+  560×560(收起态更紧凑,展开靠滚动)。
+- 字段标签仍读自隐藏原对话框(7-Zip Lang 本地化),新增文案进
+  CompressDialogPage.resw(en + zh-Hans)。
+
+## 5. 解压窗口简化(ExtractDialogPage)
+
+- Basic 区:目的地(可编辑组合框)+ Browse + Open folder after
+  extraction + Password(+ 显示密码)。
+- "More options"(默认收起):路径模式 / 覆盖模式 / 消除重复 /
+  NT 安全 / 打开目标文件夹(ZS 项)/ 拆分目标名。
+- 主按钮 Extract(Accent);窗口 500×480 → 500×440。
+
+## 6. 设置页整理(SettingsPage)
+
+- 导航顺序调整为:General / Appearance / Compression / Extraction /
+  File Associations / Context Menu / Advanced / About(外观前移)。
+- 每个开关增加一行灰色说明(28 组,en + zh-Hans resw;
+  Header = 标题行 + 描述小字)。
+- Advanced 标记:Advanced 分类标题旁徽章;右键菜单的 Email 三项 /
+  Smart Extract / 消除重复 / 打开时解压等高级开关带 "Advanced" 小徽章
+  (中性色圆角边框,Light/Dark 随主题)。
+- General 新增 "Show the Start page on launch" 开关
+  (`CFmSettings.ShowStartPage`,默认开,经原回调链读写)。
+- About 分类新增 "View open source projects" 按钮(原工具栏 Open
+  Source 行为迁入)。
+- 导航项补 AutomationProperties.Name(可访问性 + 自动化)。
+
+## 7. 空状态 / 视觉
+
+- 空文件夹/空压缩包提示沿用 P1-2;首次启动空状态 = Home 欢迎文案。
+- 间距体系 4/8/12/16/24、圆角 4/8、图标 16/24(Fluent 字体),
+  主操作 Accent、次操作默认样式;无花哨动画。
+
+## 8. 验证(P1-6)
+
+- 构建:NanaZip.Modern / Modern FM / NanaZipPackage(合并 PRI)
+  Release x64 全部 0 error(全量干净构建后验证)。
+- 可用性任务("第一次使用的普通用户"视角,UIA/键盘驱动 + 截图):
+  1. 打开 ZIP ✓(窗口标题/列表/状态栏 "3 items · 42 B · ZIP";
+     工具栏显示 Add/Extract/Test/Delete/More + 齿轮);
+  2. 解压到指定目录 ✓(Basic 三步:目的地 + Browse + Extract,
+     产物 t2out\sample\ 完整还原);
+  3. 创建 ZIP ✓(创建链路 + 自动命名验证;格式切换人工路径可达,
+     自动化受 UWP ComboBox 弹出列表虚拟化限制,见 Known Issues);
+  4. 创建带密码的 7z ✓(两框密码 + Create;产物 -p 解压还原一致);
+  5. 修改默认压缩格式 ✓(Settings > Compression > Default archive
+     format,8 分类导航 + 说明文案 + 徽章视觉验证);
+  6. 找到右键菜单设置 ✓(Settings > Context Menu,18 开关全部带
+     说明,Email 组带 Advanced 徽章)。
+- Home:四卡 2×2 + Recent 列表(打开过 sample.zip 后重启显示)✓;
+  普通文件夹场景工具栏隐藏 Extract/Test ✓(04 截图)。
+- 截图:Docs/Screenshots/P1-6/(01 Home / 02 压缩包内工具栏 /
+  03 解压 Basic / 04 文件夹工具栏 / 05 压缩 Basic / 06 压缩 More
+  展开 / 07-11 设置各分类 / 12 格式下拉 / 13 Home Recent)。
+
+## 9. Known Issues(P1-6)
+
+- unpackaged(便携/安装)模式下 resw 的非英文候选不生效(MRT 语言
+  上下文回退默认英文候选)——P1-1 以来既有行为,MSIX 部署生效;
+  本阶段对话框分区标题 / 按钮文案英文,字段标签仍随 7-Zip Lang
+  本地化(中文系统实测)。
+- Home 的文件选择器为系统 IFileOpenDialog(未本地化定制)。
+- UIA 自动化对 UWP ComboBox 弹出列表存在虚拟化限制(未见项不可
+  Select),人工路径不受影响;Settings 导航已补 Automation 名称。
+- 构建考古结论:XAML/resw 改动必须经 NanaZipPackage 重新聚合
+  resources.pri;便携布局"单文件替换 DLL"对 x:Class XAML 改动无效
+  (xbf 在 PRI 内);obj 增量状态腐烂会产生幽灵行为(启动崩溃 /
+  空文件名),变更后建议清 obj 全量构建。
+
+## 永不改(红线,不变)
+
+7-Zip ABI GUID、Core/Codecs 算法、Shell CLSID、Package Identity、
+LangUtils 匹配键、Mile.*、第三方许可证、内部二进制契约。

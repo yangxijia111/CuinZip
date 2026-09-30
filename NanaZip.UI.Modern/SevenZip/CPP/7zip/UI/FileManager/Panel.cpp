@@ -1130,6 +1130,54 @@ bool CPanel::IsHashFolder() const
   return false;
 }
 
+// **************** CuinZip P1-6 Modification Start ****************
+// 选中项是否全部为常见压缩包格式的文件(不含目录)。按扩展名近似
+// 判断;冷门格式经双击进入压缩包后,Extract/Test 随"压缩包内"状态
+// 自然显示。只读操作,不影响任何命令的实际执行路径。
+bool CPanel::SelectionAreArchives(const CRecordVector<UInt32> &indices) const
+{
+  if (indices.Size() == 0)
+    return false;
+
+  static const wchar_t * const kArchiveExtensions[] =
+  {
+    L".7z",  L".zip",  L".rar",  L".tar",  L".gz",   L".tgz",
+    L".bz2", L".tbz2", L".xz",   L".txz",  L".zst",  L".tzst",
+    L".lz4", L".lz",   L".lzma", L".lz86", L".lzh",  L".arj",
+    L".cab", L".iso",  L".wim",  L".esd",  L".swm",  L".001",
+    L".dmg", L".xar",  L".cpio", L".rpm",  L".deb",  L".appx",
+    L".msi", L".vhd",  L".vhdx",
+  };
+
+  for (unsigned i = 0; i < indices.Size(); i++)
+  {
+    if (IsItem_Folder(indices[i]))
+      return false;
+
+    UString name;
+    GetItemName(indices[i], name);
+    const int dotPos = name.ReverseFind(L'.');
+    if (dotPos < 0)
+      return false;
+
+    const UString extension = name.Ptr(dotPos);
+    bool found = false;
+    for (unsigned j = 0; j < ARRAY_SIZE(kArchiveExtensions); j++)
+    {
+      if (extension.IsEqualTo_NoCase(kArchiveExtensions[j]))
+      {
+        found = true;
+        break;
+      }
+    }
+    if (!found)
+      return false;
+  }
+
+  return true;
+}
+// **************** CuinZip P1-6 Modification End ****************
+
 // **************** CuinZip P1-2 Modification Start ****************
 // 空目录 / 空压缩包提示:仅在文件列表为空(或只剩 ".." 父项)时
 // 显示,有内容时自动隐藏,不遮挡正常文件列表。

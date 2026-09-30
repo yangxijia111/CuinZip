@@ -115,6 +115,11 @@
     <Midl Include="SettingsPage.idl" />
     <Midl Include="CompressDialogPage.idl" />
     <Midl Include="ExtractDialogPage.idl" />
+    <!-- CuinZip P1-6 Modification Start -->
+    <!-- CuinZip P1-6 Modification Start -->
+    <Midl Include="StartPage.idl" />
+    <!-- CuinZip P1-6 Modification End -->
+    <!-- CuinZip P1-6 Modification End -->
     <Midl Include="StatusBar.idl" />
     <Midl Include="StatusBarTemplate.idl">
       <DependentUpon>StatusBarTemplate.xaml</DependentUpon>
@@ -176,6 +181,9 @@
     <ClInclude Include="ExtractDialogPage.h">
       <DependentUpon>ExtractDialogPage.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="StartPage.h">
+      <DependentUpon>StartPage.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="DialogMirrorUi.h" />
   </ItemGroup>
   <ItemGroup>
@@ -229,6 +237,11 @@
     <!-- CuinZip P1-4 Modification End -->
     <ClCompile Include="CompressDialogPage.cpp" />
     <ClCompile Include="ExtractDialogPage.cpp" />
+    <!-- CuinZip P1-6 Modification Start -->
+    <!-- CuinZip P1-6 Modification Start -->
+    <ClCompile Include="StartPage.cpp" />
+    <!-- CuinZip P1-6 Modification End -->
+    <!-- CuinZip P1-6 Modification End -->
     <ClCompile Include="UiStrings.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -294,6 +307,11 @@
     <PRIResource Include="Strings\en\SettingsPage.resw" />
     <PRIResource Include="Strings\en\CompressDialogPage.resw" />
     <PRIResource Include="Strings\en\ExtractDialogPage.resw" />
+    <!-- CuinZip P1-6 Modification Start -->
+    <!-- CuinZip P1-6 Modification Start -->
+    <PRIResource Include="Strings\en\StartPage.resw" />
+    <!-- CuinZip P1-6 Modification End -->
+    <!-- CuinZip P1-6 Modification End -->
     <PRIResource Include="Strings\en\SponsorPage.resw" />
     <PRIResource Include="Strings\eo\Common.resw" />
     <PRIResource Include="Strings\eo\CopyLocationPage.resw" />
@@ -502,6 +520,11 @@
     <PRIResource Include="Strings\zh-Hans\SettingsPage.resw" />
     <PRIResource Include="Strings\zh-Hans\CompressDialogPage.resw" />
     <PRIResource Include="Strings\zh-Hans\ExtractDialogPage.resw" />
+    <!-- CuinZip P1-6 Modification Start -->
+    <!-- CuinZip P1-6 Modification Start -->
+    <PRIResource Include="Strings\zh-Hans\StartPage.resw" />
+    <!-- CuinZip P1-6 Modification End -->
+    <!-- CuinZip P1-6 Modification End -->
     <PRIResource Include="Strings\zh-Hans\SponsorPage.resw" />
     <PRIResource Include="Strings\zh-Hant\Common.resw" />
     <PRIResource Include="Strings\zh-Hant\CopyLocationPage.resw" />

@@ -79,4 +79,13 @@
   <data name="CancelButtonText.Text" xml:space="preserve">
     <value>Cancel</value>
   </data>
+  <!--
+    CuinZip P1-6: Basic + More options layout.
+  -->
+  <data name="MoreOptionsSection.Text" xml:space="preserve">
+    <value>More options</value>
+  </data>
+  <data name="CreateButtonText.Text" xml:space="preserve">
+    <value>Create</value>
+  </data>
 </root>

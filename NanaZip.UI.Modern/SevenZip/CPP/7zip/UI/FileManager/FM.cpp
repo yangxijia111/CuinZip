@@ -505,6 +505,100 @@ static bool CallExtractOnOpen() {
 }
 // **************** NanaZip Modification End ****************
 
+// **************** CuinZip P1-6 Modification Start ****************
+// Home / Start 窗口的最近列表回调:真实数据源是 FM 注册表
+// (RecentArchives,面板状态栏刷新时幂等记录)。
+static VOID WINAPI StartGetRecentArchivesCallback(
+    K7_MODERN_START_RECENT_LIST* Recent)
+{
+  if (!Recent)
+    return;
+  Recent->Count = 0;
+  UStringVector paths;
+  ReadRecentArchives(paths);
+  for (unsigned i = 0; i < paths.Size() && i < K7_START_RECENT_MAX; i++)
+  {
+    const UString &path = paths[i];
+    if (path.Len() > 0 && path.Len() < K7_START_PATH_MAX)
+    {
+      memcpy(
+          Recent->Paths[Recent->Count],
+          (const wchar_t *)path,
+          path.Len() * sizeof(wchar_t));
+      Recent->Paths[Recent->Count][path.Len()] = 0;
+      Recent->Count++;
+    }
+  }
+}
+
+// 显示 Home / Start 窗口并处理用户动作:
+//   Open Archive / Open Folder -> 设置 g_MainPath,进入文件管理器;
+//   Extract                    -> 直接进入解压流程(解压对话框);
+//   Create                     -> 以所选文件清单打开压缩对话框;
+//   关闭窗口                   -> 按默认行为进入文件管理器。
+static void ShowStartWindow()
+{
+  // 路径缓冲(NUL 分隔 + 双 NUL 结尾);创建模式支持多文件选择。
+  wchar_t pathBuffer[64 * 1024];
+  K7_MODERN_START_RESULT result;
+  memset(&result, 0, sizeof(result));
+  result.Action = K7_START_ACTION_NONE;
+  result.PathBuffer = pathBuffer;
+  result.PathBufferCapacity = ARRAY_SIZE(pathBuffer);
+
+  ::K7ModernShowStartWindow(NULL, StartGetRecentArchivesCallback, &result);
+
+  UStringVector paths;
+  {
+    const wchar_t* cursor = pathBuffer;
+    for (INT32 i = 0; i < result.PathCount && *cursor; i++)
+    {
+      paths.Add(cursor);
+      cursor += wcslen(cursor) + 1;
+    }
+  }
+
+  if (paths.IsEmpty())
+    return;
+
+  switch (result.Action)
+  {
+    case K7_START_ACTION_OPEN_ARCHIVE:
+    case K7_START_ACTION_OPEN_FOLDER:
+      g_MainPath = paths[0];
+      break;
+
+    case K7_START_ACTION_EXTRACT:
+    {
+      UStringVector arcPaths;
+      arcPaths.Add(paths[0]);
+      CContextMenuInfo ci;
+      ci.Load();
+      ::ExtractArchives(arcPaths, UString(), true, false, ci.WriteZone);
+      break;
+    }
+
+    case K7_START_ACTION_CREATE:
+    {
+      // 文件清单交给压缩子进程(自动命名 -an,对话框内确认细节)。
+      ::CompressFiles(
+          UString(),   // arcPathPrefix
+          UString(),   // arcName(空 = 自动命名)
+          UString(),   // arcType(对话框内选择)
+          true,        // addExtension
+          paths,
+          false,       // email
+          true,        // showDialog
+          false);      // waitFinish
+      break;
+    }
+
+    default:
+      break;
+  }
+}
+// **************** CuinZip P1-6 Modification End ****************
+
 static int WINAPI WinMain2(int nCmdShow)
 {
   g_RAM_Size_Defined = NSystem::GetRamSize(g_RAM_Size);
@@ -660,6 +754,21 @@ static int WINAPI WinMain2(int nCmdShow)
   if (CallExtractOnOpen())
     return 0;
   // **************** NanaZip Modification End ****************
+
+  // **************** CuinZip P1-6 Modification Start ****************
+  // Home / Start 启动首屏:无打开任务(无路径参数且非文件类型处理器)
+  // 且设置允许时显示。四个操作 + 最近打开的压缩包;用户选择后
+  // 关闭 Home 进入文件管理器(或直接执行解压/压缩流程)。
+  if (g_MainPath.IsEmpty() && !g_IsFileTypeHandler)
+  {
+    CFmSettings startSettings;
+    startSettings.Load();
+    if (startSettings.ShowStartPage)
+    {
+      ShowStartWindow();
+    }
+  }
+  // **************** CuinZip P1-6 Modification End ****************
 
   #if defined(_WIN32) && !defined(UNDER_CE)
   SetMemoryLock();
@@ -865,14 +974,16 @@ void FmModernSettingsLoad(K7_MODERN_APPEARANCE_SETTINGS *settings)
   settings->ShowGrid = st.ShowGrid ? TRUE : FALSE;
   settings->SingleClick = st.SingleClick ? TRUE : FALSE;
   settings->AlternativeSelection = st.AlternativeSelection ? TRUE : FALSE;
-  // **************** CuinZip P1-4 Modification Start ****************
-  // General 分类(同一 CFmSettings 配置源)。
-  settings->ShowSystemMenu = st.ShowSystemMenu ? TRUE : FALSE;
-  settings->ArcHistory = st.ArcHistory ? TRUE : FALSE;
-  settings->PathHistory = st.PathHistory ? TRUE : FALSE;
-  settings->CopyHistory = st.CopyHistory ? TRUE : FALSE;
-  settings->FolderHistory = st.FolderHistory ? TRUE : FALSE;
-  // **************** CuinZip P1-4 Modification End ****************
+    // **************** CuinZip P1-4 Modification Start ****************
+    // General 分类(同一 CFmSettings 配置源)。
+    settings->ShowSystemMenu = st.ShowSystemMenu ? TRUE : FALSE;
+    settings->ArcHistory = st.ArcHistory ? TRUE : FALSE;
+    settings->PathHistory = st.PathHistory ? TRUE : FALSE;
+    settings->CopyHistory = st.CopyHistory ? TRUE : FALSE;
+    settings->FolderHistory = st.FolderHistory ? TRUE : FALSE;
+    // **************** CuinZip P1-6 Modification Start ****************
+    settings->ShowStartPage = st.ShowStartPage ? TRUE : FALSE;
+    // **************** CuinZip P1-6 Modification End ****************
 }
 
 void FmModernSettingsApply(const K7_MODERN_APPEARANCE_SETTINGS *settings)
@@ -885,15 +996,17 @@ void FmModernSettingsApply(const K7_MODERN_APPEARANCE_SETTINGS *settings)
   st.ShowGrid = (settings->ShowGrid != FALSE);
   st.SingleClick = (settings->SingleClick != FALSE);
   st.AlternativeSelection = (settings->AlternativeSelection != FALSE);
-  // **************** CuinZip P1-4 Modification Start ****************
-  // General 分类。ShowSystemMenu 在面板/窗口创建时读取,对新窗口生效;
-  // 历史记录类选项实时生效。
-  st.ShowSystemMenu = (settings->ShowSystemMenu != FALSE);
-  st.ArcHistory = (settings->ArcHistory != FALSE);
-  st.PathHistory = (settings->PathHistory != FALSE);
-  st.CopyHistory = (settings->CopyHistory != FALSE);
-  st.FolderHistory = (settings->FolderHistory != FALSE);
-  // **************** CuinZip P1-4 Modification End ****************
+    // **************** CuinZip P1-4 Modification Start ****************
+    // General 分类。ShowSystemMenu 在面板/窗口创建时读取,对新窗口生效;
+    // 历史记录类选项实时生效。
+    st.ShowSystemMenu = (settings->ShowSystemMenu != FALSE);
+    st.ArcHistory = (settings->ArcHistory != FALSE);
+    st.PathHistory = (settings->PathHistory != FALSE);
+    st.CopyHistory = (settings->CopyHistory != FALSE);
+    st.FolderHistory = (settings->FolderHistory != FALSE);
+    // **************** CuinZip P1-6 Modification Start ****************
+    st.ShowStartPage = (settings->ShowStartPage != FALSE);
+    // **************** CuinZip P1-6 Modification End ****************
   st.Save();
   g_App.SetListSettings();
   g_App.RefreshAllPanels();

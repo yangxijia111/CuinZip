@@ -348,4 +348,106 @@
   <data name="CtxCascadedToggle.Header" xml:space="preserve">
     <value>Show all items under one CuinZip submenu</value>
   </data>
+  <!--
+    CuinZip P1-6: per-setting descriptions.
+  -->
+  <data name="ShowSystemMenuToggle.Description" xml:space="preserve">
+    <value>Show the system menu in windows.</value>
+  </data>
+  <data name="ArcHistoryToggle.Description" xml:space="preserve">
+    <value>Remember recently used archive names.</value>
+  </data>
+  <data name="PathHistoryToggle.Description" xml:space="preserve">
+    <value>Remember recently used paths.</value>
+  </data>
+  <data name="CopyHistoryToggle.Description" xml:space="preserve">
+    <value>Remember recently used copy destinations.</value>
+  </data>
+  <data name="FolderHistoryToggle.Description" xml:space="preserve">
+    <value>Remember recently visited folders.</value>
+  </data>
+  <data name="ExtractOnOpenToggle.Description" xml:space="preserve">
+    <value>Extract instead of browsing when opening an archive.</value>
+  </data>
+  <data name="CtxOpenToggle.Description" xml:space="preserve">
+    <value>Add "Open archive" to the context menu.</value>
+  </data>
+  <data name="CtxTestToggle.Description" xml:space="preserve">
+    <value>Add "Test archive" to the context menu.</value>
+  </data>
+  <data name="CtxExtractToggle.Description" xml:space="preserve">
+    <value>Add "Extract files..." to the context menu.</value>
+  </data>
+  <data name="CtxExtractHereToggle.Description" xml:space="preserve">
+    <value>Add "Extract Here" to the context menu.</value>
+  </data>
+  <data name="CtxExtractHereSmartToggle.Description" xml:space="preserve">
+    <value>Extract Here without creating duplicate folders.</value>
+  </data>
+  <data name="CtxExtractToToggle.Description" xml:space="preserve">
+    <value>Add "Extract to &lt;folder&gt;" to the context menu.</value>
+  </data>
+  <data name="CtxCompressToggle.Description" xml:space="preserve">
+    <value>Add "Add to archive..." to the context menu.</value>
+  </data>
+  <data name="CtxCompressTo7zToggle.Description" xml:space="preserve">
+    <value>One-click "Add to &lt;archive&gt;.7z" entry.</value>
+  </data>
+  <data name="CtxCompressToZipToggle.Description" xml:space="preserve">
+    <value>One-click "Add to &lt;archive&gt;.zip" entry.</value>
+  </data>
+  <data name="CtxCompressEmailToggle.Description" xml:space="preserve">
+    <value>Compress and attach to an email.</value>
+  </data>
+  <data name="CtxCompressTo7zEmailToggle.Description" xml:space="preserve">
+    <value>Compress to .7z and attach to an email.</value>
+  </data>
+  <data name="CtxCompressToZipEmailToggle.Description" xml:space="preserve">
+    <value>Compress to .zip and attach to an email.</value>
+  </data>
+  <data name="CtxHashToggle.Description" xml:space="preserve">
+    <value>Add checksum (CRC / SHA) entries.</value>
+  </data>
+  <data name="CtxElimDupToggle.Description" xml:space="preserve">
+    <value>Skip duplicate folders created on extraction.</value>
+  </data>
+  <data name="CtxCascadedToggle.Description" xml:space="preserve">
+    <value>Group entries under one CuinZip submenu.</value>
+  </data>
+  <data name="ShowDotsToggle.Description" xml:space="preserve">
+    <value>Show the ".." parent folder item.</value>
+  </data>
+  <data name="ShowRealFileIconsToggle.Description" xml:space="preserve">
+    <value>Use system icons for files inside archives.</value>
+  </data>
+  <data name="FullRowToggle.Description" xml:space="preserve">
+    <value>Select an item by clicking anywhere on its row.</value>
+  </data>
+  <data name="ShowGridToggle.Description" xml:space="preserve">
+    <value>Draw grid lines in the file list.</value>
+  </data>
+  <data name="SingleClickToggle.Description" xml:space="preserve">
+    <value>Open items with a single click.</value>
+  </data>
+  <data name="AlternativeSelectionToggle.Description" xml:space="preserve">
+    <value>Use Ctrl / Shift free selection mode.</value>
+  </data>
+  <data name="OpenFolderToggle.Description" xml:space="preserve">
+    <value>Open the destination folder when done.</value>
+  </data>
+  <!--
+    CuinZip P1-6: Start page toggle, advanced badge, open source entry.
+  -->
+  <data name="AdvancedBadgeText.Text" xml:space="preserve">
+    <value>Advanced</value>
+  </data>
+  <data name="ShowStartPageToggle.Header" xml:space="preserve">
+    <value>Show the Start page on launch</value>
+  </data>
+  <data name="ShowStartPageToggle.Description" xml:space="preserve">
+    <value>Show quick actions and recent archives when CuinZip starts.</value>
+  </data>
+  <data name="AboutOpenSourceButton.Content" xml:space="preserve">
+    <value>View open source projects</value>
+  </data>
 </root>

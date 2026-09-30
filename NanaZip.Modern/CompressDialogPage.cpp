@@ -142,19 +142,20 @@ namespace winrt::NanaZip::Modern::implementation
         scroll.Content(content);
         root.Children().Append(scroll);
 
-        // ==================== Archive 分区 ====================
-        StackPanel archiveSection = this->BuildSection(
-            content, L"ArchiveSection", L"Archive", true);
+        // ==================== Basic 区(始终可见) ====================
+        // CuinZip P1-6:普通用户需要的字段直接平铺——压缩包名 / 所在目录 /
+        // 浏览 / 格式 / 压缩级别 / 密码;全部高级参数收进下方
+        // "More options" 折叠区(默认收起,原功能零删除)。
 
         this->BuildComboField(
-            archiveSection, IdArchiveLabel, IdArchiveCombo, true);
+            content, IdArchiveLabel, IdArchiveCombo, true);
 
         // 压缩包所在目录(只读展示,带 Tooltip 便于复制长路径)
         m_FolderText = winrt::TextBlock();
         m_FolderText.TextWrapping(
             winrt::Windows::UI::Xaml::TextWrapping::Wrap);
         this->ApplyTextStyle(m_FolderText, L"CaptionTextBlockStyle");
-        archiveSection.Children().Append(m_FolderText);
+        content.Children().Append(m_FolderText);
 
         // 浏览按钮(标题沿用原对话框本地化文本)
         {
@@ -170,40 +171,49 @@ namespace winrt::NanaZip::Modern::implementation
             {
                 this->OnNestedModalButtonClick(IdArchiveBrowse);
             });
-            archiveSection.Children().Append(browse);
+            content.Children().Append(browse);
         }
 
         this->BuildComboField(
-            archiveSection, IdFormatLabel, IdFormatCombo, false);
+            content, IdFormatLabel, IdFormatCombo, false);
         this->BuildComboField(
-            archiveSection, IdUpdateModeLabel, IdUpdateModeCombo, false);
-        this->BuildComboField(
-            archiveSection, IdPathModeLabel, IdPathModeCombo, false);
-        this->BuildCheckField(archiveSection, IdSfxCheck);
+            content, IdLevelLabel, IdLevelCombo, false);
 
-        // ==================== Compression 分区 ====================
-        StackPanel compressionSection = this->BuildSection(
-            content, L"CompressionSection", L"Compression", true);
+        // 密码(两个输入框:密码 + 确认;不改变镜像校验语义)
+        this->BuildPasswordField(
+            content, IdPassword1Label, IdPassword1Edit);
+        this->BuildPasswordField(
+            content, IdPassword2Label, IdPassword2Edit);
 
+        // ==================== More options(默认折叠) ====================
+        StackPanel moreSection = this->BuildSection(
+            content, L"MoreOptionsSection", L"More options", false);
+
+        // --- 压缩包高级项 ---
         this->BuildComboField(
-            compressionSection, IdLevelLabel, IdLevelCombo, false);
+            moreSection, IdUpdateModeLabel, IdUpdateModeCombo, false);
         this->BuildComboField(
-            compressionSection, IdMethodLabel, IdMethodCombo, false);
+            moreSection, IdPathModeLabel, IdPathModeCombo, false);
+        this->BuildCheckField(moreSection, IdSfxCheck);
+
+        // --- 压缩算法项 ---
         this->BuildComboField(
-            compressionSection, IdDictionaryLabel, IdDictionaryCombo, true);
+            moreSection, IdMethodLabel, IdMethodCombo, false);
         this->BuildComboField(
-            compressionSection, IdOrderLabel, IdOrderCombo, true);
+            moreSection, IdDictionaryLabel, IdDictionaryCombo, true);
         this->BuildComboField(
-            compressionSection, IdSolidLabel, IdSolidCombo, true);
+            moreSection, IdOrderLabel, IdOrderCombo, true);
         this->BuildComboField(
-            compressionSection, IdThreadsLabel, IdThreadsCombo, false);
+            moreSection, IdSolidLabel, IdSolidCombo, true);
         this->BuildComboField(
-            compressionSection, IdMemUseLabel, IdMemUseCombo, true);
+            moreSection, IdThreadsLabel, IdThreadsCombo, false);
+        this->BuildComboField(
+            moreSection, IdMemUseLabel, IdMemUseCombo, true);
 
         // 内存占用实时数值两行(压缩/解压)
         m_MemoryText = winrt::TextBlock();
         this->ApplyTextStyle(m_MemoryText, L"CaptionTextBlockStyle");
-        compressionSection.Children().Append(m_MemoryText);
+        moreSection.Children().Append(m_MemoryText);
 
         {
             StackPanel deRow;
@@ -214,40 +224,29 @@ namespace winrt::NanaZip::Modern::implementation
             m_MemoryDeText = winrt::TextBlock();
             this->ApplyTextStyle(m_MemoryDeText, L"CaptionTextBlockStyle");
             deRow.Children().Append(m_MemoryDeText);
-            compressionSection.Children().Append(deRow);
+            moreSection.Children().Append(deRow);
         }
 
-        // ==================== Encryption 分区 ====================
-        StackPanel encryptionSection = this->BuildSection(
-            content, L"EncryptionSection", L"Encryption", true);
-
-        this->BuildPasswordField(
-            encryptionSection, IdPassword1Label, IdPassword1Edit);
-        this->BuildPasswordField(
-            encryptionSection, IdPassword2Label, IdPassword2Edit);
-        this->BuildCheckField(encryptionSection, IdShowPasswordCheck);
-        this->BuildCheckField(encryptionSection, IdEncryptNamesCheck);
+        // --- 加密高级项 ---
+        this->BuildCheckField(moreSection, IdShowPasswordCheck);
+        this->BuildCheckField(moreSection, IdEncryptNamesCheck);
         this->BuildComboField(
-            encryptionSection, IdEncryptMethodLabel, IdEncryptionMethod,
-            false);
+            moreSection, IdEncryptMethodLabel, IdEncryptionMethod, false);
 
-        // ==================== Advanced 分区(默认折叠) ====================
-        StackPanel advancedSection = this->BuildSection(
-            content, L"AdvancedSection", L"Advanced", false);
-
+        // --- 分卷 / 参数 / 杂项 ---
         this->BuildComboField(
-            advancedSection, IdVolumeLabel, IdVolumeCombo, true);
+            moreSection, IdVolumeLabel, IdVolumeCombo, true);
         this->BuildTextField(
-            advancedSection, IdParamsLabel, IdParamsEdit);
-        this->BuildCheckField(advancedSection, IdSharedCheck);
-        this->BuildCheckField(advancedSection, IdDeleteCheck);
+            moreSection, IdParamsLabel, IdParamsEdit);
+        this->BuildCheckField(moreSection, IdSharedCheck);
+        this->BuildCheckField(moreSection, IdDeleteCheck);
 
         // 时间戳/NTFS 选项摘要 + "Options" 按钮(打开原选项子对话框)
         m_OptionsText = winrt::TextBlock();
         m_OptionsText.TextWrapping(
             winrt::Windows::UI::Xaml::TextWrapping::Wrap);
         this->ApplyTextStyle(m_OptionsText, L"CaptionTextBlockStyle");
-        advancedSection.Children().Append(m_OptionsText);
+        moreSection.Children().Append(m_OptionsText);
 
         {
             Button options;
@@ -262,7 +261,7 @@ namespace winrt::NanaZip::Modern::implementation
             {
                 this->OnNestedModalButtonClick(IdOptionsButton);
             });
-            advancedSection.Children().Append(options);
+            moreSection.Children().Append(options);
         }
 
         // ==================== 按钮栏 ====================
@@ -283,9 +282,10 @@ namespace winrt::NanaZip::Modern::implementation
         buttons.Children().Append(cancel);
 
         m_OkButton = winrt::Button();
+        // CuinZip P1-6:主按钮用动作动词 "Create"(原 OK 语义不变)。
         m_OkButton.Content(winrt::box_value(
             winrt::NanaZip::Modern::GetUiString(
-                L"CompressDialogPage/OkButtonText", L"OK")));
+                L"CompressDialogPage/CreateButtonText", L"Create")));
         try
         {
             m_OkButton.Style(Application::Current().Resources()

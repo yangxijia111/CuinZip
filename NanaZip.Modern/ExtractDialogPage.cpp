@@ -111,12 +111,13 @@ namespace winrt::NanaZip::Modern::implementation
         scroll.Content(content);
         root.Children().Append(scroll);
 
-        // ==================== Destination 分区 ====================
-        StackPanel destinationSection = this->BuildSection(
-            content, L"DestinationSection", L"Destination", true);
+        // ==================== Basic 区(始终可见) ====================
+        // CuinZip P1-6:解压只需目的地 + 浏览 + 完成后打开文件夹 + 密码;
+        // 路径模式 / 覆盖模式等技术参数收进 "More options"(默认收起,
+        // 原功能零删除)。
 
         this->BuildComboField(
-            destinationSection, IdExtractToLabel, IdPathCombo, true);
+            content, IdExtractToLabel, IdPathCombo, true);
 
         // 浏览按钮(标题沿用原对话框本地化文本)
         {
@@ -132,17 +133,36 @@ namespace winrt::NanaZip::Modern::implementation
             {
                 this->OnBrowseClick();
             });
-            destinationSection.Children().Append(browse);
+            content.Children().Append(browse);
         }
 
+        // 完成后打开目标文件夹(NanaZip 增强的复选框)
+        this->BuildCheckField(content, IdOpenFolderCheck);
+
+        // 密码(加密压缩包需要时填写;不改变镜像校验语义)
+        this->BuildPasswordField(content);
+        this->BuildCheckField(content, IdShowPasswordCheck);
+
+        // ==================== More options(默认折叠) ====================
+        StackPanel moreSection = this->BuildSection(
+            content, L"MoreOptionsSection", L"More options", false);
+
+        this->BuildComboField(
+            moreSection, IdPathModeLabel, IdPathModeCombo, false);
+        this->BuildComboField(
+            moreSection, IdOverwriteModeLabel, IdOverwriteModeCombo, false);
+        this->BuildCheckField(moreSection, IdElimDupCheck);
+        this->BuildCheckField(moreSection, IdNtSecurCheck);
+        this->BuildCheckField(moreSection, IdOpenTrgFoldCheck);
+
         // 拆分目标名(启用复选框 + 名称输入行;无原生标签,用 resw)
-        this->BuildCheckField(destinationSection, IdNameEnableCheck);
+        this->BuildCheckField(moreSection, IdNameEnableCheck);
         {
             TextBlock label;
             label.Text(winrt::NanaZip::Modern::GetUiString(
                 L"ExtractDialogPage/NameLabelText", L"Folder name"));
             label.Margin(winrt::ThicknessHelper::FromLengths(0, 8, 0, 2));
-            destinationSection.Children().Append(label);
+            moreSection.Children().Append(label);
 
             m_NameEdit = winrt::TextBox();
             m_NameEdit.KeyDown([this](
@@ -153,30 +173,8 @@ namespace winrt::NanaZip::Modern::implementation
             });
             winrt::AutomationProperties::SetName(
                 m_NameEdit, winrt::hstring(label.Text()));
-            destinationSection.Children().Append(m_NameEdit);
+            moreSection.Children().Append(m_NameEdit);
         }
-
-        this->BuildComboField(
-            destinationSection, IdPathModeLabel, IdPathModeCombo, false);
-        this->BuildComboField(
-            destinationSection, IdOverwriteModeLabel, IdOverwriteModeCombo,
-            false);
-
-        // ==================== Options 分区 ====================
-        StackPanel optionsSection = this->BuildSection(
-            content, L"OptionsSection", L"Options", true);
-
-        this->BuildCheckField(optionsSection, IdElimDupCheck);
-        this->BuildCheckField(optionsSection, IdNtSecurCheck);
-        this->BuildCheckField(optionsSection, IdOpenTrgFoldCheck);
-        this->BuildCheckField(optionsSection, IdOpenFolderCheck);
-
-        // ==================== Password 分区 ====================
-        StackPanel passwordSection = this->BuildSection(
-            content, L"PasswordSection", L"Password", true);
-
-        this->BuildPasswordField(passwordSection);
-        this->BuildCheckField(passwordSection, IdShowPasswordCheck);
 
         // ==================== 按钮栏 ====================
         StackPanel buttons;

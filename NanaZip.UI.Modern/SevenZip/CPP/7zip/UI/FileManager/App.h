@@ -149,6 +149,13 @@ public:
   NWindows::NControl::CCommandBar _commandBar;
   #endif
   HWND m_ToolBar = nullptr;
+  // **************** CuinZip P1-6 Modification Start ****************
+  // XAML 工具栏页面实例(K7ModernCreateMainWindowToolBarPage 返回值),
+  // 供场景状态推送(Context-aware 工具栏)。
+  LPVOID m_ToolBarPage = nullptr;
+  // 把聚焦面板的场景状态推送给工具栏(Extract/Test 显隐)。
+  void UpdateToolBarContextState();
+  // **************** CuinZip P1-6 Modification End ****************
 
   CDropTarget *_dropTargetSpec;
   CMyComPtr<IDropTarget> _dropTarget;
