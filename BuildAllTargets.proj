@@ -27,8 +27,8 @@
       FilePath="$(MSBuildThisFileDirectory)NanaZip.Project\NanaZip.Project.Version.props"
       BuildNumberDate="$(NanaZipBuildNumberDate)" />
     <PropertyGroup>
-      <!-- CuinZip 自有版本号:Major.Minor.Build.0(与 NanaZip.Project.props 一致) -->
-      <MileProjectVersion>$(NanaZipMajorVersion).$(NanaZipMinorVersion).$(NanaZipBuildNumber).0</MileProjectVersion>
+      <!-- CuinZip 自有版本号:Major.Minor.Build.Revision(与 NanaZip.Project.props 一致) -->
+      <MileProjectVersion>$(NanaZipMajorVersion).$(NanaZipMinorVersion).$(NanaZipBuildNumber).$(NanaZipRevisionNumber)</MileProjectVersion>
     </PropertyGroup>
     <RefreshAppxManifestVersion
       FilePath="$(MSBuildThisFileDirectory)NanaZipPackage\Package.appxmanifest"

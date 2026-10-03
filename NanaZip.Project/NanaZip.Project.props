@@ -16,9 +16,9 @@
   </PropertyGroup>
   <PropertyGroup>
     <NanaZipBuildNumberDate Condition="'$(NanaZipBuildNumberDate)' == ''">$([System.DateTime]::Today.ToString('yyyy-MM-dd'))</NanaZipBuildNumberDate>
-    <!-- CuinZip 自有版本号:Major.Minor.Build.0(Build 见 Version.props,
+    <!-- CuinZip 自有版本号:Major.Minor.Build.Revision(Build 见 Version.props,
          不再使用上游"距 2021-08-31 天数"构建号规则) -->
-    <MileProjectVersion>$(NanaZipMajorVersion).$(NanaZipMinorVersion).$(NanaZipBuildNumber).0</MileProjectVersion>
+    <MileProjectVersion>$(NanaZipMajorVersion).$(NanaZipMinorVersion).$(NanaZipBuildNumber).$(NanaZipRevisionNumber)</MileProjectVersion>
     <MileProjectVersionTag Condition="'$(NanaZipBuildPreviewRelease)' == 'false'">, version $(NanaZipDisplayVersion)</MileProjectVersionTag>
     <MileProjectVersionTag Condition="'$(MileProjectVersionTag)' == ''">Preview, version $(NanaZipDisplayVersion)</MileProjectVersionTag>
   </PropertyGroup>
