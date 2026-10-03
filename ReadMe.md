@@ -1,7 +1,7 @@
 ﻿# ![CuinZip](Assets/CuinZip.png) CuinZip
 
 **CuinZip is a modern, open source file archiver for Windows — currently in
-Preview / Alpha status (`v0.1.0-preview.1`).** It is a long-term derivative
+Preview / Alpha status (`v0.1.0-preview.2`).** It is a long-term derivative
 project of [NanaZip](https://github.com/M2Team/NanaZip), which itself is forked
 from the source code of the well-known open source file archiver
 [7-Zip](https://www.7-zip.org).

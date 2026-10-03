@@ -14,8 +14,8 @@
          NanaZip 的"距 2021-08-31 天数"构建号规则;Build 随每次发布手动递增。 -->
     <NanaZipMajorVersion>0</NanaZipMajorVersion>
     <NanaZipMinorVersion>1</NanaZipMinorVersion>
-    <NanaZipBuildNumber>0</NanaZipBuildNumber>
-    <NanaZipBuildNumberDate>2026-09-29</NanaZipBuildNumberDate>
-    <NanaZipDisplayVersion>0.1.0-preview.1</NanaZipDisplayVersion>
+    <NanaZipBuildNumber>1</NanaZipBuildNumber>
+    <NanaZipBuildNumberDate>2026-10-03</NanaZipBuildNumberDate>
+    <NanaZipDisplayVersion>0.1.0-preview.2</NanaZipDisplayVersion>
   </PropertyGroup>
 </Project>
