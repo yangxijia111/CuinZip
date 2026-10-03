@@ -20,98 +20,82 @@
         <ColumnDefinition Width="auto" />
       </Grid.ColumnDefinitions>
       <!--
-        CuinZip P1-1: Reorganized main actions into two focused groups
-        (Add / Extract / Test / Delete / Info and Options / More).
-        Copy, Move, Benchmark and About remain available through the
-        More menu (the full File Manager menu); the F5/F6 shortcuts
-        of Copy/Move are unchanged.
+        CuinZip P1-6 / P1-6.1: the toolbar exposes the high-frequency
+        actions with icon + text labels (DefaultLabelPosition="Right"
+        keeps the 48px toolbar height). Low-frequency commands
+        (Copy / Move / Info / Benchmark / About / full menu) stay in
+        the More menu; Settings is a dedicated gear button on the right;
+        Home reopens the Start page (quick actions + recent archives).
+        Extract / Test are context-aware: they only make sense inside
+        an archive or when the selection consists of archive files,
+        and are hidden otherwise (see UpdateContextState).
       -->
       <CommandBar
         Grid.Column="0"
         HorizontalAlignment="Left"
         Background="Transparent"
-        DefaultLabelPosition="Collapsed"
+        DefaultLabelPosition="Right"
         IsDynamicOverflowEnabled="False"
         IsOpen="False">
         <AppBarButton
+          x:Name="HomeButton"
+          x:Uid="/NanaZip.Modern/MainWindowToolBarPage/HomeButton"
+          AutomationProperties.Name="[Home]"
+          Click="HomeButtonClick"
+          Icon="Home"
+          Label="[Home]"
+          ToolTipService.ToolTip="[Home]" />
+        <AppBarButton
           x:Name="AddButton"
-          Width="48"
           AutomationProperties.Name="[Add]"
           Click="AddButtonClick"
           Icon="Add"
+          Label="[Add]"
           ToolTipService.ToolTip="[Add]" />
         <AppBarButton
           x:Name="ExtractButton"
-          Width="48"
           AutomationProperties.Name="[Extract]"
           Click="ExtractButtonClick"
           Icon="MoveToFolder"
+          Label="[Extract]"
           ToolTipService.ToolTip="[Extract]" />
         <AppBarButton
           x:Name="TestButton"
-          Width="48"
           AutomationProperties.Name="[Test]"
           Click="TestButtonClick"
           Icon="Accept"
+          Label="[Test]"
           ToolTipService.ToolTip="[Test]" />
         <AppBarButton
           x:Name="DeleteButton"
-          Width="48"
           AutomationProperties.Name="[Delete]"
           Click="DeleteButtonClick"
           Icon="Delete"
+          Label="[Delete]"
           ToolTipService.ToolTip="[Delete]" />
-        <AppBarButton
-          x:Name="InfoButton"
-          Width="48"
-          AutomationProperties.Name="[Info]"
-          Click="InfoButtonClick"
-          ToolTipService.ToolTip="[Info]">
-          <AppBarButton.Content>
-            <TextBlock FontFamily="Segoe Fluent Icons,Segoe MDL2 Assets" Text="&#xE946;" />
-          </AppBarButton.Content>
-        </AppBarButton>
-        <AppBarSeparator />
-        <AppBarButton
-          x:Name="OptionsButton"
-          Width="48"
-          AutomationProperties.Name="[Options]"
-          Click="OptionsButtonClick"
-          Icon="Setting"
-          ToolTipService.ToolTip="[Options]" />
         <AppBarButton
           x:Name="MoreButton"
           x:Uid="/NanaZip.Modern/MainWindowToolBarPage/MoreButton"
-          Width="48"
           AutomationProperties.Name="[More]"
           Click="MoreButtonClick"
           Icon="More"
+          Label="[More]"
           ToolTipService.ToolTip="[More]" />
       </CommandBar>
-      <Button
-        x:Name="OpenSourceButton"
-        x:Uid="/NanaZip.Modern/MainWindowToolBarPage/OpenSourceButton"
+      <!--
+        CuinZip P1-6: dedicated gear entry for Settings (opens the Modern
+        settings window, same command as the former Options button).
+      -->
+      <AppBarButton
+        x:Name="SettingsButton"
         Grid.Column="2"
-        Margin="0,0,6,0"
+        Margin="0,0,8,0"
         VerticalAlignment="Center"
-        Background="Transparent"
-        Click="OpenSourceButtonClick"
-        Content="[Open Source]">
-        <Button.Resources>
-          <ResourceDictionary>
-            <ResourceDictionary.ThemeDictionaries>
-              <ResourceDictionary x:Key="Default">
-                <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="#6CB8F6" />
-                <SolidColorBrush x:Key="ButtonForegroundPressed" Color="#4CA2E8" />
-              </ResourceDictionary>
-              <ResourceDictionary x:Key="Light">
-                <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="#0067C0" />
-                <SolidColorBrush x:Key="ButtonForegroundPressed" Color="#005BA6" />
-              </ResourceDictionary>
-            </ResourceDictionary.ThemeDictionaries>
-          </ResourceDictionary>
-        </Button.Resources>
-      </Button>
+        AutomationProperties.Name="[Settings]"
+        Click="OptionsButtonClick"
+        Icon="Setting"
+        Label="[Settings]"
+        ToolTipService.ToolTip="[Settings]" />
     </Grid>
   </Grid>
 </Page>

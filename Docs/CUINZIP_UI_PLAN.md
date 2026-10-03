@@ -453,3 +453,54 @@ LangUtils `"NanaZip"` 匹配键、`Mile.*`、第三方许可证、内部二进�
 
 7-Zip ABI GUID、Core/Codecs 算法、Shell CLSID、Package Identity、
 LangUtils 匹配键、Mile.*、第三方许可证、内部二进制契约。
+
+# CuinZip UI / UX 计划(P1-6.1 实施记录)
+
+日期:2026-10-03,基线 `864d63f9`。范围:Usability Fix + Preview 2
+Hardening,不新增功能。
+
+## 修复清单
+
+1. **工具栏实现找回(重要)**:P1-6 提交 `864d63f9` 里
+   MainWindowToolBarPage 三件套因提交前的 stash 往返意外回退为旧版
+   (十键纯图标布局;CI/本机构建均通过因此未被发现)。本次重写落地:
+   Home / Add / Extract / Test / Delete / More(图标+文字,中文本地化)
+   + 右侧设置齿轮;Context-aware 显隐随之恢复。
+2. **Home 返回逻辑**:工具栏新增 Home 按钮(命令 1079),运行中模式
+   重新打开 Home;打开动作(Open Archive / Open Folder)导航聚焦面板
+   (BindToPathAndRefresh 支持磁盘压缩包),Extract / Create 直接进入
+   对应流程;关闭 Home 停留在文件管理器;Esc = 关闭 Home。
+3. **Settings 窗口标题**:显示 "CuinZip Settings / CuinZip 设置"
+   (resw,P1-5 遗留空标题修复)。
+4. **Recent 失效容错**:FM 回调读取时过滤不存在路径并把清理后的列表
+   写回注册表(SaveRecentArchiveList);Modern 显示前再做存在性检查
+   (双保险)。实测:注入 ghost 条目后启动,注册表自动清理、有效项保留。
+5. **展开 More options 后产物空名修复**:UWP 可编辑 ComboBox 在滚动/
+   虚拟化回收后 Text 属性可能读空,镜像写回时把空值覆盖引擎导致产物
+   空文件名(".zip")。修复:压缩/解压两页维护"最后已知非空文本"缓存,
+   PushEditableTexts 读空时用缓存兜底写回(实测展开后创建产物名正常)。
+6. **Settings 导航项 Automation 名称**(上轮遗留的显示名缺失补充)。
+
+## 验证(P1-6.1)
+
+- 构建:NanaZip.Modern / Modern FM / NanaZipPackage(合并 PRI)Release
+  x64 0 error;P1-6 的 CI cuinzip-ci SUCCESS(29m25s)。
+- 中文本地化实证:工具栏(主页/添加/提取/测试/删除/更多/设置)、
+  压缩对话框(压缩包:/更多选项/创建)、解压对话框、Settings 标题与
+  导航 —— unpackaged 布局 zh-Hans resw 正常生效(P1-6 Known Issues
+  中"英文兜底"结论系当时 PRI 聚合损坏所致,予以勘误)。
+- Gate:打开 ZIP / 解压到指定目录 / 创建 ZIP(含默认格式=zip 实证)/
+  带密码创建 + 解密还原 / 修改默认格式(注册表 ArcType 生效)/ 右键
+  菜单设置 / 文件关联分类 / Recent 打开 / Recent 失效自动清理 / Home
+  四入口 + 工具栏 Home 返回,全部 PASS。
+- 稳定性:中文+空格路径全链路往返 PASS;Home 关闭直接进 FM PASS;
+  Enter/Esc(对话框四层键盘 + Home Esc)PASS;空数据防御为代码审查。
+- 截图更新:02(新工具栏)/05/06(中文化 + 展开态)/13-16。
+
+## Known Issues(P1-6.1)
+
+- 拖放的 OLE 自动化模拟受限(剪贴板数据对象 + STA 封装未成功);
+  DropTarget 代码路径审查通过(非 CF_HDROP 拒绝、空列表安全、单压缩包
+  直接打开、普通文件进创建面板),真实拖放待 preview 2 发布前人工
+  验证一次。
+- UWP ComboBox 弹出列表虚拟化对 UIA 自动化仍受限(人工路径不受影响)。

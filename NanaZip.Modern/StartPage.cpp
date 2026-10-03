@@ -226,6 +226,8 @@ namespace winrt::NanaZip::Modern::implementation
         }
 
         // 最近列表经宿主回调读取(真实数据源在 FM 注册表)。
+        // P1-6.1:显示前再做一次存在性检查(双保险,宿主清理与
+        // 显示之间被删除的文件不再出现在列表中)。
         if (m_GetRecent)
         {
             K7_MODERN_START_RECENT_LIST recent = {};
@@ -233,7 +235,9 @@ namespace winrt::NanaZip::Modern::implementation
             for (UINT32 i = 0; i < recent.Count && i < K7_START_RECENT_MAX;
                 ++i)
             {
-                if (recent.Paths[i][0] != L'\0')
+                if (recent.Paths[i][0] != L'\0'
+                    && INVALID_FILE_ATTRIBUTES
+                        != ::GetFileAttributesW(recent.Paths[i]))
                 {
                     m_RecentPaths.push_back(std::wstring(recent.Paths[i]));
                 }
@@ -249,6 +253,20 @@ namespace winrt::NanaZip::Modern::implementation
 
         m_Root.Children().Append(m_HomePanel);
         m_Root.Children().Append(m_CreatePanel);
+
+        // P1-6.1:Esc = 关闭 Home 按默认行为进入文件管理器;
+        // Enter 不绑定(避免误触发卡片按钮)。
+        m_Root.KeyDown([this](
+            winrt::IInspectable const&,
+            winrt::Windows::UI::Xaml::Input::KeyRoutedEventArgs const& e)
+        {
+            if (e.Key() == winrt::Windows::System::VirtualKey::Escape)
+            {
+                e.Handled(true);
+                this->Finish(K7_START_ACTION_NONE, {});
+            }
+        });
+
         this->Content(m_Root);
 
         this->RegisterDropTarget();

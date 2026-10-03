@@ -39,6 +39,11 @@ enum
   kMenuCmdID_Toolbar_Legacy_Integration, // 1076: Integration 页(关联/右键菜单/提取)
   kMenuCmdID_Toolbar_Legacy_Folders,     // 1077: Folders 页(提取工作文件夹)
   kMenuCmdID_Toolbar_Legacy_Editor,      // 1078: Editor 页
+
+  // **************** CuinZip P1-6.1 Modification Start ****************
+  // 工具栏 Home 按钮:在文件管理器中重新打开 Home / Start 页。
+  kMenuCmdID_Toolbar_Home,               // 1079
+  // **************** CuinZip P1-6.1 Modification End ****************
   // **************** CuinZip P1-2 Modification End ****************
 
   kMenuCmdID_Toolbar_End

@@ -63,6 +63,8 @@ bool ReadFlatView(UInt32 panelIndex);
 // REG_MULTI_SZ 存储,最新在前,上限 10 条;SaveRecentArchive 幂等。
 void ReadRecentArchives(UStringVector &paths);
 void SaveRecentArchive(const UString &path);
+// CuinZip P1-6.1:整列表写回(失效记录清理)。
+void SaveRecentArchiveList(const UStringVector &paths);
 // **************** CuinZip P1-6 Modification End ****************
 
 /*

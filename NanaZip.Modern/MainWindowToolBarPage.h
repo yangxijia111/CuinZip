@@ -28,6 +28,11 @@ namespace winrt::NanaZip::Modern::implementation
             winrt::IInspectable const& sender,
             winrt::RoutedEventArgs const& e);
 
+        // CuinZip P1-6.1: reopen the Home / Start page (running mode).
+        void HomeButtonClick(
+            winrt::IInspectable const& sender,
+            winrt::RoutedEventArgs const& e);
+
         void AddButtonClick(
             winrt::IInspectable const& sender,
             winrt::RoutedEventArgs const& e);

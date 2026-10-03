@@ -139,4 +139,13 @@
   <data name="OpenSourceButton.Content" xml:space="preserve">
     <value>Open Source</value>
   </data>
+  <!--
+    CuinZip P1-6.1 additions.
+  -->
+  <data name="MoreButton.Label" xml:space="preserve">
+    <value>More</value>
+  </data>
+  <data name="HomeButton.Label" xml:space="preserve">
+    <value>Home</value>
+  </data>
 </root>

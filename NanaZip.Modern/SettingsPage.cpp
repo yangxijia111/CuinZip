@@ -260,6 +260,13 @@ namespace winrt::NanaZip::Modern::implementation
     {
         using namespace winrt;
 
+        // CuinZip P1-6.1:窗口标题(P1-5 起标题栏为空的遗留问题)。
+        if (m_WindowHandle)
+        {
+            ::SetWindowTextW(m_WindowHandle, winrt::NanaZip::Modern::GetUiString(
+                L"SettingsPage/WindowTitle", L"CuinZip Settings").c_str());
+        }
+
         this->LoadHostSettings();
 
         // ================== 根布局:左右两栏 ==================

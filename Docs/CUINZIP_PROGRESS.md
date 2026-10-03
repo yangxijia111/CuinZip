@@ -1,12 +1,13 @@
 ﻿# CuinZip Progress
 
 ## Current Phase
-P1-6(UI Usability Redesign)已完成,待 P2(Search / 智能解压 / 安全能力)
+P1-6.1(Usability Fix + Preview 2 Hardening)已完成;下一步发布
+v0.1.0-preview.2,之后 P2(Search / 智能解压 / 安全能力)
 
 ## Status
-P1-6 DONE(2026-09-30,Home/Start 首屏 + 工具栏重组 + Context-aware +
-压缩/解压窗口简化 + 设置页整理;详见 `Docs/CUINZIP_UI_PLAN.md` P1-6 节
-与 `Docs/Screenshots/P1-6/`)
+P1-6.1 DONE(2026-10-03;工具栏实现找回 + Home 返回 + Settings 标题 +
+Recent 失效清理 + 展开 More 后空文件名修复;P1-6 CI SUCCESS;详见
+`Docs/CUINZIP_UI_PLAN.md` P1-6.1 节)
 
 ## Completed
 - P0-1 Fork / Git / License Audit
@@ -36,7 +37,7 @@ P1-6 DONE(2026-09-30,Home/Start 首屏 + 工具栏重组 + Context-aware +
   - RefreshVersion 自动改动（Version.props / manifest 版本号）已回滚，未污染 Git
 
 ## Current Task
-P1-6 已完成;下一步 P2(Search / 智能解压 / 安全能力)
+P1-6.1 已完成;下一步 v0.1.0-preview.2 发布准备
 
 ## P1-5 UI 收尾 + v0.1 Preview Release Hardening
 DONE(2026-09-29,安全标签 `p1-5-pre-release`,基线 `3e0243a9`,发布

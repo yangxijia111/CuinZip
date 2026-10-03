@@ -450,4 +450,10 @@
   <data name="AboutOpenSourceButton.Content" xml:space="preserve">
     <value>View open source projects</value>
   </data>
+  <!--
+    CuinZip P1-6.1 additions.
+  -->
+  <data name="WindowTitle" xml:space="preserve">
+    <value>CuinZip Settings</value>
+  </data>
 </root>

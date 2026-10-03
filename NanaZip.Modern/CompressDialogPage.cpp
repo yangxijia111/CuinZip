@@ -683,6 +683,11 @@ namespace winrt::NanaZip::Modern::implementation
             if (entry.Editable)
             {
                 combo.Text(winrt::hstring(snapshot.Text));
+                // P1-6.1:缓存最后已知非空文本
+                if (!snapshot.Text.empty())
+                {
+                    m_LastComboTexts[entry.Id] = snapshot.Text;
+                }
             }
             combo.IsEnabled(snapshot.Enabled);
             combo.Visibility(snapshot.Visible
@@ -808,10 +813,32 @@ namespace winrt::NanaZip::Modern::implementation
         {
             if (!entry.Editable || !entry.Control)
                 continue;
+            // CuinZip P1-6.1:More options 展开滚动后 UWP 可编辑
+            // ComboBox 可能因虚拟化回收丢失 Text;读空时用最后
+            // 已知非空文本兜底写回,保证引擎侧不丢值(否则产物
+            // 会出现空文件名)。
+            std::wstring text(entry.Control.Text());
+            if (text.empty())
+            {
+                auto cached = m_LastComboTexts.find(entry.Id);
+                if (cached != m_LastComboTexts.end())
+                {
+                    text = cached->second;
+                    entry.Control.Text(winrt::hstring(text));
+                }
+                else
+                {
+                    continue;
+                }
+            }
+            else
+            {
+                m_LastComboTexts[entry.Id] = text;
+            }
             m_Engine->SetComboText(
                 m_Engine->Context,
                 entry.Id,
-                entry.Control.Text().c_str());
+                text.c_str());
         }
     }
 

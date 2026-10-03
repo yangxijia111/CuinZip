@@ -291,29 +291,9 @@ void ReadRecentArchives(UStringVector &paths)
   ::RegCloseKey(key);
 }
 
-void SaveRecentArchive(const UString &path)
+// CuinZip P1-6.1:整列表写回(失效记录清理用)。
+void SaveRecentArchiveList(const UStringVector &paths)
 {
-  if (path.IsEmpty())
-    return;
-
-  UStringVector paths;
-  ReadRecentArchives(paths);
-
-  // 幂等:已是最新的则不写(状态栏刷新高频调用)。
-  if (paths.Size() > 0 && paths[0].IsEqualTo_NoCase(path))
-    return;
-
-  for (unsigned i = 0; i < paths.Size();)
-  {
-    if (path.IsEqualTo_NoCase(paths[i]))
-      paths.Delete(i);
-    else
-      i++;
-  }
-  paths.Insert(0, path);
-  if (paths.Size() > kRecentArchivesMax)
-    paths.DeleteFrom(kRecentArchivesMax);
-
   // 组装 REG_MULTI_SZ(双 NUL 结尾)。
   size_t total = 1;
   for (unsigned i = 0; i < paths.Size(); i++)
@@ -342,5 +322,31 @@ void SaveRecentArchive(const UString &path)
         static_cast<DWORD>(total));
     ::RegCloseKey(key);
   }
+}
+
+void SaveRecentArchive(const UString &path)
+{
+  if (path.IsEmpty())
+    return;
+
+  UStringVector paths;
+  ReadRecentArchives(paths);
+
+  // 幂等:已是最新的则不写(状态栏刷新高频调用)。
+  if (paths.Size() > 0 && paths[0].IsEqualTo_NoCase(path))
+    return;
+
+  for (unsigned i = 0; i < paths.Size();)
+  {
+    if (path.IsEqualTo_NoCase(paths[i]))
+      paths.Delete(i);
+    else
+      i++;
+  }
+  paths.Insert(0, path);
+  if (paths.Size() > kRecentArchivesMax)
+    paths.DeleteFrom(kRecentArchivesMax);
+
+  SaveRecentArchiveList(paths);
 }
 // **************** CuinZip P1-6 Modification End ****************

@@ -450,4 +450,10 @@
   <data name="AboutOpenSourceButton.Content" xml:space="preserve">
     <value>查看开源项目</value>
   </data>
+  <!--
+    CuinZip P1-6.1 additions.
+  -->
+  <data name="WindowTitle" xml:space="preserve">
+    <value>CuinZip 设置</value>
+  </data>
 </root>

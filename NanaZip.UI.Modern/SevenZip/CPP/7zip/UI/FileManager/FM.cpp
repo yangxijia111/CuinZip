@@ -516,6 +516,30 @@ static VOID WINAPI StartGetRecentArchivesCallback(
   Recent->Count = 0;
   UStringVector paths;
   ReadRecentArchives(paths);
+
+  // CuinZip P1-6.1:失效路径容错——读取时过滤不存在的文件并把清理
+  // 后的列表写回注册表(下次不再出现失效记录)。
+  {
+    UStringVector valid;
+    bool changed = false;
+    for (unsigned i = 0; i < paths.Size(); i++)
+    {
+      if (NFind::DoesFileExist_FollowLink(us2fs(paths[i])))
+      {
+        valid.Add(paths[i]);
+      }
+      else
+      {
+        changed = true;
+      }
+    }
+    if (changed)
+    {
+      SaveRecentArchiveList(valid);
+    }
+    paths = valid;
+  }
+
   for (unsigned i = 0; i < paths.Size() && i < K7_START_RECENT_MAX; i++)
   {
     const UString &path = paths[i];
@@ -532,11 +556,13 @@ static VOID WINAPI StartGetRecentArchivesCallback(
 }
 
 // 显示 Home / Start 窗口并处理用户动作:
-//   Open Archive / Open Folder -> 设置 g_MainPath,进入文件管理器;
+//   Open Archive / Open Folder -> 启动模式设置 g_MainPath 进入文件管理器;
+//                                 运行中模式导航聚焦面板到所选路径;
 //   Extract                    -> 直接进入解压流程(解压对话框);
 //   Create                     -> 以所选文件清单打开压缩对话框;
-//   关闭窗口                   -> 按默认行为进入文件管理器。
-static void ShowStartWindow()
+//   关闭窗口                   -> 启动模式按默认行为进入文件管理器,
+//                                 运行中模式停留在文件管理器。
+static void ShowStartWindow(bool inFileManager)
 {
   // 路径缓冲(NUL 分隔 + 双 NUL 结尾);创建模式支持多文件选择。
   wchar_t pathBuffer[64 * 1024];
@@ -565,7 +591,15 @@ static void ShowStartWindow()
   {
     case K7_START_ACTION_OPEN_ARCHIVE:
     case K7_START_ACTION_OPEN_FOLDER:
-      g_MainPath = paths[0];
+      if (inFileManager)
+      {
+        // 运行中:聚焦面板直接导航(BindToPath 支持磁盘压缩包/文件夹)。
+        g_App.Panels[g_App.LastFocusedPanel].BindToPathAndRefresh(paths[0]);
+      }
+      else
+      {
+        g_MainPath = paths[0];
+      }
       break;
 
     case K7_START_ACTION_EXTRACT:
@@ -765,7 +799,7 @@ static int WINAPI WinMain2(int nCmdShow)
     startSettings.Load();
     if (startSettings.ShowStartPage)
     {
-      ShowStartWindow();
+      ShowStartWindow(false);
     }
   }
   // **************** CuinZip P1-6 Modification End ****************
@@ -1164,6 +1198,14 @@ static void ExecuteCommand(UINT commandID)
     case kMenuCmdID_Toolbar_Legacy_Editor:
       OptionsDialog(g_HWND, g_hInstance, 2);
       break;
+
+    // **************** CuinZip P1-6.1 Modification Start ****************
+    // 工具栏 Home 按钮:重新打开 Home / Start 页(运行中模式,
+    // 打开动作导航聚焦面板)。
+    case kMenuCmdID_Toolbar_Home:
+      ShowStartWindow(true);
+      break;
+    // **************** CuinZip P1-6.1 Modification End ****************
     // **************** CuinZip P1-2 Modification End ****************
   }
 }

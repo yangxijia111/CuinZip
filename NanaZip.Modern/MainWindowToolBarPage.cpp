@@ -29,6 +29,7 @@ namespace
     {
         enum
         {
+            Home = 1079,
             Add = 1070,
             Extract = 1071,
             Test = 1072,
@@ -71,27 +72,27 @@ namespace winrt::NanaZip::Modern::implementation
     {
         MainWindowToolBarPageT::InitializeComponent();
 
-        // CuinZip P1-1: the toolbar hosts the high-frequency actions only;
-        // Copy / Move / Benchmark / About stay reachable through the More
-        // menu (the File Manager main menu) and their shortcuts.
-        winrt::AppBarButton ToolBarButtons[6] =
+        // CuinZip P1-6 / P1-6.1: the toolbar shows the high-frequency
+        // actions with icon + text labels; everything else stays in the
+        // More menu (the File Manager main menu) and shortcuts. Copy /
+        // Move keep their F5/F6 shortcuts. Home / More use their resw
+        // labels (x:Uid); the rest use localized legacy resources.
+        winrt::AppBarButton ToolBarButtons[5] =
         {
             this->AddButton(),
             this->ExtractButton(),
             this->TestButton(),
             this->DeleteButton(),
-            this->InfoButton(),
-            this->OptionsButton()
+            this->SettingsButton()
         };
 
-        const UINT32 ToolBarLegacyStringResources[6] =
+        const UINT32 ToolBarLegacyStringResources[5] =
         {
             7200, // Add
             7201, // Extract
             7202, // Test
             7205, // Delete
-            7206, // Info
-            900 // Options
+            900   // Options -> gear button
         };
 
         const std::size_t ToolBarButtonCount =
@@ -99,18 +100,41 @@ namespace winrt::NanaZip::Modern::implementation
 
         for (size_t i = 0; i < ToolBarButtonCount; ++i)
         {
-            winrt::hstring Resource = winrt::hstring(::K7ModernGetLegacyStringResource(
-                ToolBarLegacyStringResources[i]));
+            winrt::hstring Resource = winrt::hstring(
+                ::K7ModernGetLegacyStringResource(
+                    ToolBarLegacyStringResources[i]));
             winrt::AutomationProperties::SetName(
                 ToolBarButtons[i],
                 Resource);
             winrt::ToolTipService::SetToolTip(
                 ToolBarButtons[i],
                 winrt::box_value(Resource));
+            ToolBarButtons[i].Label(Resource);
         }
 
         this->m_DispatcherQueue =
             winrt::DispatcherQueue::GetForCurrentThread();
+
+        // 初始按"普通文件夹、无选择"处理;File Manager 在面板创建后
+        // 会立即推送真实状态。
+        this->UpdateContextState(0);
+    }
+
+    void MainWindowToolBarPage::HomeButtonClick(
+        winrt::IInspectable const& sender,
+        winrt::RoutedEventArgs const& e)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(e);
+
+        // CuinZip P1-6.1: reopen the Home / Start page (running mode).
+        ::PostMessageW(
+            this->m_WindowHandle,
+            WM_COMMAND,
+            MAKEWPARAM(
+                ToolBarCommandID::Home,
+                BN_CLICKED),
+            0);
     }
 
     void MainWindowToolBarPage::PageLoaded(
