@@ -31,7 +31,7 @@
     <value>欢迎使用 CuinZip</value>
   </data>
   <data name="WelcomeSubtitle.Text" xml:space="preserve">
-    <value>打开压缩包,或将文件拖到此处开始。</value>
+    <value>解压已有压缩包，或把文件和文件夹压缩打包。也可以直接拖到这里。</value>
   </data>
   <data name="ActionOpenArchiveTitle.Text" xml:space="preserve">
     <value>打开压缩包</value>
@@ -49,7 +49,7 @@
     <value>创建压缩包</value>
   </data>
   <data name="ActionCreateDescription.Text" xml:space="preserve">
-    <value>将文件压缩为新压缩包。</value>
+    <value>选择要压缩的文件和文件夹。</value>
   </data>
   <data name="ActionOpenFolderTitle.Text" xml:space="preserve">
     <value>浏览文件夹</value>
@@ -64,15 +64,36 @@
     <value>创建压缩包</value>
   </data>
   <data name="CreateFilesText.Text" xml:space="preserve">
-    <value>已选择 {0} 个文件</value>
+    <value>已添加 {0} 个项目</value>
   </data>
   <data name="CreateListHeader.Text" xml:space="preserve">
-    <value>要压缩的文件</value>
+    <value>要压缩的文件和文件夹</value>
   </data>
   <data name="CreateConfirmText.Text" xml:space="preserve">
-    <value>创建压缩包</value>
+    <value>下一步</value>
   </data>
   <data name="CreateCancelText.Text" xml:space="preserve">
     <value>取消</value>
+  </data>
+  <data name="CreateSelectionHint.Text" xml:space="preserve">
+    <value>先添加文件或文件夹，点击“下一步”选择压缩包名称和保存位置。分享给别人时可以选 ZIP 格式。</value>
+  </data>
+  <data name="AddFilesText.Text" xml:space="preserve">
+    <value>添加文件</value>
+  </data>
+  <data name="AddFoldersText.Text" xml:space="preserve">
+    <value>添加文件夹</value>
+  </data>
+  <data name="RemoveFilesText.Text" xml:space="preserve">
+    <value>移除所选</value>
+  </data>
+  <data name="ArchiveFilterText.Text" xml:space="preserve">
+    <value>压缩包</value>
+  </data>
+  <data name="AllFilesFilterText.Text" xml:space="preserve">
+    <value>所有文件</value>
+  </data>
+  <data name="SelectionTooLargeText.Text" xml:space="preserve">
+    <value>所选项目过多或路径过长。请移除部分项目，或直接选择它们所在的文件夹，然后重试。</value>
   </data>
 </root>

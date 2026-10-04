@@ -143,6 +143,7 @@
       <SubType>Code</SubType>
     </ClInclude>
     <ClInclude Include="NanaZip.Modern.h" />
+    <ClInclude Include="StartPagePaths.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="App.h">
       <DependentUpon>App.xaml</DependentUpon>

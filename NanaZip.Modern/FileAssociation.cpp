@@ -99,14 +99,7 @@ namespace
         return ReadStringValue(HKEY_CLASSES_ROOT, SubKey, std::wstring());
     }
 
-    bool ContainsInsensitive(
-        std::wstring const& Text,
-        std::wstring const& Pattern)
-    {
-        return ::StrStrIW(Text.c_str(), Pattern.c_str()) != nullptr;
-    }
-
-    std::wstring ExtractExecutableName(std::wstring const& Command)
+    std::wstring ExtractExecutablePath(std::wstring const& Command)
     {
         std::wstring Trimmed = Command;
         size_t Start = Trimmed.find_first_not_of(L" \t");
@@ -126,7 +119,7 @@ namespace
         }
         else
         {
-            size_t End = Trimmed.find_first_of(L" ");
+            size_t End = Trimmed.find_first_of(L" \t");
             FirstToken = (End == std::wstring::npos) ? Trimmed : Trimmed.substr(0, End);
         }
 
@@ -134,7 +127,55 @@ namespace
         {
             return std::wstring();
         }
-        return std::wstring(::PathFindFileNameW(FirstToken.c_str()));
+        return FirstToken;
+    }
+
+    bool IsCuinZipCommand(std::wstring const& Command, std::wstring const& ProgId)
+    {
+        std::wstring Executable = ExtractExecutablePath(Command);
+        wchar_t const* Name = ::PathFindFileNameW(Executable.c_str());
+        if (0 == ::_wcsicmp(ProgId.c_str(), L"CuinZip.Archive") ||
+            0 == ::_wcsicmp(ProgId.c_str(), L"Applications\\CuinZip.exe"))
+        {
+            return 0 == ::_wcsicmp(Name, L"CuinZip.exe");
+        }
+        // The upstream NanaZip uses the same internal executable name. Only
+        // recognise that name when it points to this CuinZip runtime directory;
+        // a filename in another app's arguments must never count as default.
+        if (0 != ::_wcsicmp(Name, kFileManagerExecutable))
+        {
+            return false;
+        }
+        HMODULE Module = nullptr;
+        if (!::GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+            GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+            reinterpret_cast<LPCWSTR>(&IsCuinZipCommand), &Module))
+        {
+            return false;
+        }
+        wchar_t Path[32768] = {};
+        DWORD Length = ::GetModuleFileNameW(Module, Path, ARRAYSIZE(Path));
+        if (!Length || Length >= ARRAYSIZE(Path))
+        {
+            return false;
+        }
+        std::wstring Expected(Path, Length);
+        Expected.erase(Expected.find_last_of(L"\\/") + 1);
+        if (0 == ::_wcsicmp(Executable.c_str(),
+            (Expected + kFileManagerExecutable).c_str()))
+        {
+            return true;
+        }
+        // Setup upgrades replace the old root-level entry with our launcher,
+        // preserving previously chosen associations without changing defaults.
+        std::wstring Directory = Expected.substr(0, Expected.size() - 1);
+        if (0 == ::_wcsicmp(::PathFindFileNameW(Directory.c_str()), L"x64"))
+        {
+            Directory.erase(Directory.find_last_of(L"\\/") + 1);
+            return 0 == ::_wcsicmp(Executable.c_str(),
+                (Directory + kFileManagerExecutable).c_str());
+        }
+        return false;
     }
 
     std::wstring GetCurrentApplicationUserModelIdSimple()
@@ -217,35 +258,57 @@ EXTERN_C BOOL WINAPI K7ModernQueryFileAssociation(
     }
 
     // 2. 没有 UserChoice 时回落到 Progid 注册(经典每用户/系统级关联)。
-    if (Command.empty())
+    if (ProgId.empty())
     {
         std::wstring ExtensionProgId = ReadStringValue(
             HKEY_CLASSES_ROOT,
             NormalizedExtension,
             std::wstring());
-        Command = GetProgIdOpenCommand(ExtensionProgId);
+        ProgId = ExtensionProgId;
+        Command = GetProgIdOpenCommand(ProgId);
     }
 
     // 3. 极少数情况下 open 命令直接挂在扩展名键下。
-    if (Command.empty())
+    if (ProgId.empty() && Command.empty())
     {
         Command = GetExtensionOpenCommand(NormalizedExtension);
     }
 
     if (Command.empty())
     {
-        // 查询成功,但该扩展名当前没有默认打开方式。
+        // Some packaged handlers use DelegateExecute instead of an open
+        // command. Preserve the actual UserChoice rather than claiming another
+        // application's class registration is the selected default.
+        std::wstring HandlerId = ReadStringValue(HKEY_CLASSES_ROOT,
+            ProgId + L"\\Application", L"AppUserModelID");
+        std::wstring CurrentId = GetCurrentApplicationUserModelIdSimple();
+        if (!HandlerId.empty() && !CurrentId.empty() &&
+            0 == ::_wcsicmp(HandlerId.c_str(), CurrentId.c_str()))
+        {
+            *IsDefault = TRUE;
+        }
+        std::wstring Name = *IsDefault ? L"CuinZip" : ReadStringValue(HKEY_CLASSES_ROOT,
+            ProgId + L"\\Application", L"ApplicationName");
+        if (Name.empty() && !ProgId.empty())
+        {
+            Name = ReadStringValue(HKEY_CLASSES_ROOT, ProgId, std::wstring());
+        }
+        if (CurrentAppName && CurrentAppNameLength > 0 && !Name.empty())
+        {
+            ::wcsncpy_s(CurrentAppName, CurrentAppNameLength, Name.c_str(), _TRUNCATE);
+        }
         return TRUE;
     }
 
-    if (ContainsInsensitive(Command, kFileManagerExecutable))
+    if (IsCuinZipCommand(Command, ProgId))
     {
         *IsDefault = TRUE;
     }
 
     if (CurrentAppName && CurrentAppNameLength > 0)
     {
-        std::wstring Name = ExtractExecutableName(Command);
+        std::wstring Name = *IsDefault ? L"CuinZip" :
+            std::wstring(::PathFindFileNameW(ExtractExecutablePath(Command).c_str()));
         if (!Name.empty())
         {
             ::wcsncpy_s(
@@ -267,6 +330,13 @@ EXTERN_C BOOL WINAPI K7ModernLaunchDefaultAppsSettings()
     {
         NavigateUri.append(L"?registeredAUMID=");
         NavigateUri.append(ApplicationUserModelId);
+    }
+    else if (!ReadStringValue(HKEY_CURRENT_USER,
+        L"Software\\RegisteredApplications", L"CuinZip").empty())
+    {
+        // Per-user Setup registration; Windows remains responsible for asking
+        // the user to choose their defaults.
+        NavigateUri.append(L"?registeredAppUser=CuinZip");
     }
 
     SHELLEXECUTEINFOW Information = {};

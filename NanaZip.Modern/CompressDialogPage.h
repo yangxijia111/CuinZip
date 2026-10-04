@@ -6,7 +6,6 @@
 
 #include "NanaZip.Modern.h"
 
-#include <map>
 #include <string>
 #include <vector>
 
@@ -118,7 +117,6 @@ namespace winrt::NanaZip::Modern::implementation
         HWND m_WindowHandle;
         const K7_DIALOG_MIRROR_ENGINE* m_Engine;
         bool m_Suppress = false;
-        bool m_PasswordSeeded = false;
 
         // ---- 镜像控件登记表 ----
         struct ComboEntry
@@ -140,9 +138,6 @@ namespace winrt::NanaZip::Modern::implementation
         std::vector<ComboEntry> m_Combos;
         std::vector<CheckEntry> m_Checks;
         std::vector<TextEntry> m_Texts;
-        // CuinZip P1-6.1:可编辑组合框最后已知非空文本(引擎同步时
-        // 缓存);UI 虚拟化回收导致 Text 读空时用于写回兜底。
-        std::map<UINT, std::wstring> m_LastComboTexts;
 
         // ---- 专项控件 ----
         winrt::Windows::UI::Xaml::Controls::TextBlock m_FolderText{ nullptr };

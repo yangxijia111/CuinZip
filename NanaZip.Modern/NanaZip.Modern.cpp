@@ -101,8 +101,10 @@ EXTERN_C LPCWSTR WINAPI K7ModernGetLegacyStringResource(
         return nullptr;
     }
 
-    winrt::hstring Content = LegacyResourceMap.Lookup(
-        ResourceName).Candidates().GetAt(0).ValueAsString();
+    winrt::hstring Content = LegacyResourceMap.GetValue(
+        ResourceName,
+        winrt::Windows::ApplicationModel::Resources::Core::ResourceContext
+            ::GetForViewIndependentUse()).ValueAsString();
     std::lock_guard Lock(g_CachedLanguageStringResourcesMutex);
     auto Iterator = g_CachedLanguageStringResources.emplace(
         ResourceId,
@@ -341,25 +343,32 @@ namespace
             ::RemoveMenu(MenuHandle, SC_MAXIMIZE, MF_BYCOMMAND);
         }
 
+        // Restore the owner's original state even when content setup fails or
+        // throws before WM_CLOSE can run. Otherwise fallback dialogs inherit a
+        // disabled main window and the application appears stuck.
+        const BOOL ParentWasEnabled = ParentWindowHandle &&
+            ::IsWindowEnabled(ParentWindowHandle);
         if (ParentWindowHandle)
-        {
             ::EnableWindow(ParentWindowHandle, FALSE);
-        }
 
-        if (FAILED(::MileXamlSetXamlContentForContentWindow(
-            WindowHandle,
-            Content)))
+        int Result = -1;
+        try
         {
-            ::DestroyWindow(WindowHandle);
-            return -1;
+            if (SUCCEEDED(::MileXamlSetXamlContentForContentWindow(
+                WindowHandle, Content)))
+            {
+                Result = ::K7ModernShowXamlWindow(
+                    WindowHandle, Width, Height, ParentWindowHandle);
+            }
         }
-
-        int Result = ::K7ModernShowXamlWindow(
-            WindowHandle,
-            Width,
-            Height,
-            ParentWindowHandle);
-
+        catch (...)
+        {
+            Result = -1;
+        }
+        if (Result == -1 && ::IsWindow(WindowHandle))
+            ::DestroyWindow(WindowHandle);
+        if (ParentWindowHandle && ::IsWindow(ParentWindowHandle))
+            ::EnableWindow(ParentWindowHandle, ParentWasEnabled);
         return Result;
     }
 
@@ -726,6 +735,8 @@ EXTERN_C INT WINAPI K7ModernShowCompressDialog(
         return -1;
     }
 
+    try
+    {
     using Interface =
         winrt::NanaZip::Modern::CompressDialogPage;
     using Implementation =
@@ -756,6 +767,13 @@ EXTERN_C INT WINAPI K7ModernShowCompressDialog(
         ParentWindowHandle);
 
     return Result;
+    }
+    catch (...)
+    {
+        if (::IsWindow(WindowHandle))
+            ::DestroyWindow(WindowHandle);
+        return -1;
+    }
 }
 
 EXTERN_C INT WINAPI K7ModernShowExtractDialog(
@@ -770,6 +788,8 @@ EXTERN_C INT WINAPI K7ModernShowExtractDialog(
         return -1;
     }
 
+    try
+    {
     using Interface =
         winrt::NanaZip::Modern::ExtractDialogPage;
     using Implementation =
@@ -800,6 +820,13 @@ EXTERN_C INT WINAPI K7ModernShowExtractDialog(
         ParentWindowHandle);
 
     return Result;
+    }
+    catch (...)
+    {
+        if (::IsWindow(WindowHandle))
+            ::DestroyWindow(WindowHandle);
+        return -1;
+    }
 }
 
 // **************** CuinZip P1-3 Modification End ****************

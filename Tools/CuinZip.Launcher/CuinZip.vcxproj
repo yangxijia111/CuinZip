@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{86C38916-5281-4920-9D62-C197623059AA}</ProjectGuid>
+    <RootNamespace>CuinZip.Launcher</RootNamespace>
+    <MileProjectType>WindowsApplication</MileProjectType>
+    <MileProjectManifestFile>CuinZip.manifest</MileProjectManifestFile>
+    <WindowsTargetPlatformMinVersion>10.0.19041.0</WindowsTargetPlatformMinVersion>
+    <MileProjectUseProjectProperties>true</MileProjectUseProjectProperties>
+    <MileProjectCppDisablePackageReferencesSupport>true</MileProjectCppDisablePackageReferencesSupport>
+    <MileProjectCompanyName>CuinZip Project</MileProjectCompanyName>
+    <MileProjectFileDescription>CuinZip</MileProjectFileDescription>
+    <MileProjectInternalName>CuinZip.Launcher</MileProjectInternalName>
+    <MileProjectLegalCopyright>Copyright (c) CuinZip Project. MIT License.</MileProjectLegalCopyright>
+    <MileProjectOriginalFilename>CuinZip.exe</MileProjectOriginalFilename>
+    <MileProjectProductName>CuinZip</MileProjectProductName>
+  </PropertyGroup>
+  <Import Project="..\..\NanaZip.Project\NanaZip.Project.props" />
+  <Import Sdk="Mile.Project.Configurations" Project="Mile.Project.Platform.x64.props" />
+  <Import Sdk="Mile.Project.Configurations" Project="Mile.Project.Cpp.Default.props" />
+  <Import Sdk="Mile.Project.Configurations" Project="Mile.Project.Cpp.props" />
+  <Import Project="..\..\NanaZip.Project\NanaZip.Project.Runtime.props" />
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>user32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <MinimumRequiredVersion>10.0</MinimumRequiredVersion>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="CuinZip.cpp" />
+    <ResourceCompile Include="CuinZip.rc" />
+    <Manifest Include="CuinZip.manifest" />
+  </ItemGroup>
+  <Import Sdk="Mile.Project.Configurations" Project="Mile.Project.Cpp.targets" />
+</Project>

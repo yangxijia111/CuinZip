@@ -64,8 +64,14 @@ namespace winrt::NanaZip::Modern
                 winrt::hstring ResourceName(KeyName);
                 if (Subtree.HasKey(ResourceName))
                 {
-                    Result = Subtree.Lookup(ResourceName)
-                        .Candidates().GetAt(0).ValueAsString();
+                    // Candidate ordering is not language preference order.
+                    // XAML islands have no CoreWindow, so resolve strings in
+                    // the view-independent resource context used by desktop
+                    // applications instead of choosing the first translation.
+                    Result = Subtree.GetValue(ResourceName,
+                        winrt::Windows::ApplicationModel::Resources::Core
+                            ::ResourceContext::GetForViewIndependentUse())
+                        .ValueAsString();
                 }
             }
         }

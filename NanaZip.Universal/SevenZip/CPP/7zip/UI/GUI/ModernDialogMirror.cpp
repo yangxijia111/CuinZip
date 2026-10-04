@@ -6,6 +6,8 @@
 #include "ModernDialogMirror.h"
 
 #include <Windowsx.h>
+#include <algorithm>
+#include <vector>
 
 // 各 7-Zip 前端工程的主文件定义的本实例句柄
 extern HINSTANCE g_hInstance;
@@ -117,17 +119,22 @@ namespace
             combo, CB_GETLBTEXTLEN, (WPARAM)i, 0);
         if (len == CB_ERR)
           len = 0;
-        // 留出终止符空间
-        if (len >= K7_DIALOG_MIRROR_ITEM_TEXT)
-          len = K7_DIALOG_MIRROR_ITEM_TEXT - 1;
+        dst[0] = L'\0';
         if (len > 0)
         {
+          // CB_GETLBTEXT has no size argument. Read into a full-size temporary
+          // before truncating the ABI slot (history paths can exceed 511 chars).
+          std::vector<wchar_t> fullText((size_t)len + 1, L'\0');
           LRESULT copied = ::SendMessageW(
-              combo, CB_GETLBTEXT, (WPARAM)i, (LPARAM)dst);
-          if (copied == CB_ERR)
-            len = 0;
+              combo, CB_GETLBTEXT, (WPARAM)i, (LPARAM)fullText.data());
+          if (copied != CB_ERR)
+          {
+            const size_t boundedLength = (std::min)(
+                (size_t)copied, (size_t)K7_DIALOG_MIRROR_ITEM_TEXT - 1);
+            std::copy_n(fullText.data(), boundedLength, dst);
+            dst[boundedLength] = L'\0';
+          }
         }
-        dst[len] = L'\0';
       }
       if (itemData)
         itemData[i] = (LPARAM)::SendMessageW(
@@ -207,6 +214,9 @@ namespace
       return;
     HWND combo = GetItem(ctx->Window, controlId);
     if (!combo)
+      return;
+    const int count = (int)::SendMessageW(combo, CB_GETCOUNT, 0, 0);
+    if (selection < 0 || selection >= count)
       return;
     ::SendMessageW(combo, CB_SETCURSEL, (WPARAM)selection, 0);
     // 与原生行为一致:选中变化后对话框收到 CBN_SELCHANGE
@@ -371,13 +381,25 @@ namespace NModernDialogMirror
     engine.NotifyButtonClick = MirrorNotifyButtonClick;
     engine.PressOK = MirrorPressOK;
 
-    showModern(wndParent, &engine, MirrorWindowHandler, &context);
+    const BOOL parentEnabled = wndParent && ::IsWindowEnabled(wndParent);
+    INT modernResult = -1;
+    try
+    {
+      modernResult = showModern(wndParent, &engine, MirrorWindowHandler, &context);
+    }
+    catch (...)
+    {
+      // A failed XAML page must leave the classic fallback usable.
+    }
 
     // OnOK 全部通过时,原逻辑末尾的 EndDialog 对无模式对话框无效,
     // 此处统一销毁;窗口若已销毁则调用无副作用
     ::DestroyWindow(hidden);
+    dialog.Attach(NULL);
+    if (parentEnabled && ::IsWindow(wndParent))
+      ::EnableWindow(wndParent, TRUE);
 
-    return context.Result;
+    return modernResult == -1 ? 0 : context.Result;
   }
 }
 // **************** CuinZip P1-3 Modification End ****************

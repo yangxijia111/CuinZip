@@ -22,7 +22,7 @@ namespace winrt::NanaZip::Modern::implementation
     // (Open Archive / Extract / Create / Open Folder)+ Recent Archives
     // 列表(无记录时整区隐藏,保持简洁)。
     // 拖放:单个压缩包直接打开;普通文件/多文件/文件夹进入
-    // "创建压缩包"待确认模式(文件数 + Create 按钮)。
+    // "创建压缩包"待确认模式(可添加/移除文件与文件夹,下一步选输出)。
     struct StartPage : StartPageT<StartPage>
     {
     public:
@@ -87,18 +87,29 @@ namespace winrt::NanaZip::Modern::implementation
         void CreateCancelClick(
             winrt::IInspectable const& sender,
             winrt::RoutedEventArgs const& e);
+        void AddFilesClick(
+            winrt::IInspectable const& sender,
+            winrt::RoutedEventArgs const& e);
+        void AddFoldersClick(
+            winrt::IInspectable const& sender,
+            winrt::RoutedEventArgs const& e);
+        void RemoveFilesClick(
+            winrt::IInspectable const& sender,
+            winrt::RoutedEventArgs const& e);
 
         // 文件/文件夹选择(Win32 IFileOpenDialog)
         bool PickPaths(
             bool pickFolders,
             bool multiSelect,
-            std::vector<std::wstring>& paths);
+            std::vector<std::wstring>& paths,
+            bool archivesOnly = true);
 
         // 拖入的文件:单个压缩包直接打开,否则进入创建模式
         void HandleDroppedFiles(std::vector<std::wstring> const& paths);
 
         // 切换到"创建压缩包"待确认面板
         void EnterCreateList(std::vector<std::wstring> const& paths);
+        void AppendCreatePaths(std::vector<std::wstring> const& paths);
 
         // 填充结果并关闭窗口
         void Finish(
@@ -117,7 +128,11 @@ namespace winrt::NanaZip::Modern::implementation
         winrt::Windows::UI::Xaml::Controls::Grid m_HomePanel{ nullptr };
         winrt::Windows::UI::Xaml::Controls::Grid m_CreatePanel{ nullptr };
         winrt::Windows::UI::Xaml::Controls::ListView m_RecentList{ nullptr };
-        winrt::Windows::UI::Xaml::Controls::StackPanel m_RecentSection{
+        winrt::Windows::UI::Xaml::Controls::Grid m_RecentSection{
+            nullptr };
+        winrt::Windows::UI::Xaml::Controls::Button m_CreateConfirm{
+            nullptr };
+        winrt::Windows::UI::Xaml::Controls::Button m_RemoveFiles{
             nullptr };
         winrt::Windows::UI::Xaml::Controls::TextBlock m_CreateFilesText{
             nullptr };

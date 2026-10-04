@@ -41,6 +41,7 @@
 // **************** NanaZip Modification Start ****************
 #include "../Common/ZipRegistry.h"
 #include "../Common/CompressCall.h"
+#include "../Common/ArchiveName.h"
 // **************** NanaZip Modification End ****************
 // **************** CuinZip P1-4 Modification Start ****************
 #include "../Explorer/ContextMenuFlags.h"
@@ -565,14 +566,15 @@ static VOID WINAPI StartGetRecentArchivesCallback(
 static void ShowStartWindow(bool inFileManager)
 {
   // 路径缓冲(NUL 分隔 + 双 NUL 结尾);创建模式支持多文件选择。
-  wchar_t pathBuffer[64 * 1024];
+  wchar_t pathBuffer[64 * 1024] = {};
   K7_MODERN_START_RESULT result;
   memset(&result, 0, sizeof(result));
   result.Action = K7_START_ACTION_NONE;
   result.PathBuffer = pathBuffer;
   result.PathBufferCapacity = ARRAY_SIZE(pathBuffer);
 
-  ::K7ModernShowStartWindow(NULL, StartGetRecentArchivesCallback, &result);
+  ::K7ModernShowStartWindow(inFileManager ? g_HWND : NULL,
+      StartGetRecentArchivesCallback, &result);
 
   UStringVector paths;
   {
@@ -594,7 +596,10 @@ static void ShowStartWindow(bool inFileManager)
       if (inFileManager)
       {
         // 运行中:聚焦面板直接导航(BindToPath 支持磁盘压缩包/文件夹)。
-        g_App.Panels[g_App.LastFocusedPanel].BindToPathAndRefresh(paths[0]);
+        CPanel &panel = g_App.Panels[g_App.LastFocusedPanel];
+          HRESULT res = panel.BindToPathAndRefresh(paths[0]);
+          if (res != S_OK && res != E_ABORT)
+          panel.MessageBox_Error_HRESULT(res);
       }
       else
       {
@@ -614,16 +619,25 @@ static void ShowStartWindow(bool inFileManager)
 
     case K7_START_ACTION_CREATE:
     {
-      // 文件清单交给压缩子进程(自动命名 -an,对话框内确认细节)。
-      ::CompressFiles(
-          UString(),   // arcPathPrefix
-          UString(),   // arcName(空 = 自动命名)
+      // Use the selected item's parent as the initial save location. An empty
+      // prefix used the launch directory, which can be unrelated or read-only.
+      FString parentFolder;
+      NFile::NDir::GetOnlyDirPrefix(us2fs(paths[0]), parentFolder);
+      HRESULT res = ::CompressFiles(
+          fs2us(parentFolder),
+          CreateArchiveName(paths),
           UString(),   // arcType(对话框内选择)
           true,        // addExtension
           paths,
           false,       // email
           true,        // showDialog
           false);      // waitFinish
+      if (res != S_OK)
+      {
+        const UString message = NError::MyFormatMessage(res);
+        ::MessageBoxW(inFileManager ? g_HWND : NULL, message,
+            L"CuinZip", MB_OK | MB_ICONERROR);
+      }
       break;
     }
 

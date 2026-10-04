@@ -5,6 +5,7 @@
 #endif
 
 #include "UiStrings.h"
+#include "StartPagePaths.h"
 
 #include <shlobj.h>
 
@@ -53,6 +54,12 @@ namespace
 
     bool HasArchiveExtension(std::wstring const& path)
     {
+        DWORD attributes = ::GetFileAttributesW(path.c_str());
+        if (attributes == INVALID_FILE_ATTRIBUTES
+            || (attributes & FILE_ATTRIBUTE_DIRECTORY))
+        {
+            return false;
+        }
         std::size_t dot = path.find_last_of(L'.');
         if (dot == std::wstring::npos)
         {
@@ -78,15 +85,12 @@ namespace
             : path.substr(slash + 1);
     }
 
-    // 压缩包文件选择过滤器(IFileOpenDialog)。
-    COMDLG_FILTERSPEC const kArchiveFilters[] =
-    {
-        { L"Archives", L"*.7z;*.zip;*.rar;*.tar;*.gz;*.tgz;*.bz2;*.tbz2;"
+    // Pattern only; filter labels are localized when the picker is opened.
+    wchar_t const* const kArchivePattern =
+        L"*.7z;*.zip;*.rar;*.tar;*.gz;*.tgz;*.bz2;*.tbz2;"
             L"*.xz;*.txz;*.zst;*.tzst;*.lz4;*.lz;*.lzma;*.lzh;*.arj;"
             L"*.cab;*.iso;*.wim;*.esd;*.swm;*.001;*.dmg;*.xar;*.cpio;"
-            L"*.rpm;*.deb" },
-        { L"All files", L"*.*" },
-    };
+            L"*.rpm;*.deb";
 }
 
 namespace winrt::NanaZip::Modern::implementation
@@ -113,7 +117,8 @@ namespace winrt::NanaZip::Modern::implementation
             UNREFERENCED_PARAMETER(keyState);
             UNREFERENCED_PARAMETER(point);
             *effect = DROPEFFECT_NONE;
-            if (dataObject && this->HasFileList(dataObject))
+            m_AcceptsFiles = dataObject && this->HasFileList(dataObject);
+            if (m_AcceptsFiles)
             {
                 *effect = DROPEFFECT_COPY;
             }
@@ -127,12 +132,13 @@ namespace winrt::NanaZip::Modern::implementation
         {
             UNREFERENCED_PARAMETER(keyState);
             UNREFERENCED_PARAMETER(point);
-            *effect = DROPEFFECT_COPY;
+            *effect = m_AcceptsFiles ? DROPEFFECT_COPY : DROPEFFECT_NONE;
             return S_OK;
         }
 
         STDMETHODIMP DragLeave() override
         {
+            m_AcceptsFiles = false;
             return S_OK;
         }
 
@@ -196,6 +202,7 @@ namespace winrt::NanaZip::Modern::implementation
         }
 
         StartPage* m_Page;
+        bool m_AcceptsFiles = false;
     };
 
     // ==================== 页面 ====================
@@ -213,7 +220,10 @@ namespace winrt::NanaZip::Modern::implementation
 
     StartPage::~StartPage()
     {
-        // com_ptr<DropTarget> 在此释放(DropTarget 完整类型可见)
+        if (m_DropTarget && m_WindowHandle && ::IsWindow(m_WindowHandle))
+        {
+            ::RevokeDragDrop(m_WindowHandle);
+        }
     }
 
     void StartPage::InitializeComponent()
@@ -235,9 +245,10 @@ namespace winrt::NanaZip::Modern::implementation
             for (UINT32 i = 0; i < recent.Count && i < K7_START_RECENT_MAX;
                 ++i)
             {
+                DWORD attributes = ::GetFileAttributesW(recent.Paths[i]);
                 if (recent.Paths[i][0] != L'\0'
-                    && INVALID_FILE_ATTRIBUTES
-                        != ::GetFileAttributesW(recent.Paths[i]))
+                    && attributes != INVALID_FILE_ATTRIBUTES
+                    && !(attributes & FILE_ATTRIBUTE_DIRECTORY))
                 {
                     m_RecentPaths.push_back(std::wstring(recent.Paths[i]));
                 }
@@ -263,7 +274,14 @@ namespace winrt::NanaZip::Modern::implementation
             if (e.Key() == winrt::Windows::System::VirtualKey::Escape)
             {
                 e.Handled(true);
-                this->Finish(K7_START_ACTION_NONE, {});
+                if (m_CreatePanel.Visibility() == winrt::Visibility::Visible)
+                {
+                    this->CreateCancelClick(nullptr, nullptr);
+                }
+                else
+                {
+                    this->Finish(K7_START_ACTION_NONE, {});
+                }
             }
         });
 
@@ -324,7 +342,8 @@ namespace winrt::NanaZip::Modern::implementation
         button.HorizontalContentAlignment(
             winrt::HorizontalAlignment::Left);
         button.VerticalContentAlignment(winrt::VerticalAlignment::Top);
-        button.Padding(winrt::ThicknessHelper::FromUniformLength(0));
+        button.Padding(winrt::ThicknessHelper::FromUniformLength(12));
+        button.Margin(winrt::ThicknessHelper::FromUniformLength(4));
         button.UseSystemFocusVisuals(true);
         button.Click(click);
 
@@ -384,7 +403,7 @@ namespace winrt::NanaZip::Modern::implementation
             28, true, false));
         header.Children().Append(this->MakeText(
             L"StartPage/WelcomeSubtitle.Text",
-            L"Open an archive or drag files here to get started.",
+            L"Extract an archive, or create one from files and folders. You can also drag them here.",
             14, false, true));
         m_HomePanel.Children().Append(header);
 
@@ -423,7 +442,7 @@ namespace winrt::NanaZip::Modern::implementation
             actions, 1, 0, L"\uE8C8",
             L"StartPage/ActionCreateTitle.Text", L"Create Archive",
             L"StartPage/ActionCreateDescription.Text",
-            L"Compress files into a new archive.",
+            L"Choose files and folders to compress.",
             { this, &StartPage::CreateCardClick });
         this->BuildActionCard(
             actions, 1, 1, L"\uE838",
@@ -437,8 +456,15 @@ namespace winrt::NanaZip::Modern::implementation
         // ---- Recent Archives(无记录时保持简洁,整区隐藏) ----
         if (!m_RecentPaths.empty())
         {
-            m_RecentSection = winrt::StackPanel();
-            m_RecentSection.Spacing(8);
+            m_RecentSection = winrt::Grid();
+            winrt::RowDefinition titleRow;
+            titleRow.Height(winrt::GridLengthHelper::FromValueAndType(
+                0, winrt::GridUnitType::Auto));
+            m_RecentSection.RowDefinitions().Append(titleRow);
+            winrt::RowDefinition listRow;
+            listRow.Height(winrt::GridLengthHelper::FromValueAndType(
+                1, winrt::GridUnitType::Star));
+            m_RecentSection.RowDefinitions().Append(listRow);
             winrt::Grid::SetRow(m_RecentSection, 2);
             m_RecentSection.Margin(
                 winrt::ThicknessHelper::FromLengths(0, 20, 0, 0));
@@ -448,6 +474,9 @@ namespace winrt::NanaZip::Modern::implementation
                 16, true, false));
 
             m_RecentList = winrt::ListView();
+            winrt::Grid::SetRow(m_RecentList, 1);
+            m_RecentList.Margin(
+                winrt::ThicknessHelper::FromLengths(0, 8, 0, 0));
             m_RecentList.SelectionMode(
                 winrt::Windows::UI::Xaml::Controls::
                     ListViewSelectionMode::Single);
@@ -493,10 +522,14 @@ namespace winrt::NanaZip::Modern::implementation
             winrt::ThicknessHelper::FromLengths(24, 20, 24, 20));
 
         {
-            winrt::RowDefinition contentRow;
-            contentRow.Height(winrt::GridLengthHelper::FromValueAndType(
+            winrt::RowDefinition headerRow;
+            headerRow.Height(winrt::GridLengthHelper::FromValueAndType(
+                0, winrt::GridUnitType::Auto));
+            m_CreatePanel.RowDefinitions().Append(headerRow);
+            winrt::RowDefinition listRow;
+            listRow.Height(winrt::GridLengthHelper::FromValueAndType(
                 1, winrt::GridUnitType::Star));
-            m_CreatePanel.RowDefinitions().Append(contentRow);
+            m_CreatePanel.RowDefinitions().Append(listRow);
             winrt::RowDefinition buttonRow;
             buttonRow.Height(winrt::GridLengthHelper::FromValueAndType(
                 0, winrt::GridUnitType::Auto));
@@ -514,21 +547,57 @@ namespace winrt::NanaZip::Modern::implementation
 
         m_CreateFilesText = this->MakeText(
             L"StartPage/CreateFilesText.Text",
-            L"{0} files selected",
+            L"{0} items selected",
             14, false, true);
         content.Children().Append(m_CreateFilesText);
+        content.Children().Append(this->MakeText(
+            L"StartPage/CreateSelectionHint.Text",
+            L"Add files or folders, then choose Next to set the archive name and save location. ZIP is a good choice for sharing.",
+            13, false, true));
+
+        winrt::StackPanel selectionButtons;
+        selectionButtons.Orientation(
+            winrt::Windows::UI::Xaml::Controls::Orientation::Horizontal);
+        selectionButtons.Spacing(8);
+        winrt::Button addFiles;
+        addFiles.Content(winrt::box_value(
+            winrt::NanaZip::Modern::GetUiString(
+                L"StartPage/AddFilesText.Text", L"Add files")));
+        addFiles.Click({ this, &StartPage::AddFilesClick });
+        selectionButtons.Children().Append(addFiles);
+        winrt::Button addFolders;
+        addFolders.Content(winrt::box_value(
+            winrt::NanaZip::Modern::GetUiString(
+                L"StartPage/AddFoldersText.Text", L"Add folders")));
+        addFolders.Click({ this, &StartPage::AddFoldersClick });
+        selectionButtons.Children().Append(addFolders);
+        m_RemoveFiles = winrt::Button();
+        m_RemoveFiles.Content(winrt::box_value(
+            winrt::NanaZip::Modern::GetUiString(
+                L"StartPage/RemoveFilesText.Text", L"Remove selected")));
+        m_RemoveFiles.IsEnabled(false);
+        m_RemoveFiles.Click({ this, &StartPage::RemoveFilesClick });
+        selectionButtons.Children().Append(m_RemoveFiles);
+        content.Children().Append(selectionButtons);
 
         winrt::TextBlock listHeader = this->MakeText(
             L"StartPage/CreateListHeader.Text",
-            L"Files to compress",
+            L"Files and folders to compress",
             14, true, false);
         content.Children().Append(listHeader);
 
         winrt::ListView list;
         list.SelectionMode(
-            winrt::Windows::UI::Xaml::Controls::ListViewSelectionMode::None);
+            winrt::Windows::UI::Xaml::Controls::ListViewSelectionMode::Multiple);
+        winrt::Grid::SetRow(list, 1);
+        list.Margin(winrt::ThicknessHelper::FromLengths(0, 8, 0, 0));
+        list.SelectionChanged([this](auto const&, auto const&)
+        {
+            m_RemoveFiles.IsEnabled(m_CreateFilesList.SelectedItems().Size() > 0);
+        });
         m_CreateFilesList = list;
-        content.Children().Append(list);
+        winrt::AutomationProperties::SetName(list, listHeader.Text());
+        m_CreatePanel.Children().Append(list);
 
         winrt::StackPanel buttons;
         buttons.Orientation(
@@ -536,7 +605,7 @@ namespace winrt::NanaZip::Modern::implementation
         buttons.Spacing(8);
         buttons.HorizontalAlignment(winrt::HorizontalAlignment::Right);
         buttons.Margin(winrt::ThicknessHelper::FromLengths(0, 16, 0, 0));
-        winrt::Grid::SetRow(buttons, 1);
+        winrt::Grid::SetRow(buttons, 2);
 
         winrt::Button cancel;
         cancel.Content(winrt::box_value(
@@ -548,7 +617,9 @@ namespace winrt::NanaZip::Modern::implementation
         winrt::Button confirm;
         confirm.Content(winrt::box_value(
             winrt::NanaZip::Modern::GetUiString(
-                L"StartPage/CreateConfirmText.Text", L"Create Archive")));
+                L"StartPage/CreateConfirmText.Text", L"Next")));
+        m_CreateConfirm = confirm;
+        confirm.IsEnabled(false);
         try
         {
             confirm.Style(
@@ -570,7 +641,8 @@ namespace winrt::NanaZip::Modern::implementation
     bool StartPage::PickPaths(
         bool pickFolders,
         bool multiSelect,
-        std::vector<std::wstring>& paths)
+        std::vector<std::wstring>& paths,
+        bool archivesOnly)
     {
         paths.clear();
 
@@ -585,7 +657,22 @@ namespace winrt::NanaZip::Modern::implementation
 
         DWORD options = 0;
         dialog->GetOptions(&options);
-        options |= FOS_FORCEFILESYSTEM | FOS_PATHMUSTEXIST;
+        options |= FOS_FORCEFILESYSTEM | FOS_PATHMUSTEXIST
+            | FOS_DONTADDTORECENT;
+        if (multiSelect)
+        {
+            options |= FOS_ALLOWMULTISELECT;
+        }
+
+        winrt::hstring archiveLabel = winrt::NanaZip::Modern::GetUiString(
+            L"StartPage/ArchiveFilterText.Text", L"Archives");
+        winrt::hstring allFilesLabel = winrt::NanaZip::Modern::GetUiString(
+            L"StartPage/AllFilesFilterText.Text", L"All files");
+        COMDLG_FILTERSPEC filters[] =
+        {
+            { archiveLabel.c_str(), kArchivePattern },
+            { allFilesLabel.c_str(), L"*.*" },
+        };
         if (pickFolders)
         {
             options |= FOS_PICKFOLDERS;
@@ -593,12 +680,16 @@ namespace winrt::NanaZip::Modern::implementation
         else
         {
             options |= FOS_FILEMUSTEXIST;
-            if (multiSelect)
+            // Creating an archive needs ordinary input files. Applying the
+            // archive filter here hides the files users want to compress.
+            if (archivesOnly)
             {
-                options |= FOS_ALLOWMULTISELECT;
+                dialog->SetFileTypes(ARRAYSIZE(filters), filters);
             }
-            dialog->SetFileTypes(
-                ARRAYSIZE(kArchiveFilters), kArchiveFilters);
+            else
+            {
+                dialog->SetFileTypes(1, &filters[1]);
+            }
         }
         dialog->SetOptions(options);
 
@@ -671,11 +762,7 @@ namespace winrt::NanaZip::Modern::implementation
         UNREFERENCED_PARAMETER(sender);
         UNREFERENCED_PARAMETER(e);
 
-        std::vector<std::wstring> paths;
-        if (this->PickPaths(false, true, paths))
-        {
-            this->EnterCreateList(paths);
-        }
+        this->EnterCreateList({});
     }
 
     void StartPage::OpenFolderCardClick(
@@ -697,10 +784,8 @@ namespace winrt::NanaZip::Modern::implementation
         winrt::Windows::UI::Xaml::Controls::ItemClickEventArgs const& e)
     {
         UNREFERENCED_PARAMETER(sender);
-        UNREFERENCED_PARAMETER(e);
-
-        int index = m_RecentList.SelectedIndex();
-        if (index < 0
+        UINT32 index = 0;
+        if (!m_RecentList.Items().IndexOf(e.ClickedItem(), index)
             || static_cast<std::size_t>(index) >= m_RecentPaths.size())
         {
             return;
@@ -737,11 +822,75 @@ namespace winrt::NanaZip::Modern::implementation
         m_HomePanel.Visibility(winrt::Visibility::Visible);
     }
 
+    void StartPage::AddFilesClick(
+        winrt::IInspectable const&,
+        winrt::RoutedEventArgs const&)
+    {
+        std::vector<std::wstring> paths;
+        if (this->PickPaths(false, true, paths, false))
+        {
+            this->AppendCreatePaths(paths);
+        }
+    }
+
+    void StartPage::AddFoldersClick(
+        winrt::IInspectable const&,
+        winrt::RoutedEventArgs const&)
+    {
+        std::vector<std::wstring> paths;
+        if (this->PickPaths(true, true, paths, false))
+        {
+            this->AppendCreatePaths(paths);
+        }
+    }
+
+    void StartPage::RemoveFilesClick(
+        winrt::IInspectable const&,
+        winrt::RoutedEventArgs const&)
+    {
+        std::vector<std::wstring> remaining;
+        for (UINT32 i = 0; i < m_PendingFiles.size(); ++i)
+        {
+            UINT32 selectedIndex = 0;
+            if (!m_CreateFilesList.SelectedItems().IndexOf(
+                m_CreateFilesList.Items().GetAt(i), selectedIndex))
+            {
+                remaining.push_back(m_PendingFiles[i]);
+            }
+        }
+        this->EnterCreateList(remaining);
+    }
+
+    void StartPage::AppendCreatePaths(std::vector<std::wstring> const& paths)
+    {
+        std::vector<std::wstring> combined = m_PendingFiles;
+        for (std::wstring const& path : paths)
+        {
+            if (std::none_of(combined.begin(), combined.end(),
+                [&path](std::wstring const& existing)
+                {
+                    return _wcsicmp(existing.c_str(), path.c_str()) == 0;
+                }))
+            {
+                combined.push_back(path);
+            }
+        }
+        this->EnterCreateList(combined);
+    }
+
     void StartPage::HandleDroppedFiles(
         std::vector<std::wstring> const& paths)
     {
         if (paths.empty())
         {
+            return;
+        }
+
+        // Additional drops on the confirmation page append to the selection,
+        // including archives that the user wants to compress together.
+        if (m_CreatePanel.Visibility() == winrt::Visibility::Visible)
+        {
+            this->AppendCreatePaths(paths);
             return;
         }
 
@@ -760,9 +909,12 @@ namespace winrt::NanaZip::Modern::implementation
     {
         m_PendingFiles = paths;
 
-        // 汇总文案:"{0} files selected"
+        m_CreateConfirm.IsEnabled(!paths.empty());
+        m_RemoveFiles.IsEnabled(false);
+
+        // Items can be files or folders.
         std::wstring summary(winrt::NanaZip::Modern::GetUiString(
-            L"StartPage/CreateFilesText.Text", L"{0} files selected"));
+            L"StartPage/CreateFilesText.Text", L"{0} items selected"));
         std::wstring countText = std::to_wstring(paths.size());
         std::size_t position = summary.find(L"{0}");
         if (position != std::wstring::npos)
@@ -800,6 +952,7 @@ namespace winrt::NanaZip::Modern::implementation
 
                 winrt::ListViewItem item;
                 item.Content(row);
+                winrt::AutomationProperties::SetName(item, winrt::hstring(path));
                 m_CreateFilesList.Items().Append(item);
             }
         }
@@ -814,25 +967,19 @@ namespace winrt::NanaZip::Modern::implementation
     {
         if (m_Result)
         {
-            m_Result->Action = action;
-            m_Result->PathCount = 0;
-            if (m_Result->PathBuffer && m_Result->PathBufferCapacity > 0)
+            INT32 count = 0;
+            if (!TryWriteStartPaths(paths, m_Result->PathBuffer,
+                m_Result->PathBufferCapacity, count))
             {
-                wchar_t* cursor = m_Result->PathBuffer;
-                wchar_t* end = cursor + m_Result->PathBufferCapacity;
-                for (std::wstring const& path : paths)
-                {
-                    // 每条路径 + 结尾 NUL;最后保留一个 NUL 作双结尾。
-                    if (cursor + path.size() + 1 >= end)
-                    {
-                        break;
-                    }
-                    std::wmemcpy(cursor, path.c_str(), path.size() + 1);
-                    cursor += path.size() + 1;
-                    ++m_Result->PathCount;
-                }
-                *cursor = L'\0';
+                winrt::hstring message = winrt::NanaZip::Modern::GetUiString(
+                    L"StartPage/SelectionTooLargeText.Text",
+                    L"This selection contains too many or overly long paths. Remove some items, or select their parent folder, then try again.");
+                ::MessageBoxW(m_WindowHandle, message.c_str(), L"CuinZip",
+                    MB_OK | MB_ICONINFORMATION);
+                return;
             }
+            m_Result->Action = action;
+            m_Result->PathCount = count;
         }
 
         if (m_WindowHandle)

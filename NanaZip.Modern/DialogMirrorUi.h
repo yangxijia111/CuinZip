@@ -7,6 +7,7 @@
 #include "pch.h"
 
 #include "NanaZip.Modern.h"
+#include <winrt/Windows.UI.Xaml.Media.h>
 
 #include <algorithm>
 #include <string>
@@ -14,8 +15,36 @@
 
 namespace winrt::NanaZip::Modern::implementation::MirrorUi
 {
-    // 镜像组合框项数上限(与引擎 ABI 约定一致)
-    constexpr UINT MaxComboItems = 64;
+    // Editable paths need the Windows Unicode path limit, independently of
+    // the fixed-size display slots used for each history-list entry.
+    constexpr UINT MaxControlText = 32768;
+
+    // ComboBox.Text may still contain the committed value while its focused
+    // editor holds a new value. Read the live TextBox, including intentional
+    // deletion, before rebuilding the control or submitting the dialog.
+    inline winrt::Windows::UI::Xaml::Controls::TextBox FindComboEditor(
+        winrt::Windows::UI::Xaml::DependencyObject const& root)
+    {
+        using winrt::Windows::UI::Xaml::Controls::TextBox;
+        using winrt::Windows::UI::Xaml::Media::VisualTreeHelper;
+        if (auto editor = root.try_as<TextBox>())
+            return editor;
+        const int count = VisualTreeHelper::GetChildrenCount(root);
+        for (int i = 0; i < count; ++i)
+        {
+            if (auto editor = FindComboEditor(VisualTreeHelper::GetChild(root, i)))
+                return editor;
+        }
+        return nullptr;
+    }
+
+    inline std::wstring ReadEditableComboText(
+        winrt::Windows::UI::Xaml::Controls::ComboBox const& combo)
+    {
+        if (auto editor = FindComboEditor(combo))
+            return std::wstring(editor.Text());
+        return std::wstring(combo.Text());
+    }
 
     // 去除 "&" 加速键与 "(&X)" 形式的括号加速键,供 Fluent 标签使用
     inline winrt::hstring StripAccelerator(std::wstring_view source)
@@ -62,10 +91,14 @@ namespace winrt::NanaZip::Modern::implementation::MirrorUi
         if (!engine || !engine->ReadCombo || !engine->Context)
             return snapshot;
 
+        UINT capacity = engine->ReadCombo(engine->Context, controlId,
+            nullptr, 0, nullptr, nullptr, nullptr, 0, nullptr, nullptr);
+        if (capacity == (UINT)-1)
+            return snapshot;
         std::vector<wchar_t> buffer(
-            (size_t)MaxComboItems * K7_DIALOG_MIRROR_ITEM_TEXT);
-        std::vector<LPARAM> itemData(MaxComboItems);
-        wchar_t text[K7_DIALOG_MIRROR_ITEM_TEXT];
+            (size_t)capacity * K7_DIALOG_MIRROR_ITEM_TEXT);
+        std::vector<LPARAM> itemData(capacity);
+        std::vector<wchar_t> text(MaxControlText, L'\0');
         int selection = -1;
         BOOL enabled = TRUE;
         BOOL visible = TRUE;
@@ -74,22 +107,23 @@ namespace winrt::NanaZip::Modern::implementation::MirrorUi
             engine->Context,
             controlId,
             buffer.data(),
-            MaxComboItems,
+            capacity,
             itemData.data(),
             &selection,
-            text,
-            K7_DIALOG_MIRROR_ITEM_TEXT,
+            text.data(),
+            MaxControlText,
             &enabled,
             &visible);
         if (count == (UINT)-1)
             return snapshot;
 
         snapshot.Ok = true;
-        snapshot.Selection = selection;
-        snapshot.Text = text;
+        snapshot.Selection = selection >= 0 && (UINT)selection < capacity
+            ? selection : -1;
+        snapshot.Text = text.data();
         snapshot.Enabled = enabled != FALSE;
         snapshot.Visible = visible != FALSE;
-        for (UINT i = 0; i < count && i < MaxComboItems; i++)
+        for (UINT i = 0; i < count && i < capacity; i++)
         {
             snapshot.Items.emplace_back(
                 buffer.data() + (size_t)i * K7_DIALOG_MIRROR_ITEM_TEXT);
@@ -114,21 +148,21 @@ namespace winrt::NanaZip::Modern::implementation::MirrorUi
         if (!engine || !engine->ReadText || !engine->Context)
             return snapshot;
 
-        wchar_t text[K7_DIALOG_MIRROR_ITEM_TEXT];
+        std::vector<wchar_t> text(MaxControlText, L'\0');
         BOOL enabled = TRUE;
         BOOL visible = TRUE;
         if (!engine->ReadText(
                 engine->Context,
                 controlId,
-                text,
-                K7_DIALOG_MIRROR_ITEM_TEXT,
+                text.data(),
+                MaxControlText,
                 &enabled,
                 &visible))
         {
             return snapshot;
         }
         snapshot.Ok = true;
-        snapshot.Text = text;
+        snapshot.Text = text.data();
         snapshot.Enabled = enabled != FALSE;
         snapshot.Visible = visible != FALSE;
         return snapshot;

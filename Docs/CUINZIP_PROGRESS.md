@@ -37,7 +37,16 @@ Recent 失效清理 + 展开 More 后空文件名修复;P1-6 CI SUCCESS;详见
   - RefreshVersion 自动改动（Version.props / manifest 版本号）已回滚，未污染 Git
 
 ## Current Task
-P1-6.1 已完成;下一步 v0.1.0-preview.2 发布准备
+P1-6.2 Final Release Gate(v0.1.0-preview.2)进行中:
+- 已 PASS:CI 三轮全绿(c4a95e19 / 148d907b / 1118ddac)、版本 0.1.0.1 五处
+  同步、BuildAllTargets 0 错误、CLI 核心回归(ZIP/7z/密码 7z 往返 SHA-256
+  一致)、Portable 三种方式覆盖升级启动、UI Gate 自动化部分(Home 四卡/
+  工具栏七键/上下文感知/Settings 页/中英文/闭环)
+- 待人工:真实拖放 6 场景(本机杀软封锁合成输入)、Setup 交互安装(静默
+  被 AV 挂起)、MSIX preview.1→preview.2 升级(需开发者模式 UAC)、压缩
+  对话框 Basic/More 保值
+- 全部 PASS 后:合并 main(禁 force)→ tag `v0.1.0-preview.2` →
+  GitHub Pre-release 上传四件套
 
 ## P1-5 UI 收尾 + v0.1 Preview Release Hardening
 DONE(2026-09-29,安全标签 `p1-5-pre-release`,基线 `3e0243a9`,发布

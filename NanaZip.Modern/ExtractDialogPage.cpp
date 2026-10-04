@@ -382,6 +382,8 @@ namespace winrt::NanaZip::Modern::implementation
             if (m_Suppress)
                 return;
             ComboBox source = sender.as<ComboBox>();
+            if (source.SelectedIndex() < 0)
+                return;
             this->OnMirrorComboChanged(comboId, source.SelectedIndex());
         });
         combo.KeyDown([this](
@@ -564,11 +566,6 @@ namespace winrt::NanaZip::Modern::implementation
             if (entry.Editable)
             {
                 combo.Text(winrt::hstring(snapshot.Text));
-                // P1-6.1:缓存最后已知非空文本
-                if (!snapshot.Text.empty())
-                {
-                    m_LastComboTexts[entry.Id] = snapshot.Text;
-                }
             }
             combo.IsEnabled(snapshot.Enabled);
             combo.Visibility(snapshot.Visible
@@ -603,29 +600,22 @@ namespace winrt::NanaZip::Modern::implementation
         TextSnapshot edit = MirrorUi::ReadText(m_Engine, IdPasswordEdit);
         bool showPlain = show.Ok ? show.Checked : false;
 
-        if (!m_PasswordSeeded && edit.Ok)
+        if (edit.Ok)
         {
-            m_PasswordSeeded = true;
-            m_PasswordBox.Password(winrt::hstring(edit.Text));
-            m_PasswordPlain.Text(winrt::hstring(edit.Text));
+            winrt::hstring value(edit.Text);
+            if (m_PasswordBox.Password() != value)
+                m_PasswordBox.Password(value);
+            if (m_PasswordPlain.Text() != value)
+                m_PasswordPlain.Text(value);
         }
 
         if (showPlain)
         {
-            if (m_PasswordPlain.Visibility() == winrt::Visibility::Collapsed)
-            {
-                m_PasswordPlain.Text(
-                    winrt::hstring(m_PasswordBox.Password()));
-            }
             m_PasswordPlain.Visibility(winrt::Visibility::Visible);
             m_PasswordBox.Visibility(winrt::Visibility::Collapsed);
         }
         else
         {
-            if (m_PasswordBox.Visibility() == winrt::Visibility::Collapsed)
-            {
-                m_PasswordBox.Password(m_PasswordPlain.Text());
-            }
             m_PasswordBox.Visibility(winrt::Visibility::Visible);
             m_PasswordPlain.Visibility(winrt::Visibility::Collapsed);
         }
@@ -640,25 +630,7 @@ namespace winrt::NanaZip::Modern::implementation
         {
             if (!entry.Editable || !entry.Control)
                 continue;
-            // CuinZip P1-6.1:虚拟化回收丢 Text 时用缓存兜底写回。
-            std::wstring text(entry.Control.Text());
-            if (text.empty())
-            {
-                auto cached = m_LastComboTexts.find(entry.Id);
-                if (cached != m_LastComboTexts.end())
-                {
-                    text = cached->second;
-                    entry.Control.Text(winrt::hstring(text));
-                }
-                else
-                {
-                    continue;
-                }
-            }
-            else
-            {
-                m_LastComboTexts[entry.Id] = text;
-            }
+            std::wstring text = MirrorUi::ReadEditableComboText(entry.Control);
             if (m_Engine->SetComboText)
             {
                 m_Engine->SetComboText(

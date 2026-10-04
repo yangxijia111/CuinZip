@@ -3,6 +3,11 @@
   DefaultTargets="RefreshVersion;Restore;Build;Packaging"
   xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="NanaZip.Project\NanaZip.Project.props" />
+  <PropertyGroup>
+    <InputBinariesPath>$(MSBuildThisFileDirectory)Output\Binaries\Release\</InputBinariesPath>
+    <PortableDir>$(MSBuildThisFileDirectory)Output\Binaries\Root\CuinZip_$(MileProjectVersion)_x64\</PortableDir>
+    <PortableZipPath>$(MSBuildThisFileDirectory)Output\CuinZip_$(MileProjectVersion)_x64_Portable.zip</PortableZipPath>
+  </PropertyGroup>
   <UsingTask
     TaskName="NanaZip.Build.Tasks.RefreshAppxManifestResourceIdentifies"
     AssemblyFile="$(MSBuildThisFileDirectory)NanaZip.Project\NanaZip.Build.Tasks.dll"/>
@@ -57,7 +62,7 @@
       StopOnFirstFailure="True"
       Properties="PreferredToolArchitecture=x64" />
   </Target>
-  <Target Name="Build">
+  <Target Name="Build" DependsOnTargets="BuildLauncher">
     <MSBuild
       Projects="$(MSBuildThisFileDirectory)NanaZipPackage\NanaZipPackage.wapproj"
       Targets="Build"
@@ -71,6 +76,13 @@
       StopOnFirstFailure="True"
       Properties="PreferredToolArchitecture=x64;Configuration=Release;Platform=x64" />
     <!-- 安装器依赖打包产物,改为 Packaging 之后由 BuildInstaller 目标构建 -->
+  </Target>
+  <Target Name="BuildLauncher">
+    <MSBuild
+      Projects="$(MSBuildThisFileDirectory)Tools\CuinZip.Launcher\CuinZip.vcxproj"
+      Targets="Build"
+      StopOnFirstFailure="True"
+      Properties="PreferredToolArchitecture=x64;Configuration=Release;Platform=x64" />
   </Target>
   <Target Name="Packaging">
     <PropertyGroup>
@@ -151,11 +163,9 @@
   <!-- 暂存 x64 完整运行时(与 MSIX 载荷一致的文件集)+ 文档,供 Portable ZIP
        与 Inno 安装器共用。上游 Packaging 的 Binaries 集不含 FM/ShellExtension
        可执行文件,不能直接作为应用分发,故此处按 MSIX 载荷重新暂存。 -->
-  <Target Name="StagePortable" AfterTargets="Packaging">
-    <PropertyGroup>
-      <PortableDir>$(MSBuildThisFileDirectory)Output\Binaries\Root\CuinZip_$(MileProjectVersion)_x64\</PortableDir>
-    </PropertyGroup>
+  <Target Name="StagePortable" AfterTargets="Packaging" DependsOnTargets="BuildLauncher">
     <MakeDir Directories="$(PortableDir)x64" />
+    <Copy SourceFiles="$(InputBinariesPath)x64\CuinZip.exe" DestinationFolder="$(PortableDir)" />
     <Copy SourceFiles="$(InputBinariesPath)NanaZipPackage\x64\K7Base.dll" DestinationFolder="$(PortableDir)x64" />
     <Copy SourceFiles="$(InputBinariesPath)NanaZipPackage\x64\K7User.dll" DestinationFolder="$(PortableDir)x64" />
     <Copy SourceFiles="$(InputBinariesPath)NanaZipPackage\x64\Mile.Xaml.Styles.SunValley.xbf" DestinationFolder="$(PortableDir)x64" />
@@ -171,13 +181,20 @@
     <Copy SourceFiles="$(InputBinariesPath)NanaZipPackage\x64\NanaZip.Universal.Console.exe" DestinationFolder="$(PortableDir)x64" />
     <Copy SourceFiles="$(InputBinariesPath)NanaZipPackage\x64\NanaZip.Universal.Windows.exe" DestinationFolder="$(PortableDir)x64" />
     <Copy SourceFiles="$(InputBinariesPath)NanaZipPackage\x64\resources.pri" DestinationFolder="$(PortableDir)x64" />
-    <Copy SourceFiles="$(OutputBinariesPath)License.txt" DestinationFiles="$(PortableDir)License.txt" />
-    <Copy SourceFiles="$(OutputBinariesPath)ReadMe.txt" DestinationFiles="$(PortableDir)ReadMe.txt" />
+    <Copy SourceFiles="$(MSBuildThisFileDirectory)License.md" DestinationFiles="$(PortableDir)License.txt" />
+    <Copy SourceFiles="$(MSBuildThisFileDirectory)ReadMe.md" DestinationFiles="$(PortableDir)ReadMe.txt" />
     <Copy SourceFiles="$(MSBuildThisFileDirectory)Documents\CuinZipReleaseNotes.md" DestinationFiles="$(PortableDir)ReleaseNotes.txt" />
+    <Copy SourceFiles="$(MSBuildThisFileDirectory)Documents\QuickStart.zh-CN.md" DestinationFiles="$(PortableDir)快速上手.txt" />
   </Target>
-  <Target Name="BuildPortableZip" AfterTargets="StagePortable">
+  <Target Name="BuildPortableZip" AfterTargets="StagePortable" DependsOnTargets="StagePortable">
+    <PropertyGroup>
+      <PortableZipTemporaryPath>$(MSBuildThisFileDirectory)Output\CuinZip_$(MileProjectVersion)_x64_Portable.$([System.Guid]::NewGuid().ToString('N')).zip</PortableZipTemporaryPath>
+    </PropertyGroup>
     <!-- 在 Root 目录下打包,使 ZIP 内含 CuinZip_<版本>_x64 顶层文件夹 -->
-    <Exec Command="&quot;$(InputBinariesPath)NanaZipPackage\x64\NanaZip.Universal.Console.exe&quot; a -r ..\..\CuinZip_$(MileProjectVersion)_x64_Portable.zip CuinZip_$(MileProjectVersion)_x64\*" WorkingDirectory="$(MSBuildThisFileDirectory)Output\Binaries\Root\"/>
+    <!-- 每次创建新 ZIP，成功后才替换交付物，避免 a 命令更新旧 ZIP 时保留过期文件。 -->
+    <Exec Command="&quot;$(InputBinariesPath)NanaZipPackage\x64\NanaZip.Universal.Console.exe&quot; a -tzip -r &quot;$(PortableZipTemporaryPath)&quot; CuinZip_$(MileProjectVersion)_x64\*" WorkingDirectory="$(MSBuildThisFileDirectory)Output\Binaries\Root\"/>
+    <Copy SourceFiles="$(PortableZipTemporaryPath)" DestinationFiles="$(PortableZipPath)" />
+    <Delete Files="$(PortableZipTemporaryPath)" />
   </Target>
   <Target Name="BuildInstaller" AfterTargets="BuildPortableZip">
     <MSBuild

@@ -472,6 +472,10 @@ namespace winrt::NanaZip::Modern::implementation
             if (m_Suppress)
                 return;
             ComboBox source = sender.as<ComboBox>();
+            // Editing a custom value clears the selection. Keep that text and
+            // wait for submission instead of clearing it through CB_SETCURSEL.
+            if (source.SelectedIndex() < 0)
+                return;
             this->OnMirrorComboChanged(comboId, source.SelectedIndex());
         });
         combo.KeyDown([this](
@@ -539,6 +543,16 @@ namespace winrt::NanaZip::Modern::implementation
     {
         TextBlock label = this->BuildLabel(labelId);
         TextBox edit;
+        edit.TextChanged([this, editId](
+            winrt::IInspectable const& sender,
+            winrt::RoutedEventArgs const&)
+        {
+            if (!m_Suppress && m_Engine && m_Engine->SetText)
+            {
+                m_Engine->SetText(m_Engine->Context, editId,
+                    sender.as<TextBox>().Text().c_str());
+            }
+        });
         edit.KeyDown([this](
             winrt::IInspectable const&,
             winrt::Windows::UI::Xaml::Input::KeyRoutedEventArgs const& e)
@@ -683,11 +697,6 @@ namespace winrt::NanaZip::Modern::implementation
             if (entry.Editable)
             {
                 combo.Text(winrt::hstring(snapshot.Text));
-                // P1-6.1:缓存最后已知非空文本
-                if (!snapshot.Text.empty())
-                {
-                    m_LastComboTexts[entry.Id] = snapshot.Text;
-                }
             }
             combo.IsEnabled(snapshot.Enabled);
             combo.Visibility(snapshot.Visible
@@ -742,32 +751,16 @@ namespace winrt::NanaZip::Modern::implementation
         TextSnapshot edit = MirrorUi::ReadText(m_Engine, editId);
         bool showPlain = show.Ok ? show.Checked : false;
 
-        // 首次同步:把引擎侧已有密码(命令行/上次会话带入)填入
-        if (!m_PasswordSeeded && edit.Ok)
+        // Native edits are authoritative for both password fields. Visibility
+        // also changes when a format disables encryption, so it cannot tell us
+        // which display mode previously held the user's latest password.
+        if (edit.Ok)
         {
-            m_PasswordSeeded = true;
-            passwordBox.Password(winrt::hstring(edit.Text));
-            plainBox.Text(winrt::hstring(edit.Text));
-        }
-
-        // 显示开关切换时在密文/明文控件间保持文本一致
-        if (showPlain)
-        {
-            if (plainBox.Visibility() == winrt::Visibility::Collapsed)
-            {
-                plainBox.Text(winrt::hstring(passwordBox.Password()));
-            }
-            plainBox.Visibility(winrt::Visibility::Visible);
-            passwordBox.Visibility(winrt::Visibility::Collapsed);
-        }
-        else
-        {
-            if (passwordBox.Visibility() == winrt::Visibility::Collapsed)
-            {
-                passwordBox.Password(plainBox.Text());
-            }
-            passwordBox.Visibility(winrt::Visibility::Visible);
-            plainBox.Visibility(winrt::Visibility::Collapsed);
+            winrt::hstring value(edit.Text);
+            if (passwordBox.Password() != value)
+                passwordBox.Password(value);
+            if (plainBox.Text() != value)
+                plainBox.Text(value);
         }
 
         // 复刻 UpdatePasswordControl:显示密码时隐藏第二个输入框;
@@ -780,12 +773,10 @@ namespace winrt::NanaZip::Modern::implementation
             : winrt::Visibility::Collapsed);
         passwordBox.IsEnabled(enabled);
         plainBox.IsEnabled(enabled);
-        passwordBox.Visibility(visible
-            ? passwordBox.Visibility()
-            : winrt::Visibility::Collapsed);
-        plainBox.Visibility(visible
-            ? plainBox.Visibility()
-            : winrt::Visibility::Collapsed);
+        passwordBox.Visibility(visible && !showPlain
+            ? winrt::Visibility::Visible : winrt::Visibility::Collapsed);
+        plainBox.Visibility(visible && showPlain
+            ? winrt::Visibility::Visible : winrt::Visibility::Collapsed);
     }
 
     void CompressDialogPage::SyncStaticText(
@@ -806,39 +797,22 @@ namespace winrt::NanaZip::Modern::implementation
 
     void CompressDialogPage::PushEditableTexts()
     {
-        if (!m_Engine || !m_Engine->SetComboText)
+        if (!m_Engine)
             return;
 
         for (ComboEntry const& entry : m_Combos)
         {
             if (!entry.Editable || !entry.Control)
                 continue;
-            // CuinZip P1-6.1:More options 展开滚动后 UWP 可编辑
-            // ComboBox 可能因虚拟化回收丢失 Text;读空时用最后
-            // 已知非空文本兜底写回,保证引擎侧不丢值(否则产物
-            // 会出现空文件名)。
-            std::wstring text(entry.Control.Text());
-            if (text.empty())
-            {
-                auto cached = m_LastComboTexts.find(entry.Id);
-                if (cached != m_LastComboTexts.end())
-                {
-                    text = cached->second;
-                    entry.Control.Text(winrt::hstring(text));
-                }
-                else
-                {
-                    continue;
-                }
-            }
-            else
-            {
-                m_LastComboTexts[entry.Id] = text;
-            }
-            m_Engine->SetComboText(
-                m_Engine->Context,
-                entry.Id,
-                text.c_str());
+            std::wstring text = MirrorUi::ReadEditableComboText(entry.Control);
+            if (m_Engine->SetComboText)
+                m_Engine->SetComboText(m_Engine->Context, entry.Id, text.c_str());
+        }
+        for (TextEntry const& entry : m_Texts)
+        {
+            if (entry.Control && m_Engine->SetText)
+                m_Engine->SetText(m_Engine->Context, entry.Id,
+                    entry.Control.Text().c_str());
         }
     }
 

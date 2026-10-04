@@ -46,3 +46,7 @@ jobs:
       - name: Smoke tests (CLI round-trips, hash, volumes, branding)
         shell: pwsh
         run: .github/scripts/smoke-tests.ps1 -BinDir Output/Binaries/Release/NanaZipPackage/x64
+
+      - name: Archive integration (Unicode, Windows ZIP, passwords, real split volumes, failures)
+        shell: pwsh
+        run: Tests/ArchiveRoundtrip.ps1 -BinDir Output/Binaries/Release/NanaZipPackage/x64

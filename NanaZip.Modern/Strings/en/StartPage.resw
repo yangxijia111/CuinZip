@@ -31,7 +31,7 @@
     <value>Welcome to CuinZip</value>
   </data>
   <data name="WelcomeSubtitle.Text" xml:space="preserve">
-    <value>Open an archive or drag files here to get started.</value>
+    <value>Extract an archive, or create one from files and folders. You can also drag them here.</value>
   </data>
   <data name="ActionOpenArchiveTitle.Text" xml:space="preserve">
     <value>Open Archive</value>
@@ -49,7 +49,7 @@
     <value>Create Archive</value>
   </data>
   <data name="ActionCreateDescription.Text" xml:space="preserve">
-    <value>Compress files into a new archive.</value>
+    <value>Choose files and folders to compress.</value>
   </data>
   <data name="ActionOpenFolderTitle.Text" xml:space="preserve">
     <value>Open Folder</value>
@@ -64,15 +64,36 @@
     <value>Create Archive</value>
   </data>
   <data name="CreateFilesText.Text" xml:space="preserve">
-    <value>{0} files selected</value>
+    <value>{0} items selected</value>
   </data>
   <data name="CreateListHeader.Text" xml:space="preserve">
-    <value>Files to compress</value>
+    <value>Files and folders to compress</value>
   </data>
   <data name="CreateConfirmText.Text" xml:space="preserve">
-    <value>Create Archive</value>
+    <value>Next</value>
   </data>
   <data name="CreateCancelText.Text" xml:space="preserve">
     <value>Cancel</value>
+  </data>
+  <data name="CreateSelectionHint.Text" xml:space="preserve">
+    <value>Add files or folders, then choose Next to set the archive name and save location. ZIP is a good choice for sharing.</value>
+  </data>
+  <data name="AddFilesText.Text" xml:space="preserve">
+    <value>Add files</value>
+  </data>
+  <data name="AddFoldersText.Text" xml:space="preserve">
+    <value>Add folders</value>
+  </data>
+  <data name="RemoveFilesText.Text" xml:space="preserve">
+    <value>Remove selected</value>
+  </data>
+  <data name="ArchiveFilterText.Text" xml:space="preserve">
+    <value>Archives</value>
+  </data>
+  <data name="AllFilesFilterText.Text" xml:space="preserve">
+    <value>All files</value>
+  </data>
+  <data name="SelectionTooLargeText.Text" xml:space="preserve">
+    <value>This selection contains too many or overly long paths. Remove some items, or select their parent folder, then try again.</value>
   </data>
 </root>

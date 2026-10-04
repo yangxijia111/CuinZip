@@ -1,0 +1,7 @@
+#include <Windows.h>
+2000 DIALOGEX 0, 0, 100, 100
+STYLE DS_SETFONT | WS_POPUP | WS_CAPTION
+CAPTION "Isolated archive dialog test"
+FONT 9, "Segoe UI"
+BEGIN
+END
