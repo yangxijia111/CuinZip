@@ -6,6 +6,8 @@
 
 #include "NanaZip.Modern.h"
 
+#include <winrt/Windows.UI.Xaml.h>
+
 #include <string>
 #include <vector>
 
@@ -166,7 +168,14 @@ namespace winrt::NanaZip::Modern::implementation
 
         // ---- 拖放 ----
         void RegisterDropTarget();
+        // P1-9:给全部子 HWND(含 XAML island 输入窗口)幂等注册拖放;
+        // OLE 会把拖放路由到鼠标下最深层的窗口,只注册顶层无效
+        void RegisterDropTargetOnChildren();
         struct DropTarget;
         winrt::com_ptr<DropTarget> m_DropTarget;
+        std::vector<HWND> m_DropChildWindows;
+        // island 子窗口晚于页面创建,短期定时重试注册(12 次/每秒)
+        winrt::Windows::UI::Xaml::DispatcherTimer m_DropRetryTimer{ nullptr };
+        int m_DropRetryCount = 0;
     };
 }

@@ -301,6 +301,20 @@ namespace winrt::NanaZip::Modern::implementation
 
     StartPage::~StartPage()
     {
+        if (m_DropRetryTimer)
+        {
+            m_DropRetryTimer.Stop();
+            m_DropRetryTimer = nullptr;
+        }
+        // 子窗口随顶层窗口销毁时由系统自动撤销注册;此处显式清理
+        // 记录的句柄,避免页面先于窗口销毁的边界情况
+        for (HWND child : m_DropChildWindows)
+        {
+            if (::IsWindow(child))
+            {
+                ::RevokeDragDrop(child);
+            }
+        }
         if (m_DropTarget && m_WindowHandle && ::IsWindow(m_WindowHandle))
         {
             ::RevokeDragDrop(m_WindowHandle);
@@ -1239,6 +1253,79 @@ namespace winrt::NanaZip::Modern::implementation
             static_cast<IDropTarget*>(m_DropTarget.get()))))
         {
             m_DropTarget = nullptr;
+            return;
         }
+
+        // P1-9 修复:鼠标拖放会被 OLE 路由到鼠标下最深层的 HWND——
+        // XAML island 的输入子窗口覆盖了整个客户区,只注册顶层窗口时
+        // 拖入显示禁止光标。给全部子窗口(现在与将来创建的)幂等注册。
+        this->RegisterDropTargetOnChildren();
+
+        // island 子窗口在 XAML 内容挂载后才创建,构造时刻可能还不存在;
+        // 用 DispatcherTimer 短期重试(每秒一次,12 次后停),幂等注册
+        try
+        {
+            m_DropRetryTimer = winrt::Windows::UI::Xaml::DispatcherTimer();
+            m_DropRetryTimer.Interval(std::chrono::seconds(1));
+            m_DropRetryTimer.Tick([this](
+                winrt::IInspectable const&, winrt::IInspectable const&)
+            {
+                ++m_DropRetryCount;
+                if (m_WindowHandle && ::IsWindow(m_WindowHandle))
+                {
+                    this->RegisterDropTargetOnChildren();
+                }
+                if (m_DropRetryCount >= 12 || !m_WindowHandle
+                    || !::IsWindow(m_WindowHandle))
+                {
+                    if (m_DropRetryTimer)
+                    {
+                        m_DropRetryTimer.Stop();
+                        m_DropRetryTimer = nullptr;
+                    }
+                }
+            });
+            m_DropRetryTimer.Start();
+        }
+        catch (...)
+        {
+            // DispatcherTimer 不可用时退化为一次性注册
+            m_DropRetryTimer = nullptr;
+        }
+    }
+
+    void StartPage::RegisterDropTargetOnChildren()
+    {
+        if (!m_DropTarget || !m_WindowHandle || !::IsWindow(m_WindowHandle))
+        {
+            return;
+        }
+
+        // EnumChildWindows 的回调签名是传统函数指针,经结构体传上下文
+        struct DropRegisterContext
+        {
+            IDropTarget* Target;
+            std::vector<HWND>* Registered;
+        } context = {
+            static_cast<IDropTarget*>(m_DropTarget.get()),
+            &m_DropChildWindows
+        };
+
+        ::EnumChildWindows(
+            m_WindowHandle,
+            [](HWND hWnd, LPARAM lParam) -> BOOL
+            {
+                DropRegisterContext* context = reinterpret_cast<
+                    DropRegisterContext*>(lParam);
+                HRESULT result = ::RegisterDragDrop(hWnd, context->Target);
+                if (SUCCEEDED(result))
+                {
+                    context->Registered->push_back(hWnd);
+                }
+                // 已注册(DRAGDROP_E_ALREADYREGISTERED)与其他失败均忽略,
+                // 下一次重试会再尝试
+                return TRUE;
+            },
+            reinterpret_cast<LPARAM>(&context));
     }
 }
