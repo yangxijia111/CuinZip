@@ -1,16 +1,13 @@
 ﻿# CuinZip Progress
 
 ## Current Phase
-P1-7(Usability Polish)已完成;下一步发布 v0.1.0-preview.2,
+P1-8(界面语言一键切换)已完成;下一步发布 v0.1.0-preview.2,
 之后 P2(Search / 智能解压 / 安全能力)
 
 ## Status
-P1-7 DONE(2026-10-04;首页卡片视觉 + Recent 元数据 + 对话框新手引导;
-构建 Debug/Release 0 错误 + UIA/截图验证;详见
-`Docs/CUINZIP_UI_PLAN.md` P1-7 节)。
-另:工作区遗留的 P1-6.2 收尾工作(便携 CuinZip.exe 启动器/两步式
-创建流程/镜像 ABI 容量协商/回归测试宿主/中文快速上手)经全链构建
-0 错误 + 便携包冒烟验证后已提交(`5b3de432`)
+P1-8 DONE(2026-10-04;首页语言按钮 + 设置页语言组合框 + FM 中文
+界面;修复 P1-6.2 引入的 Start→FM 0xC000041D 崩溃与 Modern resw
+寻址;构建链 NuGet/配置坑修复;详见 `Docs/CUINZIP_UI_PLAN.md` P1-8 节)
 
 ## Completed
 - P0-1 Fork / Git / License Audit
@@ -41,14 +38,34 @@ P1-7 DONE(2026-10-04;首页卡片视觉 + Recent 元数据 + 对话框新手引�
 
 ## Current Task
 v0.1.0-preview.2 发布(继承 P1-6.2 gate 状态):
-- 已 PASS:CI 三轮全绿(c4a95e19 / 148d907b / 1118ddac)+ 遗留收尾
-  提交(5b3de432,含全链构建 0 错误 + 便携包三种方式启动验证)+
-  P1-7 UI 打磨(构建 0 错误 + UIA/截图验证)
+- 已 PASS:CI 三轮全绿(c4a95e19 / 148d907b / 1118ddac)+ P1-6.2
+  收尾(5b3de432)+ P1-7(5cd12519)+ P1-8(语言切换/崩溃修复,
+  含 Start→FM 回归补测)
 - 待人工:真实拖放 6 场景(本机杀软封锁合成输入)、Setup 交互安装(静默
   被 AV 挂起)、MSIX preview.1→preview.2 升级(需开发者模式 UAC)、压缩
   对话框 Basic/More 保值
 - 全部 PASS 后:合并 main(禁 force)→ tag `v0.1.0-preview.2` →
   GitHub Pre-release 上传四件套
+
+## P1-8 Interface Language Switching
+DONE(2026-10-04;基线 `5cd12519`):
+- **一键切换**:首页右上角语言按钮(中文 ↔ English,即时刷新全部
+  首页文本)+ 设置页 General 语言组合框(跟随系统/English/
+  简体中文);`K7ModernSetAppLanguage` 导出(Wrapper 转发),
+  FM/GUI 宿主启动时从 `HKCU\Software\CuinZip\FM\Language` 回放
+- **Start→FM 崩溃修复**:P1-6.2 的 GetValue(view-independent
+  context)在 FM 主窗口线程悬空 IMap 调用(0xC000041D,WER 偏移
+  0x86E0 实证)→ 改候选手选(Qualifiers 遍历 + 近似语言匹配),
+  不再接触 ResourceContext;FM 主窗口存活实证 15s+
+- **Modern resw 首次真正生效**:GetUiString 点号寻址改为 PRI 斜杠
+  两级("Name.Text"→"Name/Text"),此前 P1-2 起全部走英文 fallback
+- **持久化**:island 线程写注册表不落盘(实测)→ 分离后台线程写
+  (FM 经 SaveAppLanguage 回调/独立进程自写);双向切换 500ms 落盘
+- **验证**:langswitch 6/6 + strings 双语 3 轮 + UIA Invoke UI 实测
+  (切换/注册表/重启持久化/FM 中文主窗口/压缩对话框中文);
+  截图 `Docs/Screenshots/P1-8/`
+- **构建链修复**:删 obj 后必须逐配置 `-t:Restore`(MIDL9008/
+  C1083 根因);僵死 cl 进程会挂起构建;聚合 PRI 损坏=0x80070002
 
 ## P1-7 Usability Polish
 DONE(2026-10-04;对照 Bandizip/WinRAR/Windows 11 系统应用的新手友好

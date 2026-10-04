@@ -67,6 +67,28 @@ namespace winrt::NanaZip::Modern::implementation
         // 次要文本前景画刷(TextFillColorSecondaryBrush,缺失返回空)
         winrt::Windows::UI::Xaml::Media::Brush GetSecondaryBrush();
 
+        // CuinZip P1-8:按当前语言重建全部注册文本(语言切换用)
+        void RefreshTexts();
+
+        // CuinZip P1-8:语言切换按钮(zh-Hans <-> en-US 一步切换)
+        void ToggleLanguageClick(
+            winrt::IInspectable const& sender,
+            winrt::RoutedEventArgs const& e);
+        void UpdateLanguageButtonCaption();
+
+        // resw 文本登记表:MakeText 创建的控件 + 键/兜底,切换语言时
+        // 统一重取(动态文本如选中计数另行处理)
+        struct LocalizedTextEntry
+        {
+            winrt::Windows::UI::Xaml::Controls::TextBlock Control{
+                nullptr };
+            std::wstring Key;
+            std::wstring Fallback;
+        };
+        std::vector<LocalizedTextEntry> m_LocalizedTexts;
+        winrt::Windows::UI::Xaml::Controls::Button m_LanguageButton{
+            nullptr };
+
         // ---- 交互 ----
 
         void OpenArchiveCardClick(

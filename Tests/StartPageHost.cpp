@@ -1,4 +1,4 @@
-// Isolated Home regression host. No file-manager registry callbacks, settings,
+﻿// Isolated Home regression host. No file-manager registry callbacks, settings,
 // file associations, archive subprocesses, or native file pickers are invoked.
 // Put this EXE beside the tested DLLs/resources.pri, or pass their directory.
 #include <Windows.h>
@@ -22,6 +22,12 @@ namespace
     using namespace winrt::NanaZip::Modern::implementation;
     std::vector<std::wstring> g_RecentPaths;
     int g_Failures = 0;
+    int g_LanguageSaveAttempts = 0;
+
+    VOID CALLBACK FakeLanguagePersist(LPCWSTR)
+    {
+        ++g_LanguageSaveAttempts;
+    }
 
     void Check(bool pass, char const* description)
     {
@@ -197,17 +203,14 @@ int wmain(int argc, wchar_t** argv)
         return g_Failures ? 1 : 0;
     if (argc < 4)
     {
-        std::puts("Usage: StartPageHost <runtime directory> <en|zh-Hans> <--strings|--ui> [recent paths...]");
+        std::puts("Usage: StartPageHost <runtime directory> <en|zh-Hans> <--strings|--langswitch|--ui> [recent paths...]");
         return 2;
     }
 
     winrt::init_apartment(winrt::apartment_type::single_threaded);
-    // This changes only this process's runtime resource context. It does not
-    // call ApplicationLanguages.PrimaryLanguageOverride or change Windows.
-    auto context = winrt::Windows::ApplicationModel::Resources::Core
-        ::ResourceContext::GetForViewIndependentUse();
-    context.Languages(winrt::single_threaded_vector<winrt::hstring>(
-        { winrt::hstring(argv[2]) }).GetView());
+    // P1-8: the requested language is applied after the runtime DLL is
+    // loaded, via K7ModernSetAppLanguage (candidate-picking resolution;
+    // no ResourceContext is involved anymore).
 
     std::wstring directory = argv[1];
     HMODULE module = ::LoadLibraryExW(
@@ -228,14 +231,47 @@ int wmain(int argc, wchar_t** argv)
         ::GetProcAddress(module, "K7ModernShowStartWindow"));
     auto uninitialize = reinterpret_cast<decltype(&K7ModernUninitialize)>(
         ::GetProcAddress(module, "K7ModernUninitialize"));
+    auto setLanguage = reinterpret_cast<decltype(&K7ModernSetAppLanguage)>(
+        ::GetProcAddress(module, "K7ModernSetAppLanguage"));
+    auto setPersistCallback = reinterpret_cast<decltype(&K7ModernSetLanguagePersistCallback)>(
+        ::GetProcAddress(module, "K7ModernSetLanguagePersistCallback"));
     if (!initialize || !getString || !getLegacy || !show || !uninitialize)
     {
         std::puts("FAIL: required exports are missing");
         return 2;
     }
+    if (setLanguage)
+    {
+        if (setPersistCallback)
+            setPersistCallback(FakeLanguagePersist);
+        // "en" keeps English; the DLL resolves empty/system differently,
+        // so pass through exactly what the caller asked for.
+        setLanguage(std::wstring(argv[2]) == L"en" ? L"en-US" : argv[2]);
+    }
+    if (std::wstring(argv[3]) == L"--candidates")
+    {
+        auto map = winrt::Windows::ApplicationModel::Resources::Core::ResourceManager
+            ::Current().MainResourceMap();
+        auto resource = map.GetSubtree(L"NanaZip.Modern/StartPage")
+            .Lookup(L"ActionCreateTitle/Text");
+        for (auto candidate : resource.Candidates())
+        {
+            std::printf("value=%s\n", winrt::to_string(candidate.ValueAsString()).c_str());
+            for (auto qualifier : candidate.Qualifiers())
+                std::printf("  %s=%s\n", winrt::to_string(qualifier.QualifierName()).c_str(),
+                    winrt::to_string(qualifier.QualifierValue()).c_str());
+        }
+        return 0;
+    }
     bool chinese = std::wstring(argv[2]) == L"zh-Hans";
     auto matches = [](wchar_t const* actual, wchar_t const* expected)
     {
+        if (actual && std::wstring(actual) != expected)
+        {
+            std::printf("  actual: [%s] expected: [%s]\n",
+                winrt::to_string(actual).c_str(), winrt::to_string(expected).c_str());
+            std::fflush(stdout);
+        }
         return actual && std::wstring(actual) == expected;
     };
     Check(matches(getString(L"StartPage/ActionCreateTitle.Text", L"MISSING"),
@@ -246,7 +282,36 @@ int wmain(int argc, wchar_t** argv)
         "new selection action resolves from current resources.pri");
     Check(matches(getLegacy(3900), chinese ? L"已用时间：" : L"Elapsed time:"),
         "legacy dialog labels honor the requested language context");
+    Check(g_LanguageSaveAttempts == 0,
+        "applying runtime language never persists user preferences");
 
+    if (std::wstring(argv[3]) == L"--langswitch" && setLanguage)
+    {
+        // CuinZip P1-8:语言切换链(context Languages + 缓存清理)回归。
+        // 本模式自带英文起始 context(argv[2] = en),不依赖系统语言。
+        Check(matches(getString(L"StartPage/ActionCreateTitle.Text",
+            L"MISSING"), L"Create Archive"),
+            "starts from the English context");
+        Check(setLanguage(L"zh-Hans") != FALSE, "switch to zh-Hans succeeds");
+        Check(matches(getString(L"StartPage/ActionCreateTitle.Text",
+            L"MISSING"), L"创建压缩包"),
+            "same key resolves in Chinese after switching");
+        Check(matches(getLegacy(3900), L"已用时间："),
+            "legacy labels follow the switch");
+        Check(setLanguage(L"en-US") != FALSE, "switch back to en succeeds");
+        Check(matches(getString(L"StartPage/ActionCreateTitle.Text",
+            L"MISSING"), L"Create Archive"),
+            "English resolvable again after switching back");
+        setLanguage(L"zh-CN");
+        Check(matches(getString(L"StartPage/ActionCreateTitle.Text",
+            L"MISSING"), L"创建压缩包"),
+            "zh-CN resolves Simplified Chinese script resources");
+        Check(matches(getLegacy(3900), L"已用时间："),
+            "zh-CN resolves legacy labels consistently");
+        Check(g_LanguageSaveAttempts == 0,
+            "repeated switches remain process-local");
+        return g_Failures ? 1 : 0;
+    }
     if (std::wstring(argv[3]) == L"--strings")
         return g_Failures ? 1 : 0;
     for (int i = 4; i < argc; ++i)

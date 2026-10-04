@@ -368,6 +368,19 @@ namespace winrt::NanaZip::Modern::implementation
 
         this->Content(m_Root);
 
+        // P1-8:右上角语言切换按钮(zh-Hans <-> en-US 一步切换),
+        // 叠在两个面板之上,位置不随面板切换变化
+        m_LanguageButton = winrt::Button();
+        m_LanguageButton.Margin(
+            winrt::ThicknessHelper::FromLengths(0, 8, 12, 0));
+        m_LanguageButton.HorizontalAlignment(
+            winrt::HorizontalAlignment::Right);
+        m_LanguageButton.VerticalAlignment(winrt::VerticalAlignment::Top);
+        m_LanguageButton.MinWidth(72.0);
+        m_LanguageButton.Click({ this, &StartPage::ToggleLanguageClick });
+        this->UpdateLanguageButtonCaption();
+        m_Root.Children().Append(m_LanguageButton);
+
         this->RegisterDropTarget();
     }
 
@@ -397,6 +410,14 @@ namespace winrt::NanaZip::Modern::implementation
                 text.Foreground(brush);
             }
         }
+
+        // P1-8:登记到 resw 文本注册表,语言切换时统一重取
+        LocalizedTextEntry entry;
+        entry.Control = text;
+        entry.Key = std::wstring(key);
+        entry.Fallback = std::wstring(fallback);
+        m_LocalizedTexts.push_back(std::move(entry));
+
         return text;
     }
 
@@ -413,6 +434,68 @@ namespace winrt::NanaZip::Modern::implementation
         catch (...)
         {
             return nullptr;
+        }
+    }
+
+    void StartPage::RefreshTexts()
+    {
+        // 语言切换后:重取全部登记文本;动态文本(选中计数)单独重建
+        for (LocalizedTextEntry& entry : m_LocalizedTexts)
+        {
+            if (entry.Control)
+            {
+                entry.Control.Text(winrt::NanaZip::Modern::GetUiString(
+                    entry.Key, entry.Fallback));
+            }
+        }
+
+        if (m_CreatePanel
+            && m_CreatePanel.Visibility() == winrt::Visibility::Visible
+            && !m_PendingFiles.empty())
+        {
+            // 重建 "{0} items selected" 计数行
+            std::vector<std::wstring> current = m_PendingFiles;
+            this->EnterCreateList(current);
+        }
+
+        this->UpdateLanguageButtonCaption();
+    }
+
+    void StartPage::UpdateLanguageButtonCaption()
+    {
+        if (!m_LanguageButton)
+        {
+            return;
+        }
+
+        // 按钮显示目标语言的自称(不随界面语言本地化):
+        // 当前中文 → 显示 English;否则 → 显示 中文
+        std::wstring current = ::K7ModernGetAppLanguage()
+            ? std::wstring(::K7ModernGetAppLanguage())
+            : std::wstring();
+        m_LanguageButton.Content(winrt::box_value(
+            winrt::hstring(current == L"zh-Hans"
+                ? L"English"
+                : L"\u4E2D\u6587")));
+    }
+
+    void StartPage::ToggleLanguageClick(
+        winrt::IInspectable const& sender,
+        winrt::RoutedEventArgs const& e)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(e);
+
+        std::wstring current = ::K7ModernGetAppLanguage()
+            ? std::wstring(::K7ModernGetAppLanguage())
+            : std::wstring();
+        wchar_t const* next = (current == L"zh-Hans")
+            ? L"en-US"
+            : L"zh-Hans";
+
+        if (::K7ModernSetAppLanguage(next))
+        {
+            this->RefreshTexts();
         }
     }
 
@@ -717,22 +800,21 @@ namespace winrt::NanaZip::Modern::implementation
         selectionButtons.Orientation(
             winrt::Windows::UI::Xaml::Controls::Orientation::Horizontal);
         selectionButtons.Spacing(8);
+        // P1-8:按钮文字经 MakeText 登记,语言切换时随注册表刷新
         winrt::Button addFiles;
-        addFiles.Content(winrt::box_value(
-            winrt::NanaZip::Modern::GetUiString(
-                L"StartPage/AddFilesText.Text", L"Add files")));
+        addFiles.Content(this->MakeText(
+            L"StartPage/AddFilesText.Text", L"Add files", 0, false, false));
         addFiles.Click({ this, &StartPage::AddFilesClick });
         selectionButtons.Children().Append(addFiles);
         winrt::Button addFolders;
-        addFolders.Content(winrt::box_value(
-            winrt::NanaZip::Modern::GetUiString(
-                L"StartPage/AddFoldersText.Text", L"Add folders")));
+        addFolders.Content(this->MakeText(
+            L"StartPage/AddFoldersText.Text", L"Add folders", 0, false, false));
         addFolders.Click({ this, &StartPage::AddFoldersClick });
         selectionButtons.Children().Append(addFolders);
         m_RemoveFiles = winrt::Button();
-        m_RemoveFiles.Content(winrt::box_value(
-            winrt::NanaZip::Modern::GetUiString(
-                L"StartPage/RemoveFilesText.Text", L"Remove selected")));
+        m_RemoveFiles.Content(this->MakeText(
+            L"StartPage/RemoveFilesText.Text", L"Remove selected",
+            0, false, false));
         m_RemoveFiles.IsEnabled(false);
         m_RemoveFiles.Click({ this, &StartPage::RemoveFilesClick });
         selectionButtons.Children().Append(m_RemoveFiles);
@@ -766,16 +848,14 @@ namespace winrt::NanaZip::Modern::implementation
         winrt::Grid::SetRow(buttons, 2);
 
         winrt::Button cancel;
-        cancel.Content(winrt::box_value(
-            winrt::NanaZip::Modern::GetUiString(
-                L"StartPage/CreateCancelText.Text", L"Cancel")));
+        cancel.Content(this->MakeText(
+            L"StartPage/CreateCancelText.Text", L"Cancel", 0, false, false));
         cancel.Click({ this, &StartPage::CreateCancelClick });
         buttons.Children().Append(cancel);
 
         winrt::Button confirm;
-        confirm.Content(winrt::box_value(
-            winrt::NanaZip::Modern::GetUiString(
-                L"StartPage/CreateConfirmText.Text", L"Next")));
+        confirm.Content(this->MakeText(
+            L"StartPage/CreateConfirmText.Text", L"Next", 0, false, false));
         m_CreateConfirm = confirm;
         confirm.IsEnabled(false);
         try

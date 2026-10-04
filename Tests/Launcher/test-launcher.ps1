@@ -43,7 +43,7 @@ public static class LauncherContractWindows {
                 return true;
             }, IntPtr.Zero);
             result = String.Join("\n", parts);
-            PostMessage(hwnd, 0x0111, new IntPtr(1), IntPtr.Zero);
+            PostMessage(hwnd, 0x0010, IntPtr.Zero, IntPtr.Zero);
             return false;
         }, IntPtr.Zero);
         return result;

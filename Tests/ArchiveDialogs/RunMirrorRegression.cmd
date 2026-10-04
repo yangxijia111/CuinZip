@@ -2,6 +2,9 @@
 setlocal
 cd /d "%~dp0\..\.."
 if not exist "Output\Tests\ArchiveDialogs" mkdir "Output\Tests\ArchiveDialogs"
+set "TEMP=%CD%\Output\Tests\ArchiveDialogs\Temp"
+set "TMP=%TEMP%"
+if not exist "%TEMP%" mkdir "%TEMP%"
 if not defined VCToolsInstallDir call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" amd64
 if errorlevel 1 exit /b %errorlevel%
 rc /nologo /fo "Output\Tests\ArchiveDialogs\MirrorRegression.res" "Tests\ArchiveDialogs\MirrorRegression.rc"

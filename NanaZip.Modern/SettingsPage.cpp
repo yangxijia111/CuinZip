@@ -418,6 +418,45 @@ namespace winrt::NanaZip::Modern::implementation
                 m_Appearance.ShowStartPage != FALSE,
                 [this]() { this->ApplyAppearanceSettings(); });
 
+            // CuinZip P1-8:界面语言(跟随系统 / English / 简体中文)。
+            {
+                std::wstring current = ::K7ModernGetAppLanguage()
+                    ? std::wstring(::K7ModernGetAppLanguage())
+                    : std::wstring();
+                int selectedLanguage = 0;
+                if (current == L"zh-Hans")
+                    selectedLanguage = 2;
+                else if (current == L"en-US")
+                    selectedLanguage = 1;
+                std::vector<std::pair<std::wstring, int>> languageItems;
+                languageItems.push_back({ std::wstring(
+                    winrt::NanaZip::Modern::GetUiString(
+                        L"SettingsPage/LanguageSystem.Text",
+                        L"System default")), 0 });
+                languageItems.push_back({ std::wstring(
+                    winrt::NanaZip::Modern::GetUiString(
+                        L"SettingsPage/LanguageEnglish.Text",
+                        L"English")), 1 });
+                languageItems.push_back({ std::wstring(
+                    winrt::NanaZip::Modern::GetUiString(
+                        L"SettingsPage/LanguageChinese.Text",
+                        L"Chinese (Simplified)")), 2 });
+                m_LanguageCombo = this->BuildCombo(
+                    panel,
+                    L"SettingsPage/LanguageComboHeader.Text",
+                    L"Language",
+                    languageItems,
+                    selectedLanguage,
+                    [this]() { this->ApplyLanguageSettings(); });
+
+                m_LanguageRestartHint = MakeText(
+                    L"SettingsPage/LanguageRestartHint.Text",
+                    L"New windows use the new language immediately. Restart CuinZip to refresh menus.",
+                    0, false, true, UniformThickness(0));
+                m_LanguageRestartHint.Visibility(Visibility::Collapsed);
+                panel.Children().Append(m_LanguageRestartHint);
+            }
+
             this->BuildButton(
                 panel,
                 L"SettingsPage/GeneralLegacyButton.Content",
@@ -1129,7 +1168,48 @@ namespace winrt::NanaZip::Modern::implementation
         return button;
     }
 
-    void SettingsPage::ApplyAppearanceSettings()
+    // CuinZip P1-8:语言组合框 → K7ModernSetAppLanguage(进程内立即生效 +
+// 注册表持久化 + 字符串缓存清理);已渲染界面保持原语言,重开生效。
+void SettingsPage::ApplyLanguageSettings()
+{
+    if (!m_LanguageCombo || m_LanguageCombo.SelectedIndex() < 0)
+    {
+        return;
+    }
+
+    auto item = m_LanguageCombo.SelectedItem()
+        .try_as<winrt::Windows::UI::Xaml::Controls::ComboBoxItem>();
+    if (!item)
+    {
+        return;
+    }
+
+    int value = 0;
+    if (auto tag = item.Tag().try_as<winrt::Windows::Foundation::IReference<int32_t>>())
+    {
+        value = tag.Value();
+    }
+
+    wchar_t const* language = L"";
+    if (value == 2)
+    {
+        language = L"zh-Hans";
+    }
+    else if (value == 1)
+    {
+        language = L"en-US";
+    }
+
+    // K7ModernSetAppLanguage 内部已做进程生效 + 后台线程持久化
+    ::K7ModernSetAppLanguage(language);
+
+    if (m_LanguageRestartHint)
+    {
+        m_LanguageRestartHint.Visibility(Visibility::Visible);
+    }
+}
+
+void SettingsPage::ApplyAppearanceSettings()
     {
         if (!m_Callbacks.Apply)
         {

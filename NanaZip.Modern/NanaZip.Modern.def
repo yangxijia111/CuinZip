@@ -27,3 +27,8 @@ K7ModernShowExtractDialog
 K7ModernUpdateMainWindowToolBarState
 K7ModernShowStartWindow
 ; CuinZip P1-6 Modification End
+; CuinZip P1-8 Modification Start
+K7ModernSetAppLanguage
+K7ModernGetAppLanguage
+K7ModernSetLanguagePersistCallback
+; CuinZip P1-8 Modification End

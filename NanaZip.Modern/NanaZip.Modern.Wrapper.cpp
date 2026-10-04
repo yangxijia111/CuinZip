@@ -389,6 +389,83 @@ EXTERN_C INT WINAPI K7ModernShowStartWindow(
 
 // **************** CuinZip P1-6 Modification End ****************
 
+// **************** CuinZip P1-8 Modification Start ****************
+// 界面语言切换转发(FM / 对话框宿主启动时回放偏好,设置页与首页切换)。
+
+EXTERN_C BOOL WINAPI K7ModernSetAppLanguage(
+    _In_opt_ LPCWSTR Language)
+{
+    using ProcType = decltype(::K7ModernSetAppLanguage)*;
+
+    static ProcType ProcAddress = reinterpret_cast<ProcType>([]() -> FARPROC
+    {
+        HMODULE ModuleHandle = ::GetNanaZipModernModuleHandle();
+        if (ModuleHandle)
+        {
+            return ::GetProcAddress(
+                ModuleHandle,
+                "K7ModernSetAppLanguage");
+        }
+        return nullptr;
+    }());
+
+    if (ProcAddress)
+    {
+        return ProcAddress(Language);
+    }
+
+    return FALSE;
+}
+
+EXTERN_C LPCWSTR WINAPI K7ModernGetAppLanguage()
+{
+    using ProcType = decltype(::K7ModernGetAppLanguage)*;
+
+    static ProcType ProcAddress = reinterpret_cast<ProcType>([]() -> FARPROC
+    {
+        HMODULE ModuleHandle = ::GetNanaZipModernModuleHandle();
+        if (ModuleHandle)
+        {
+            return ::GetProcAddress(
+                ModuleHandle,
+                "K7ModernGetAppLanguage");
+        }
+        return nullptr;
+    }());
+
+    if (ProcAddress)
+    {
+        return ProcAddress();
+    }
+
+    return nullptr;
+}
+
+// **************** CuinZip P1-8 Modification End ****************
+
+EXTERN_C VOID WINAPI K7ModernSetLanguagePersistCallback(
+    _In_opt_ K7_MODERN_LANGUAGE_PERSIST_CALLBACK Callback)
+{
+    using ProcType = decltype(::K7ModernSetLanguagePersistCallback)*;
+
+    static ProcType ProcAddress = reinterpret_cast<ProcType>([]() -> FARPROC
+    {
+        HMODULE ModuleHandle = ::GetNanaZipModernModuleHandle();
+        if (ModuleHandle)
+        {
+            return ::GetProcAddress(
+                ModuleHandle,
+                "K7ModernSetLanguagePersistCallback");
+        }
+        return nullptr;
+    }());
+
+    if (ProcAddress)
+    {
+        ProcAddress(Callback);
+    }
+}
+
 // **************** CuinZip P1-3 Modification Start ****************
 // 压缩/解压 Modern 对话框转发。与上面的函数一样经 GetProcAddress
 // 动态转发,宿主 EXE(NanaZip.Universal.Windows)不产生对

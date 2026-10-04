@@ -456,4 +456,22 @@
   <data name="WindowTitle" xml:space="preserve">
     <value>CuinZip 设置</value>
   </data>
+  <!--
+    CuinZip P1-8: 界面语言切换。
+  -->
+  <data name="LanguageComboHeader.Text" xml:space="preserve">
+    <value>语言</value>
+  </data>
+  <data name="LanguageSystem.Text" xml:space="preserve">
+    <value>跟随系统</value>
+  </data>
+  <data name="LanguageEnglish.Text" xml:space="preserve">
+    <value>English</value>
+  </data>
+  <data name="LanguageChinese.Text" xml:space="preserve">
+    <value>简体中文</value>
+  </data>
+  <data name="LanguageRestartHint.Text" xml:space="preserve">
+    <value>新打开的窗口立即使用新语言；重启 CuinZip 可刷新菜单。</value>
+  </data>
 </root>

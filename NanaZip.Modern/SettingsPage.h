@@ -133,6 +133,9 @@ namespace winrt::NanaZip::Modern::implementation
             winrt::IInspectable const& sender,
             winrt::Windows::UI::Xaml::RoutedEventArgs const& e);
 
+        // CuinZip P1-8:语言组合框应用(经 K7ModernSetAppLanguage)。
+        void ApplyLanguageSettings();
+
         HWND m_WindowHandle;
         K7_MODERN_SETTINGS_CALLBACKS m_Callbacks = {};
         bool m_Initializing = true;
@@ -168,6 +171,10 @@ namespace winrt::NanaZip::Modern::implementation
 
         // Compression。
         winrt::Windows::UI::Xaml::Controls::ComboBox m_FormatCombo{ nullptr };
+        // CuinZip P1-8:界面语言(0=跟随系统 1=English 2=简体中文)
+        winrt::Windows::UI::Xaml::Controls::ComboBox m_LanguageCombo{ nullptr };
+        winrt::Windows::UI::Xaml::Controls::TextBlock
+            m_LanguageRestartHint{ nullptr };
         winrt::Windows::UI::Xaml::Controls::ComboBox m_LevelCombo{ nullptr };
 
         // Extraction。

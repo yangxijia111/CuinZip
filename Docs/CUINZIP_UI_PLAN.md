@@ -571,3 +571,86 @@ Hardening,不新增功能。
 
 - 说明行文案为静态映射(7z/zip/tar 三类);7-Zip 全部格式中
   wim/esd 等未覆盖的格式不显示提示(设计如此,不误导)。
+
+# CuinZip UI / UX 计划(P1-8 实施记录)
+
+日期:2026-10-04,基线 `5cd12519`。
+主题:界面语言一键切换(首页按钮 + 设置页组合框,跟随系统/English/
+简体中文三态);顺带修复 P1-6.2 引入的 Start→FM 崩溃与构建链问题。
+
+## 语言切换机制
+
+- **导出**:`K7ModernSetAppLanguage(LPCWSTR)`(空=跟随系统)/
+  `K7ModernGetAppLanguage` / `K7ModernSetLanguagePersistCallback`;
+  def + Wrapper(GetProcAddress 动态转发) + FM/GUI 宿主启动回放
+  (FM 读 `HKCU\Software\CuinZip\FM\Language` via ReadAppLanguage,
+  在任何菜单/窗口创建前应用)。
+- **资源解析 = 候选手选,不使用 ResourceContext**:P1-6.2 引入的
+  `GetValue(GetForViewIndependentUse())` 在 FM 主窗口线程触发悬空
+  IMap 虚调用(0xC000041D/0xC0000005,WER 实证偏移 0x86E0 =
+  IMap<IInspectable,IInspectable> thunk),Start 关闭进入 FM 必崩
+  (P1-6.2 起未被发现,因该路径此前无自动化覆盖)。P1-8 改为遍历
+  ResourceCandidate.Qualifiers() 按 language 限定符近似匹配
+  (zh-Hans/zh-CN/Hans 同族,en 默认回退),彻底不碰 context。
+- **持久化**:写入 XAML island 线程实测不落盘(独立进程正常),
+  故 `PersistAppLanguageAsync` 在分离后台线程执行(FM 环境经
+  `K7_MODERN_LANGUAGE_PERSIST_CALLBACK` 走 RegistryUtils 的
+  SaveAppLanguage,与 RecentArchives 同环境;独立进程 DLL 自写)。
+- **缓存**:GetUiString 内外两层 + Legacy 共三层缓存,切换时全部
+  清空。
+- **GetUiString 寻址修复**:resw 的 "Name.Text" 在 PRI 里是
+  子树 Name + 资源 Text(斜杠两级);此前按点号查询永远 miss,
+  **P1-2 以来所有带斜杠键名的 Modern resw 一直走英文 fallback**
+  (此前看到的"中文界面"全部来自 7-Zip Legacy 字符串)。
+
+## UI 入口
+
+- **首页右上角语言按钮**(zh-Hans ↔ en-US 一步切换,显示目标语言
+  自称"中文"/"English",不随界面语言本地化);StartPage 增加 resw
+  文本注册表(m_LocalizedTexts)+ RefreshTexts,切换后全部已渲染
+  文本即时刷新,动态计数行单独重建。
+- **设置页 General 分类**:Language 组合框(跟随系统/English/
+  简体中文)+ 重启提示行;组合框 Tag 传值,经
+  K7ModernSetAppLanguage 统一入口。
+
+## 构建/环境修复(本阶段踩坑记录)
+
+- **MIDL9008(midlrt AV 崩溃)与 C1083(缺 Mile.Json.h 等)**:
+  根因 = 删除 `Output\Objects\<Cfg>\<Project>` 后**该配置的 NuGet
+  注入(obj\nuget.g.props)丢失**;必须对**每个配置**分别
+  `-t:Restore`(或跑 BuildAllTargets.proj -t:Restore 全局还原)。
+- **僵死 cl 进程**:失败构建残留的 cl(MSM 无输出、CPU 零增长)
+  会挂起后续构建,先 Stop-Process 清理。
+- **聚合 PRI 损坏症状**:ResourceManager 抛 0x80070002
+  (FILE_NOT_FOUND);重新聚合(清 NanaZipPackage obj + 旧 PRI)。
+- **StartPageHost 旧 exe 假象**:给宿主加新模式后若首次编译失败,
+  运行的是旧 exe(模式不存在→落进 --ui 分支),测试结论会误导。
+
+## 本地化
+
+SettingsPage.resw +5 键(LanguageComboHeader/LanguageSystem/
+LanguageEnglish/LanguageChinese/LanguageRestartHint,en + zh-Hans)。
+
+## 验证(2026-10-04)
+
+- 构建:Modern Release/Debug 0 错误;BuildAllTargets 全链(见
+  PROGRESS);Package 重聚合 resources.pri。
+- 语言链:StartPageHost --langswitch 6/6(en 起步→zh→回 en);
+  --strings en/zh-Hans 各 3 轮 3/3。
+- UI 实测:首页按钮 UIA Invoke 切换→UI 即时变(欢迎使用 CuinZip/
+  Welcome to CuinZip)+ 注册表 500ms 内落盘(en-US/zh-Hans 双向);
+  重启 FM 持久化生效;FM 主窗口完整中文(工具栏 添加/提取/测试/
+  删除/信息,菜单 文件/编辑/查看/收藏夹/工具/帮助);压缩对话框
+  中文。
+- **Start→FM 崩溃修复实证**:关闭 Start 后 FM 主窗口稳定存活
+  15s+(此前 P1-6.2 起必崩 0xC000041D)。
+- 截图:`Docs/Screenshots/P1-8/`(Start 中文/FM 主窗口中文/切换
+  后/重启后/压缩对话框中文)。
+
+## Known Issues(P1-8)
+
+- 语言切换对**已打开**的窗口(工具栏 x:Uid 项、Legacy 菜单)不
+  即时刷新,重开窗口或重启生效(设置页有提示行;首页文本即时刷新)。
+- 7-Zip 侧 UI 语言跟随切换(Legacy 手选),但**压缩对话框 rc 内
+  部的少量原生控件**(如镜像对话框联动刷新后的 combo 项)在下次
+  打开时生效。

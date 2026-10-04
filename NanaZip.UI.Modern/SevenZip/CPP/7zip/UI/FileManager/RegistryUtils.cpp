@@ -256,6 +256,61 @@ bool Read_ShowDeleted() { return ReadOption(kShowDeletedFiles, false); }
 // 后必然触发),SaveRecentArchive 幂等:头部为同一路径时直接返回,
 // 避免每次刷新写注册表。
 
+// **************** CuinZip P1-8 Modification Start ****************
+// 界面语言偏好:REG_SZ,BCP-47(如 zh-Hans / en-US),不存在或空 = 跟随系统。
+// 写入方为 NanaZip.Modern.K7ModernSetAppLanguage(该键的唯一定义源)。
+void ReadAppLanguage(UString &language)
+{
+  language.Empty();
+
+  HKEY key = 0;
+  if (::RegOpenKeyExW(
+      HKEY_CURRENT_USER, kCU_FMPath, 0, KEY_READ, &key) != ERROR_SUCCESS)
+    return;
+
+  static const wchar_t kLanguage[] = L"Language";
+  DWORD type = 0;
+  DWORD size = 0;
+  if (::RegQueryValueExW(
+      key, kLanguage, nullptr, &type, nullptr, &size) == ERROR_SUCCESS
+      && type == REG_SZ && size >= sizeof(wchar_t)
+      && size <= sizeof(wchar_t) * 32)
+  {
+    CByteArr data(size);
+    if (::RegQueryValueExW(
+        key, kLanguage, nullptr, nullptr, data, &size) == ERROR_SUCCESS)
+    {
+      const wchar_t *text = (const wchar_t *)(void *)(BYTE *)data;
+      size_t length = size / sizeof(wchar_t);
+      if (length > 0 && text[length - 1] == 0)
+        length--;
+      language.SetFrom(text, (unsigned)length);
+    }
+  }
+
+  ::RegCloseKey(key);
+}
+// 语言偏好写入(空 = 删除值跟随系统)。经 Modern 的持久化回调调用,
+// 写入环境与 SaveRecentArchive 相同。
+void SaveAppLanguage(const UString &language)
+{
+  HKEY key = 0;
+  if (::RegCreateKeyExW(
+      HKEY_CURRENT_USER, kCU_FMPath, 0, nullptr,
+      REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, nullptr, &key, nullptr)
+      != ERROR_SUCCESS)
+    return;
+  static const wchar_t kLanguageName[] = L"Language";
+  if (language.IsEmpty())
+    ::RegDeleteValueW(key, kLanguageName);
+  else
+    ::RegSetValueExW(key, kLanguageName, 0, REG_SZ,
+        (const BYTE *)(const wchar_t *)language,
+        (DWORD)((language.Len() + 1) * sizeof(wchar_t)));
+  ::RegCloseKey(key);
+}
+// **************** CuinZip P1-8 Modification End ****************
+
 void ReadRecentArchives(UStringVector &paths)
 {
   paths.Clear();

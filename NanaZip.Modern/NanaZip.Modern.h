@@ -508,6 +508,35 @@ EXTERN_C LPCWSTR WINAPI K7ModernGetUiString(
     _In_ LPCWSTR Name,
     _In_opt_ LPCWSTR Fallback);
 
+/**
+ * @brief CuinZip P1-8:设置界面语言并立即在进程内生效。
+ * @param Language BCP-47 语言标签:"zh-Hans"、"en-US",空串或 nullptr
+ *                 表示跟随系统(清除覆盖)。
+ * @return 是否成功(至少限定符已应用;注册表持久化失败不影响返回值)。
+ * @remark 同时清空字符串缓存并写入 HKCU\Software\CuinZip\FM\Language
+ *         持久化(该键即语言偏好的定义源,宿主启动时读取回放)。
+ *         已渲染的界面文本不会自动变化,新建窗口/重开页面即用新语言。
+ */
+EXTERN_C BOOL WINAPI K7ModernSetAppLanguage(_In_opt_ LPCWSTR Language);
+
+/**
+ * @brief CuinZip P1-8:注册语言偏好的持久化回调(宿主环境写入注册表;
+ *        未注册时 DLL 自行写入,适用于测试宿主等独立进程)。
+ * @param Callback 语言值回调;空串表示"跟随系统"(宿主应删除注册表值)。
+ */
+typedef void(*K7_MODERN_LANGUAGE_PERSIST_CALLBACK)(
+    _In_opt_z_ const wchar_t* Language);
+
+EXTERN_C VOID WINAPI K7ModernSetLanguagePersistCallback(
+    _In_opt_ K7_MODERN_LANGUAGE_PERSIST_CALLBACK Callback);
+
+/**
+ * @brief CuinZip P1-8:读取当前进程的语言覆盖值(经 K7ModernSetAppLanguage
+ *        设置的最新值,不读注册表)。
+ * @return 当前覆盖语言(空串 = 跟随系统);返回指针归模块所有,下次调用前有效。
+ */
+EXTERN_C LPCWSTR WINAPI K7ModernGetAppLanguage();
+
 // **************** CuinZip P1-2 Modification End ****************
 
 // **************** CuinZip P1-3 Modification Start ****************

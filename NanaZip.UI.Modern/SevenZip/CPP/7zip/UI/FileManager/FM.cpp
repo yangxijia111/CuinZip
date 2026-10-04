@@ -509,6 +509,15 @@ static bool CallExtractOnOpen() {
 // **************** CuinZip P1-6 Modification Start ****************
 // Home / Start 窗口的最近列表回调:真实数据源是 FM 注册表
 // (RecentArchives,面板状态栏刷新时幂等记录)。
+// **************** CuinZip P1-8 Modification Start ****************
+// 语言偏好持久化回调:由 NanaZip.Modern 在语言切换时调用,写注册表
+// 的环境与 SaveRecentArchive 相同(Modern DLL 内直接写不落盘)。
+static VOID CALLBACK FmPersistAppLanguage(const wchar_t *language)
+{
+  SaveAppLanguage(UString(language ? language : L""));
+}
+// **************** CuinZip P1-8 Modification End ****************
+
 static VOID WINAPI StartGetRecentArchivesCallback(
     K7_MODERN_START_RECENT_LIST* Recent)
 {
@@ -904,6 +913,20 @@ void NanaZipInitialize()
         ::ErrorMessage(L"K7ModernInitialize Failed");
         ::ExitProcess(1);
     }
+
+    // **************** CuinZip P1-8 Modification Start ****************
+    // 语言持久化回调(函数定义在上方文件作用域);Modern DLL 内直接写
+    // 注册表在本进程实测不落盘,写入经本侧 Win32 层执行。
+    ::K7ModernSetLanguagePersistCallback(&FmPersistAppLanguage);
+
+    // 界面语言偏好回放:在任何菜单/窗口创建前应用,主窗口文本即用
+    // 所选语言渲染。
+    {
+      UString appLanguage;
+      ReadAppLanguage(appLanguage);
+      ::K7ModernSetAppLanguage(appLanguage.Ptr());
+    }
+    // **************** CuinZip P1-8 Modification End ****************
 }
 // **************** NanaZip Modification End ****************
 

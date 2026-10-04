@@ -457,6 +457,30 @@ void NanaZipInitialize()
     }
 
     ::K7ModernInitialize();
+
+    // **************** CuinZip P1-8 Modification Start ****************
+    // 界面语言偏好回放(对话框宿主):本工程不链接 FileManager 的
+    // RegistryUtils,直接用 Win32 API 读同一注册表值(定义源见
+    // NanaZip.Modern K7ModernSetAppLanguage)。
+    {
+      wchar_t language[32] = {};
+      HKEY key = 0;
+      if (ERROR_SUCCESS == ::RegOpenKeyExW(HKEY_CURRENT_USER,
+          L"Software\\CuinZip\\FM", 0, KEY_READ, &key))
+      {
+        DWORD type = 0;
+        DWORD size = sizeof(language);
+        if (ERROR_SUCCESS != ::RegQueryValueExW(key, L"Language",
+            nullptr, &type, (LPBYTE)language, &size)
+            || type != REG_SZ)
+        {
+          language[0] = 0;
+        }
+        ::RegCloseKey(key);
+      }
+      ::K7ModernSetAppLanguage(language);
+    }
+    // **************** CuinZip P1-8 Modification End ****************
 }
 // **************** NanaZip Modification End ****************
 

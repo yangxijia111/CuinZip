@@ -34,10 +34,13 @@
 #pragma comment(lib, "comctl32.lib")
 
 #include <winrt/Windows.ApplicationModel.Resources.Core.h>
+#include <winrt/Windows.Globalization.h>
 #include <winrt/Windows.UI.Xaml.Hosting.h>
 
 #include <mutex>
 #include <map>
+#include <thread>
+#include <vector>
 
 namespace winrt
 {
@@ -67,6 +70,11 @@ namespace
 
     static std::mutex g_CachedLanguageStringResourcesMutex;
     static std::map<UINT32, winrt::hstring> g_CachedLanguageStringResources;
+
+    // CuinZip P1-8:当前语言覆盖值(空 = 跟随系统/英文默认)。
+    // K7ModernSetAppLanguage 维护,Legacy/Modern 字符串解析共用
+    // (声明前置供 K7ModernGetLegacyStringResource 使用)。
+    static std::wstring g_AppLanguage;
 }
 
 EXTERN_C LPCWSTR WINAPI K7ModernGetLegacyStringResource(
@@ -101,10 +109,13 @@ EXTERN_C LPCWSTR WINAPI K7ModernGetLegacyStringResource(
         return nullptr;
     }
 
-    winrt::hstring Content = LegacyResourceMap.GetValue(
+    // P1-8:候选手选解析(P1-6.2 的 GetValue + view-independent context
+    // 在 FM 主窗口线程引发过 0xC000041D 崩溃,弃用;语言取自本文件的
+    // g_AppLanguage 覆盖值,由 K7ModernSetAppLanguage 维护)
+    winrt::hstring Content = winrt::NanaZip::Modern::PickResourceCandidate(
+        LegacyResourceMap,
         ResourceName,
-        winrt::Windows::ApplicationModel::Resources::Core::ResourceContext
-            ::GetForViewIndependentUse()).ValueAsString();
+        winrt::NanaZip::Modern::GetUiResourceLanguage());
     std::lock_guard Lock(g_CachedLanguageStringResourcesMutex);
     auto Iterator = g_CachedLanguageStringResources.emplace(
         ResourceId,
@@ -693,6 +704,13 @@ EXTERN_C INT WINAPI K7ModernShowSettingsDialog(
     return Result;
 }
 
+// CuinZip P1-8:K7ModernGetUiString 的所有权缓存(文件级供语言切换清空)
+namespace
+{
+    std::map<std::wstring, winrt::hstring> g_CachedAbiUiStrings;
+    std::mutex g_CachedAbiUiStringsMutex;
+}
+
 EXTERN_C LPCWSTR WINAPI K7ModernGetUiString(
     _In_ LPCWSTR Name,
     _In_opt_ LPCWSTR Fallback)
@@ -705,19 +723,125 @@ EXTERN_C LPCWSTR WINAPI K7ModernGetUiString(
     // GetUiString 内部有缓存;返回的字符串由本模块持有,
     // 调用方直接使用,不需要释放(与 K7ModernGetLegacyStringResource
     // 的所有权约定一致)。
-    static std::map<std::wstring, winrt::hstring> g_CachedUiStrings;
-    static std::mutex g_CachedUiStringsMutex;
-
-    winrt::hstring Content = winrt::NanaZip::Modern::GetUiString(
-        Name,
-        Fallback ? Fallback : L"");
-
-    std::lock_guard Lock(g_CachedUiStringsMutex);
-    auto Iterator = g_CachedUiStrings.emplace(
+    std::lock_guard Lock(g_CachedAbiUiStringsMutex);
+    auto Iterator = g_CachedAbiUiStrings.emplace(
         std::wstring(Name),
-        std::move(Content));
+        winrt::NanaZip::Modern::GetUiString(
+            Name, Fallback ? Fallback : L""));
     return Iterator.first->second.c_str();
 }
+
+// **************** CuinZip P1-8 Modification Start ****************
+
+namespace
+{
+    // Only the file-manager host persists explicit Settings choices.
+    K7_MODERN_LANGUAGE_PERSIST_CALLBACK g_LanguagePersist = nullptr;
+
+    // 语言偏好的持久化位置(HKCU);跟随系统 = 删除值。
+    // 实测 XAML island 线程内直接写注册表不落盘(独立进程正常),
+    // 因此所有持久化都转到分离的普通后台线程执行。
+    wchar_t const* const kLanguageRegistryKey = L"Software\\CuinZip\\FM";
+    wchar_t const* const kLanguageRegistryValue = L"Language";
+
+    void PersistAppLanguageAsync(std::wstring const& language)
+    {
+        std::thread([language]()
+        {
+            if (g_LanguagePersist)
+            {
+                g_LanguagePersist(language.c_str());
+                return;
+            }
+            HKEY key = nullptr;
+            if (ERROR_SUCCESS != ::RegCreateKeyExW(
+                HKEY_CURRENT_USER, kLanguageRegistryKey, 0, nullptr,
+                REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, nullptr,
+                &key, nullptr))
+            {
+                return;
+            }
+            if (language.empty())
+            {
+                ::RegDeleteValueW(key, kLanguageRegistryValue);
+            }
+            else
+            {
+                ::RegSetValueExW(
+                    key, kLanguageRegistryValue, 0, REG_SZ,
+                    reinterpret_cast<BYTE const*>(language.c_str()),
+                    static_cast<DWORD>(
+                        (language.size() + 1) * sizeof(wchar_t)));
+            }
+            ::RegCloseKey(key);
+        }).detach();
+    }
+}
+
+void winrt::NanaZip::Modern::PersistUiLanguagePreference(std::wstring_view language)
+{
+    PersistAppLanguageAsync(std::wstring(language));
+}
+
+EXTERN_C BOOL WINAPI K7ModernSetAppLanguage(_In_opt_ LPCWSTR Language)
+{
+    std::wstring language(Language ? Language : L"");
+    g_AppLanguage = language;
+
+    std::wstring qualifier = language;
+
+    // 1) "跟随系统":取当前用户语言列表首项作为解析语言(回放用户
+    //    真实偏好);失败时保持空 = 英文默认候选
+    if (qualifier.empty())
+    {
+        ULONG count = 0;
+        ULONG length = 0;
+        if (::GetUserPreferredUILanguages(MUI_LANGUAGE_NAME, &count, nullptr, &length)
+            && length > 1)
+        {
+            std::vector<wchar_t> languages(length, L'\0');
+            if (::GetUserPreferredUILanguages(MUI_LANGUAGE_NAME, &count,
+                languages.data(), &length))
+            {
+                qualifier = languages.data();
+            }
+        }
+    }
+
+    // 3) 主力机制:设置资源解析语言(GetUiString 与 Legacy 解析均按
+    //    候选手选实现,不接触 ResourceContext——其 view-independent
+    //    形态在 FM 主窗口线程引发过 0xC000041D 崩溃,P1-8 弃用)
+    winrt::NanaZip::Modern::SetUiResourceLanguage(qualifier);
+
+    // 4) 清空全部字符串缓存,让后续取值重新按新语言解析
+    winrt::NanaZip::Modern::ClearUiStringCache();
+    {
+        std::lock_guard Lock(g_CachedLanguageStringResourcesMutex);
+        g_CachedLanguageStringResources.clear();
+    }
+    {
+        std::lock_guard Lock(g_CachedAbiUiStringsMutex);
+        g_CachedAbiUiStrings.clear();
+    }
+
+    // 5) 持久化(后台线程;首页按钮与设置页切换共用本入口)
+    PersistAppLanguageAsync(language);
+
+    return TRUE;
+}
+
+EXTERN_C LPCWSTR WINAPI K7ModernGetAppLanguage()
+{
+    return g_AppLanguage.c_str();
+}
+
+EXTERN_C VOID WINAPI K7ModernSetLanguagePersistCallback(
+    _In_opt_ K7_MODERN_LANGUAGE_PERSIST_CALLBACK Callback)
+{
+    g_LanguagePersist = Callback;
+}
+
+// **************** CuinZip P1-8 Modification End ****************
 
 // **************** CuinZip P1-2 Modification End ****************
 
