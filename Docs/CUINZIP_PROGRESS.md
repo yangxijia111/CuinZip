@@ -1,13 +1,16 @@
 ﻿# CuinZip Progress
 
 ## Current Phase
-P1-6.1(Usability Fix + Preview 2 Hardening)已完成;下一步发布
-v0.1.0-preview.2,之后 P2(Search / 智能解压 / 安全能力)
+P1-7(Usability Polish)已完成;下一步发布 v0.1.0-preview.2,
+之后 P2(Search / 智能解压 / 安全能力)
 
 ## Status
-P1-6.1 DONE(2026-10-03;工具栏实现找回 + Home 返回 + Settings 标题 +
-Recent 失效清理 + 展开 More 后空文件名修复;P1-6 CI SUCCESS;详见
-`Docs/CUINZIP_UI_PLAN.md` P1-6.1 节)
+P1-7 DONE(2026-10-04;首页卡片视觉 + Recent 元数据 + 对话框新手引导;
+构建 Debug/Release 0 错误 + UIA/截图验证;详见
+`Docs/CUINZIP_UI_PLAN.md` P1-7 节)。
+另:工作区遗留的 P1-6.2 收尾工作(便携 CuinZip.exe 启动器/两步式
+创建流程/镜像 ABI 容量协商/回归测试宿主/中文快速上手)经全链构建
+0 错误 + 便携包冒烟验证后已提交(`5b3de432`)
 
 ## Completed
 - P0-1 Fork / Git / License Audit
@@ -37,16 +40,52 @@ Recent 失效清理 + 展开 More 后空文件名修复;P1-6 CI SUCCESS;详见
   - RefreshVersion 自动改动（Version.props / manifest 版本号）已回滚，未污染 Git
 
 ## Current Task
-P1-6.2 Final Release Gate(v0.1.0-preview.2)进行中:
-- 已 PASS:CI 三轮全绿(c4a95e19 / 148d907b / 1118ddac)、版本 0.1.0.1 五处
-  同步、BuildAllTargets 0 错误、CLI 核心回归(ZIP/7z/密码 7z 往返 SHA-256
-  一致)、Portable 三种方式覆盖升级启动、UI Gate 自动化部分(Home 四卡/
-  工具栏七键/上下文感知/Settings 页/中英文/闭环)
+v0.1.0-preview.2 发布(继承 P1-6.2 gate 状态):
+- 已 PASS:CI 三轮全绿(c4a95e19 / 148d907b / 1118ddac)+ 遗留收尾
+  提交(5b3de432,含全链构建 0 错误 + 便携包三种方式启动验证)+
+  P1-7 UI 打磨(构建 0 错误 + UIA/截图验证)
 - 待人工:真实拖放 6 场景(本机杀软封锁合成输入)、Setup 交互安装(静默
   被 AV 挂起)、MSIX preview.1→preview.2 升级(需开发者模式 UAC)、压缩
   对话框 Basic/More 保值
 - 全部 PASS 后:合并 main(禁 force)→ tag `v0.1.0-preview.2` →
   GitHub Pre-release 上传四件套
+
+## P1-7 Usability Polish
+DONE(2026-10-04;对照 Bandizip/WinRAR/Windows 11 系统应用的新手友好
+设计,全部为纯代码 UI + resw 改动,零 XAML 管道风险):
+- **首页操作卡视觉升级**:四卡改为横向入口卡片(模仿 Win11 设置首页)——
+  左侧 36px 强调色圆底图标(AccentFillColorDefaultBrush,降级链
+  SystemAccentColorBrush → 无底)+ 右侧标题/描述垂直居中;主题资源
+  自动适配 Light/Dark
+- **Recent 元数据**:每项第二行从纯路径改为 路径 · 大小 · 修改时间
+  (GetFileAttributesEx 实时读取,大小 B~TB 一位小数,时间按用户
+  区域短日期+时分);单行省略号 + 悬停 Tooltip 显示完整信息
+- **压缩对话框新手引导**:格式下拉下方新增随选变化的说明行
+  (7z→体积最小/zip→兼容性最好/tar 系→Linux 场景,未识别格式自动
+  隐藏;UIA 实测 7z↔zip 切换随动);密码区前置"可选"说明;Browse
+  与压缩包名同行(Grid Star+Auto)
+- **解压对话框新手引导**:密码区前置加密包说明;Browse 与目标路径同行
+- **本地化**:CompressDialogPage.resw +4 键 / ExtractDialogPage.resw
+  +1 键(en + zh-Hans,其余语言回退 English)
+- **验证**:Modern Debug/Release 0 错误;NanaZipPackage 重新聚合
+  resources.pri(1.24MB);UIA + 截图验证 7 项全 PASS
+  (卡片横向布局/圆底图标/Recent 三段元数据/Browse 同行×2/
+  格式提示初始+切换/密码说明×2/Extract 强调按钮);
+  截图 `Docs/Screenshots/P1-7/`
+
+## P1-6.2 收尾(工作区遗留工作,2026-10-04 提交 5b3de432)
+- 便携 ZIP 顶层 `CuinZip.exe` 启动器(解释缺失文件与启动失败,不再
+  静默失败)+ 中文《快速上手》随包分发;安装器注册 Default apps 候选
+- Home Create 流程两步化(添加文件/文件夹、移除、Next;路径传递
+  溢出安全,StartPagePaths 辅助)
+- 镜像引擎组合框容量协商(nullptr 探测)+ 可编辑文本实时读取
+  (焦点 TextBox,含主动清空);XAML 失败时恢复父窗口可用性
+- 文件关联判断精确化(按本运行时路径识别;UserChoice 对打包处理器
+  如实保留);PRI 字符串语言解析修复(view-independent context)
+- 回归测试宿主(StartPage/镜像/关联/启动器/CLI 往返)接入 CI;
+  BuildAllTargets 增量安全化 + Launcher 目标 + 便携 ZIP 原子替换
+- 发现并修复:上次会话构建中断留下的截断 NanaZip.Modern.dll
+  (整 2MB PE 头无效,删除重编即恢复)
 
 ## P1-5 UI 收尾 + v0.1 Preview Release Hardening
 DONE(2026-09-29,安全标签 `p1-5-pre-release`,基线 `3e0243a9`,发布

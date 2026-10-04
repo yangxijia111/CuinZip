@@ -115,31 +115,31 @@ namespace winrt::NanaZip::Modern::implementation
         // CuinZip P1-6:解压只需目的地 + 浏览 + 完成后打开文件夹 + 密码;
         // 路径模式 / 覆盖模式等技术参数收进 "More options"(默认收起,
         // 原功能零删除)。
+        // P1-7:Browse 与目标路径同行;密码区前加用途说明。
 
-        this->BuildComboField(
-            content, IdExtractToLabel, IdPathCombo, true);
-
-        // 浏览按钮(标题沿用原对话框本地化文本)
         {
-            Button browse;
             TextSnapshot caption = MirrorUi::ReadText(
                 m_Engine, IdBrowseButton);
-            browse.Content(winrt::box_value(
+            winrt::hstring browseText(
                 caption.Ok && !caption.Text.empty()
                 ? StripAccelerator(caption.Text)
-                : winrt::hstring(L"Browse...")));
-            browse.Margin(winrt::ThicknessHelper::FromLengths(0, 6, 0, 4));
-            browse.Click([this](auto&&, auto&&)
-            {
-                this->OnBrowseClick();
-            });
-            content.Children().Append(browse);
+                : winrt::hstring(L"Browse..."));
+            this->BuildComboWithButtonField(
+                content, IdExtractToLabel, IdPathCombo, true,
+                browseText,
+                [this](auto&&, auto&&)
+                {
+                    this->OnBrowseClick();
+                });
         }
 
         // 完成后打开目标文件夹(NanaZip 增强的复选框)
         this->BuildCheckField(content, IdOpenFolderCheck);
 
         // 密码(加密压缩包需要时填写;不改变镜像校验语义)
+        content.Children().Append(this->BuildHintText(
+            L"ExtractDialogPage/PasswordHint.Text",
+            L"If this archive is password-protected, enter the password here."));
         this->BuildPasswordField(content);
         this->BuildCheckField(content, IdShowPasswordCheck);
 
@@ -404,6 +404,102 @@ namespace winrt::NanaZip::Modern::implementation
         entry.Editable = editable;
         entry.Control = combo;
         m_Combos.push_back(std::move(entry));
+    }
+
+    void ExtractDialogPage::BuildComboWithButtonField(
+        winrt::Windows::UI::Xaml::Controls::Panel const& parent,
+        UINT labelId,
+        UINT comboId,
+        bool editable,
+        winrt::hstring const& buttonText,
+        winrt::Windows::UI::Xaml::RoutedEventHandler const& buttonClick)
+    {
+        TextBlock label = this->BuildLabel(labelId);
+        winrt::AutomationProperties::SetName(
+            label, winrt::hstring(label.Text()));
+
+        ComboBox combo;
+        combo.IsEditable(editable);
+        combo.SelectionChanged([this, comboId](
+            winrt::IInspectable const& sender,
+            winrt::RoutedEventArgs const&)
+        {
+            UNREFERENCED_PARAMETER(sender);
+            if (m_Suppress)
+                return;
+            ComboBox source = sender.as<ComboBox>();
+            if (source.SelectedIndex() < 0)
+                return;
+            this->OnMirrorComboChanged(comboId, source.SelectedIndex());
+        });
+        combo.KeyDown([this](
+            winrt::IInspectable const&,
+            winrt::Windows::UI::Xaml::Input::KeyRoutedEventArgs const& e)
+        {
+            this->OnFieldKeyDown(e);
+        });
+        winrt::AutomationProperties::SetName(
+            combo, winrt::hstring(label.Text()));
+
+        // P1-7:组合框与按钮同行(组合框拉伸占满,按钮靠右)
+        Grid row;
+        {
+            ColumnDefinition star;
+            star.Width(GridLengthHelper::FromValueAndType(
+                1, GridUnitType::Star));
+            row.ColumnDefinitions().Append(star);
+            ColumnDefinition tail;
+            tail.Width(GridLengthHelper::Auto());
+            row.ColumnDefinitions().Append(tail);
+        }
+
+        Button button;
+        button.Content(winrt::box_value(buttonText));
+        button.Margin(winrt::ThicknessHelper::FromLengths(8, 0, 0, 0));
+        button.Click(buttonClick);
+        button.KeyDown([this](
+            winrt::IInspectable const&,
+            winrt::Windows::UI::Xaml::Input::KeyRoutedEventArgs const& e)
+        {
+            this->OnFieldKeyDown(e);
+        });
+
+        winrt::Grid::SetColumn(combo, 0);
+        winrt::Grid::SetColumn(button, 1);
+        row.Children().Append(combo);
+        row.Children().Append(button);
+
+        parent.Children().Append(label);
+        parent.Children().Append(row);
+
+        ComboEntry entry;
+        entry.Id = comboId;
+        entry.Editable = editable;
+        entry.Control = combo;
+        m_Combos.push_back(std::move(entry));
+    }
+
+    winrt::Windows::UI::Xaml::Controls::TextBlock
+        ExtractDialogPage::BuildHintText(
+            std::wstring_view key,
+            std::wstring_view fallback)
+    {
+        TextBlock hint;
+        hint.Text(winrt::NanaZip::Modern::GetUiString(key, fallback));
+        hint.TextWrapping(winrt::Windows::UI::Xaml::TextWrapping::Wrap);
+        this->ApplyTextStyle(hint, L"CaptionTextBlockStyle");
+        try
+        {
+            hint.Foreground(winrt::Application::Current().Resources()
+                .Lookup(winrt::box_value(
+                    winrt::hstring(L"TextFillColorSecondaryBrush")))
+                .as<winrt::Windows::UI::Xaml::Media::Brush>());
+        }
+        catch (...)
+        {
+            // 样式缺失时使用默认前景
+        }
+        return hint;
     }
 
     void ExtractDialogPage::BuildCheckField(

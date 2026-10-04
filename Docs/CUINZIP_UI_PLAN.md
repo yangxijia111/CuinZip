@@ -504,3 +504,70 @@ Hardening,不新增功能。
   直接打开、普通文件进创建面板),真实拖放待 preview 2 发布前人工
   验证一次。
 - UWP ComboBox 弹出列表虚拟化对 UIA 自动化仍受限(人工路径不受影响)。
+
+# CuinZip UI / UX 计划(P1-7 实施记录)
+
+日期:2026-10-04,基线 `5b3de432`。
+主题:新手友好打磨(对照 Bandizip / WinRAR / Windows 11 系统应用的
+引导式设计);全部为纯代码 UI + resw 改动,零 XAML 管道风险,
+不触碰镜像引擎 / FM / ABI。
+
+## 首页(StartPage)
+
+- **操作卡视觉升级(模仿 Win11 设置首页的入口卡片)**:四卡由
+  纵向堆叠改为横向布局——左侧 36px 圆底图标
+  (`AccentFillColorDefaultBrush` → `SystemAccentColorBrush` →
+  无底色 三级降级;前景 `TextOnAccentFillColorPrimaryBrush` →
+  白色),右侧标题(15 SemiBold)+ 描述(12 次要色)垂直居中;
+  `MinHeight=68`。Light/Dark 由主题资源自动适配。
+- **Recent 元数据**:每项第二行 路径 · 大小 · 修改时间
+  (`GetFileAttributesExW` 实时读取;大小 B~TB 一位小数;
+  时间 `GetDateFormatW(DATE_SHORTDATE)+GetTimeFormatW
+  (TIME_NOSECONDS)` 按用户区域);`TextTrimming=Ellipsis` 单行
+  省略 + ToolTip 悬停显示完整信息。提取 `GetSecondaryBrush()`
+  供 MakeText 与列表行复用。
+
+## 压缩对话框(CompressDialogPage)
+
+- **格式说明行(模仿 Bandizip 的格式指引)**:格式下拉下方随选变化
+  ——7z→"体积最小;可用 CuinZip、7-Zip 及兼容工具打开" / zip→
+  "兼容性最好;Windows 等大多数设备可直接打开,适合分享" / tar 系→
+  "常用于 Linux 系统与开发场景";未识别格式自动隐藏(不误导)。
+  更新点挂在 `SyncAll` 末尾(`UpdateFormatHint`),任何镜像交互后
+  全量同步时随动。
+- **密码说明行**:密码输入框前置"可选。设置后打开此压缩包需要
+  输入密码"(新手常见困惑:为什么有两个框、是否必填)。
+- **Browse 同行**:压缩包名与 Browse 按钮同一行(Grid Star+Auto),
+  纵向少一行;combo 构造逻辑抽 `CreateComboControl` 复用
+  (`BuildComboField` / `BuildComboWithButtonField` 两包装)。
+
+## 解压对话框(ExtractDialogPage)
+
+- **密码说明行**:"若此压缩包设有密码,请在此输入"。
+- **Browse 同行**:目标路径与 Browse 同行(同压缩对话框模式)。
+
+## 本地化
+
+`CompressDialogPage.resw` +4 键(FormatHint7z/Zip/Tar + PasswordHint),
+`ExtractDialogPage.resw` +1 键(PasswordHint),en + zh-Hans,
+其余语言回退 English。
+
+## 验证(2026-10-04)
+
+- 构建:Modern Debug + Release 0 错误;NanaZipPackage 重新聚合
+  resources.pri(技法:先删 `Output/Objects/Release/NanaZipPackage`
+  增量缓存与旧 resources.pri)。
+- UIA + 截图 7 项 PASS:卡片横向布局 + 圆底图标 / Recent 三段元数据
+  (路径·2.9 MB·2026/10/4 9:33)/ Browse 同行(压缩+解压)/ 格式
+  提示初始(7z→Smallest size)+ 切换随动(键盘法切 zip→
+  Best compatibility)/ 密码说明(压缩+解压)/ Extract 强调按钮。
+- 格式切换验证技法:UWP ComboBox 弹出列表虚拟化,UIA Select 与
+  type-ahead 不可达;真实鼠标点击激活 island → Esc 收起 →
+  SendKeys DOWN 切换(FromHandle 挂 UIA)。
+- 截图:`Docs/Screenshots/P1-7/`(home / compress 7z / compress
+  zip / extract)。
+
+## Known Issues(P1-7)
+
+- 说明行文案为静态映射(7z/zip/tar 三类);7-Zip 全部格式中
+  wim/esd 等未覆盖的格式不显示提示(设计如此,不误导)。

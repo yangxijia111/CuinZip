@@ -9,6 +9,7 @@
 
 #include <shlobj.h>
 
+#include <winrt/Windows.UI.h>
 #include <winrt/Windows.UI.Text.h>
 #include <winrt/Windows.UI.Xaml.Automation.h>
 #include <winrt/Windows.UI.Xaml.Input.h>
@@ -20,6 +21,7 @@
 namespace winrt
 {
     using Windows::UI::Xaml::Automation::AutomationProperties;
+    using Windows::UI::Xaml::Controls::Border;
     using Windows::UI::Xaml::Controls::Button;
     using Windows::UI::Xaml::Controls::ColumnDefinition;
     using Windows::UI::Xaml::Controls::FontIcon;
@@ -31,6 +33,7 @@ namespace winrt
     using Windows::UI::Xaml::Controls::StackPanel;
     using Windows::UI::Xaml::Controls::TextBlock;
     using Windows::UI::Xaml::GridLengthHelper;
+    using Windows::UI::Xaml::CornerRadiusHelper;
     using Windows::UI::Xaml::GridUnitType;
     using Windows::UI::Xaml::HorizontalAlignment;
     using Windows::UI::Xaml::Media::FontFamily;
@@ -83,6 +86,84 @@ namespace
         return (slash == std::wstring::npos)
             ? path
             : path.substr(slash + 1);
+    }
+
+    // 文件大小人性化显示(B/KB/MB/GB/TB,一位小数)。
+    std::wstring FormatFileSize(unsigned long long bytes)
+    {
+        wchar_t const* const units[] =
+            { L"B", L"KB", L"MB", L"GB", L"TB" };
+        double value = static_cast<double>(bytes);
+        int unit = 0;
+        while (value >= 1024.0 && unit < 4)
+        {
+            value /= 1024.0;
+            ++unit;
+        }
+        wchar_t buffer[64] = {};
+        if (unit == 0)
+        {
+            swprintf_s(buffer, L"%.0f %s", value, units[unit]);
+        }
+        else
+        {
+            swprintf_s(buffer, L"%.1f %s", value, units[unit]);
+        }
+        return buffer;
+    }
+
+    // 文件修改时间按用户区域设置显示(短日期 + 时:分)。
+    std::wstring FormatFileTime(FILETIME const& fileTime)
+    {
+        SYSTEMTIME utc = {};
+        SYSTEMTIME local = {};
+        if (!::FileTimeToSystemTime(&fileTime, &utc)
+            || !::SystemTimeToTzSpecificLocalTime(
+                nullptr, &utc, &local))
+        {
+            return {};
+        }
+
+        wchar_t buffer[160] = {};
+        int written = ::GetDateFormatW(
+            LOCALE_USER_DEFAULT, DATE_SHORTDATE,
+            &local, nullptr, buffer, 80);
+        // GetDateFormatW 返回值含结尾 NUL;拼一个空格再接时间
+        std::size_t offset = (written > 0 && written < 80)
+            ? static_cast<std::size_t>(written - 1)
+            : 0;
+        buffer[offset] = L' ';
+        ::GetTimeFormatW(
+            LOCALE_USER_DEFAULT, TIME_NOSECONDS,
+            &local, nullptr, buffer + offset + 1, 80);
+        return buffer;
+    }
+
+    // Recent 条目第二行:路径 + 大小 + 修改时间(任一缺失自动跳过)。
+    std::wstring MakeRecentMetaText(std::wstring const& path)
+    {
+        WIN32_FILE_ATTRIBUTE_DATA info = {};
+        if (!::GetFileAttributesExW(
+                path.c_str(), GetFileExInfoStandard, &info))
+        {
+            return path;
+        }
+
+        unsigned long long size =
+            (static_cast<unsigned long long>(info.nFileSizeHigh) << 32)
+            | info.nFileSizeLow;
+        std::wstring meta = FormatFileSize(size);
+        std::wstring modified = FormatFileTime(info.ftLastWriteTime);
+        if (!modified.empty())
+        {
+            meta += L"  \u00B7  " + modified;
+        }
+
+        if (meta.empty())
+        {
+            return path;
+        }
+        return path + L"  \u00B7  " + meta;
     }
 
     // Pattern only; filter labels are localized when the picker is opened.
@@ -311,17 +392,28 @@ namespace winrt::NanaZip::Modern::implementation
         text.TextWrapping(winrt::Windows::UI::Xaml::TextWrapping::Wrap);
         if (secondary)
         {
-            auto brush = winrt::Windows::UI::Xaml::Application::Current()
-                .Resources().TryLookup(
-                    winrt::box_value(
-                        winrt::hstring(L"TextFillColorSecondaryBrush")))
-                .try_as<winrt::Windows::UI::Xaml::Media::Brush>();
-            if (brush)
+            if (auto brush = this->GetSecondaryBrush())
             {
                 text.Foreground(brush);
             }
         }
         return text;
+    }
+
+    winrt::Windows::UI::Xaml::Media::Brush StartPage::GetSecondaryBrush()
+    {
+        try
+        {
+            return winrt::Windows::UI::Xaml::Application::Current()
+                .Resources().TryLookup(
+                    winrt::box_value(
+                        winrt::hstring(L"TextFillColorSecondaryBrush")))
+                .try_as<winrt::Windows::UI::Xaml::Media::Brush>();
+        }
+        catch (...)
+        {
+            return nullptr;
+        }
     }
 
     void StartPage::BuildActionCard(
@@ -335,36 +427,95 @@ namespace winrt::NanaZip::Modern::implementation
         std::wstring_view const& descriptionFallback,
         winrt::Windows::UI::Xaml::RoutedEventHandler const& click)
     {
-        // 整卡可点 + 键盘可达(Button 承载,内容左上对齐)
+        // 整卡可点 + 键盘可达(Button 承载)。
+        // P1-7:模仿 Windows 11 系统应用的横向入口卡片——左侧强调色
+        // 圆底图标 + 右侧标题/描述垂直居中;主题资源缺失时退回纯图标。
         winrt::Button button;
         button.HorizontalAlignment(winrt::HorizontalAlignment::Stretch);
         button.VerticalAlignment(winrt::VerticalAlignment::Stretch);
         button.HorizontalContentAlignment(
             winrt::HorizontalAlignment::Left);
-        button.VerticalContentAlignment(winrt::VerticalAlignment::Top);
-        button.Padding(winrt::ThicknessHelper::FromUniformLength(12));
+        button.VerticalContentAlignment(
+            winrt::VerticalAlignment::Center);
+        button.Padding(winrt::ThicknessHelper::FromLengths(14, 10, 14, 10));
         button.Margin(winrt::ThicknessHelper::FromUniformLength(4));
+        button.MinHeight(68.0);
         button.UseSystemFocusVisuals(true);
         button.Click(click);
 
         winrt::StackPanel content;
-        content.Spacing(8);
+        content.Spacing(12);
 
         winrt::FontIcon icon;
         icon.FontFamily(winrt::FontFamily(
             L"Segoe Fluent Icons,Segoe MDL2 Assets"));
-        icon.FontSize(24.0);
+        icon.FontSize(18.0);
         icon.Glyph(glyph);
-        content.Children().Append(icon);
+        icon.HorizontalAlignment(winrt::HorizontalAlignment::Center);
+        icon.VerticalAlignment(winrt::VerticalAlignment::Center);
+
+        // 强调色圆底:优先 AccentFillColorDefaultBrush(SunValley 主题),
+        // 缺失时退回 SystemAccentColorBrush,再缺失则不带底色
+        winrt::Windows::UI::Xaml::Controls::Border iconHost;
+        iconHost.Width(36.0);
+        iconHost.Height(36.0);
+        iconHost.CornerRadius(
+            winrt::Windows::UI::Xaml::CornerRadiusHelper::
+                FromUniformRadius(18.0));
+        iconHost.Child(icon);
+        {
+            auto resources = winrt::Windows::UI::Xaml::Application::Current()
+                .Resources();
+            bool hasBackground = false;
+            for (wchar_t const* key :
+                { L"AccentFillColorDefaultBrush",
+                  L"SystemAccentColorBrush" })
+            {
+                try
+                {
+                    iconHost.Background(resources.Lookup(
+                        winrt::box_value(winrt::hstring(key)))
+                        .as<winrt::Windows::UI::Xaml::Media::Brush>());
+                    hasBackground = true;
+                    break;
+                }
+                catch (...)
+                {
+                }
+            }
+            if (hasBackground)
+            {
+                // 圆底上的图标用强调色上的文本前景,保证对比度
+                try
+                {
+                    icon.Foreground(resources.Lookup(winrt::box_value(
+                        winrt::hstring(
+                            L"TextOnAccentFillColorPrimaryBrush")))
+                        .as<winrt::Windows::UI::Xaml::Media::Brush>());
+                }
+                catch (...)
+                {
+                    icon.Foreground(winrt::Windows::UI::Xaml::Media::
+                        SolidColorBrush(winrt::Windows::UI::Colors::White()));
+                }
+            }
+        }
+        content.Children().Append(iconHost);
+
+        winrt::StackPanel texts;
+        texts.Spacing(2);
+        texts.VerticalAlignment(winrt::VerticalAlignment::Center);
 
         winrt::TextBlock title = this->MakeText(
-            titleKey, titleFallback, 16, true, false);
-        content.Children().Append(title);
+            titleKey, titleFallback, 15, true, false);
+        texts.Children().Append(title);
         winrt::AutomationProperties::SetName(button, title.Text());
 
         winrt::TextBlock description = this->MakeText(
             descriptionKey, descriptionFallback, 12, false, true);
-        content.Children().Append(description);
+        texts.Children().Append(description);
+
+        content.Children().Append(texts);
 
         button.Content(content);
 
@@ -495,17 +646,24 @@ namespace winrt::NanaZip::Modern::implementation
                     winrt::Windows::UI::Text::FontWeights::SemiBold());
                 row.Children().Append(name);
 
+                // P1-7:第二行带大小与修改时间,帮助用户辨认;
+                // 单行省略号,悬停 Tooltip 展示完整路径与元数据
+                std::wstring metaText = MakeRecentMetaText(path);
                 winrt::TextBlock location;
-                location.Text(winrt::hstring(path));
+                location.Text(winrt::hstring(metaText));
                 location.FontSize(12.0);
-                location.TextWrapping(
-                    winrt::Windows::UI::Xaml::TextWrapping::Wrap);
+                location.TextTrimming(
+                    winrt::Windows::UI::Xaml::TextTrimming::
+                        CharacterEllipsis);
+                location.Foreground(this->GetSecondaryBrush());
                 row.Children().Append(location);
 
                 winrt::ListViewItem item;
                 item.Content(row);
                 winrt::AutomationProperties::SetName(item,
                     winrt::hstring(GetFileName(path)));
+                winrt::Windows::UI::Xaml::Controls::ToolTipService::
+                    SetToolTip(item, winrt::box_value(metaText));
                 m_RecentList.Items().Append(item);
             }
 

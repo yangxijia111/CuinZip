@@ -88,4 +88,10 @@
   <data name="MoreOptionsSection.Text" xml:space="preserve">
     <value>More options</value>
   </data>
+  <!--
+    CuinZip P1-7: password hint.
+  -->
+  <data name="PasswordHint.Text" xml:space="preserve">
+    <value>If this archive is password-protected, enter the password here.</value>
+  </data>
 </root>

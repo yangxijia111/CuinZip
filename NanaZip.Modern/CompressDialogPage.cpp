@@ -146,9 +146,24 @@ namespace winrt::NanaZip::Modern::implementation
         // CuinZip P1-6:普通用户需要的字段直接平铺——压缩包名 / 所在目录 /
         // 浏览 / 格式 / 压缩级别 / 密码;全部高级参数收进下方
         // "More options" 折叠区(默认收起,原功能零删除)。
+        // P1-7:Browse 与压缩包名同行;格式下方带随选变化的说明行;
+        // 密码区前加用途说明,降低新手困惑。
 
-        this->BuildComboField(
-            content, IdArchiveLabel, IdArchiveCombo, true);
+        {
+            TextSnapshot caption = MirrorUi::ReadText(
+                m_Engine, IdArchiveBrowse);
+            winrt::hstring browseText(
+                caption.Ok && !caption.Text.empty()
+                ? StripAccelerator(caption.Text)
+                : winrt::hstring(L"Browse..."));
+            this->BuildComboWithButtonField(
+                content, IdArchiveLabel, IdArchiveCombo, true,
+                browseText,
+                [this](auto&&, auto&&)
+                {
+                    this->OnNestedModalButtonClick(IdArchiveBrowse);
+                });
+        }
 
         // 压缩包所在目录(只读展示,带 Tooltip 便于复制长路径)
         m_FolderText = winrt::TextBlock();
@@ -157,29 +172,20 @@ namespace winrt::NanaZip::Modern::implementation
         this->ApplyTextStyle(m_FolderText, L"CaptionTextBlockStyle");
         content.Children().Append(m_FolderText);
 
-        // 浏览按钮(标题沿用原对话框本地化文本)
-        {
-            Button browse;
-            TextSnapshot caption = MirrorUi::ReadText(
-                m_Engine, IdArchiveBrowse);
-            browse.Content(winrt::box_value(
-                caption.Ok && !caption.Text.empty()
-                ? StripAccelerator(caption.Text)
-                : winrt::hstring(L"Browse...")));
-            browse.Margin(winrt::ThicknessHelper::FromLengths(0, 6, 0, 4));
-            browse.Click([this](auto&&, auto&&)
-            {
-                this->OnNestedModalButtonClick(IdArchiveBrowse);
-            });
-            content.Children().Append(browse);
-        }
-
         this->BuildComboField(
             content, IdFormatLabel, IdFormatCombo, false);
+        m_FormatHint = this->BuildHintText(
+            L"CompressDialogPage/FormatHintZip.Text",
+            L"Best compatibility. Opens on Windows and most devices \u2014 ideal for sharing.");
+        content.Children().Append(m_FormatHint);
+
         this->BuildComboField(
             content, IdLevelLabel, IdLevelCombo, false);
 
         // 密码(两个输入框:密码 + 确认;不改变镜像校验语义)
+        content.Children().Append(this->BuildHintText(
+            L"CompressDialogPage/PasswordHint.Text",
+            L"Optional. A password will be required to open this archive."));
         this->BuildPasswordField(
             content, IdPassword1Label, IdPassword1Edit);
         this->BuildPasswordField(
@@ -450,16 +456,11 @@ namespace winrt::NanaZip::Modern::implementation
         }
     }
 
-    void CompressDialogPage::BuildComboField(
-        winrt::Windows::UI::Xaml::Controls::Panel const& parent,
-        UINT labelId,
-        UINT comboId,
-        bool editable)
+    winrt::Windows::UI::Xaml::Controls::ComboBox
+        CompressDialogPage::CreateComboControl(
+            UINT comboId,
+            bool editable)
     {
-        TextBlock label = this->BuildLabel(labelId);
-        winrt::AutomationProperties::SetName(
-            label, winrt::hstring(label.Text()));
-
         ComboBox combo;
         combo.IsEditable(editable);
         // UWP 可编辑 ComboBox 无文本变更事件,文本统一经
@@ -485,17 +486,103 @@ namespace winrt::NanaZip::Modern::implementation
             this->OnFieldKeyDown(e);
         });
 
-        winrt::AutomationProperties::SetName(
-            combo, winrt::hstring(label.Text()));
-
-        parent.Children().Append(label);
-        parent.Children().Append(combo);
-
         ComboEntry entry;
         entry.Id = comboId;
         entry.Editable = editable;
         entry.Control = combo;
         m_Combos.push_back(std::move(entry));
+
+        return combo;
+    }
+
+    void CompressDialogPage::BuildComboField(
+        winrt::Windows::UI::Xaml::Controls::Panel const& parent,
+        UINT labelId,
+        UINT comboId,
+        bool editable)
+    {
+        TextBlock label = this->BuildLabel(labelId);
+        winrt::AutomationProperties::SetName(
+            label, winrt::hstring(label.Text()));
+
+        ComboBox combo = this->CreateComboControl(comboId, editable);
+        winrt::AutomationProperties::SetName(
+            combo, winrt::hstring(label.Text()));
+
+        parent.Children().Append(label);
+        parent.Children().Append(combo);
+    }
+
+    void CompressDialogPage::BuildComboWithButtonField(
+        winrt::Windows::UI::Xaml::Controls::Panel const& parent,
+        UINT labelId,
+        UINT comboId,
+        bool editable,
+        winrt::hstring const& buttonText,
+        winrt::Windows::UI::Xaml::RoutedEventHandler const& buttonClick)
+    {
+        TextBlock label = this->BuildLabel(labelId);
+        winrt::AutomationProperties::SetName(
+            label, winrt::hstring(label.Text()));
+
+        ComboBox combo = this->CreateComboControl(comboId, editable);
+        winrt::AutomationProperties::SetName(
+            combo, winrt::hstring(label.Text()));
+
+        // P1-7:组合框与按钮同行(组合框拉伸占满,按钮靠右),
+        // 减少一行纵向占用,贴近现代文件选择对话框布局
+        Grid row;
+        {
+            ColumnDefinition star;
+            star.Width(GridLengthHelper::FromValueAndType(
+                1, GridUnitType::Star));
+            row.ColumnDefinitions().Append(star);
+            ColumnDefinition tail;
+            tail.Width(GridLengthHelper::Auto());
+            row.ColumnDefinitions().Append(tail);
+        }
+
+        Button button;
+        button.Content(winrt::box_value(buttonText));
+        button.Margin(winrt::ThicknessHelper::FromLengths(8, 0, 0, 0));
+        button.Click(buttonClick);
+        button.KeyDown([this](
+            winrt::IInspectable const&,
+            winrt::Windows::UI::Xaml::Input::KeyRoutedEventArgs const& e)
+        {
+            this->OnFieldKeyDown(e);
+        });
+
+        winrt::Grid::SetColumn(combo, 0);
+        winrt::Grid::SetColumn(button, 1);
+        row.Children().Append(combo);
+        row.Children().Append(button);
+
+        parent.Children().Append(label);
+        parent.Children().Append(row);
+    }
+
+    winrt::Windows::UI::Xaml::Controls::TextBlock
+        CompressDialogPage::BuildHintText(
+            std::wstring_view key,
+            std::wstring_view fallback)
+    {
+        TextBlock hint;
+        hint.Text(winrt::NanaZip::Modern::GetUiString(key, fallback));
+        hint.TextWrapping(winrt::Windows::UI::Xaml::TextWrapping::Wrap);
+        this->ApplyTextStyle(hint, L"CaptionTextBlockStyle");
+        try
+        {
+            hint.Foreground(winrt::Application::Current().Resources()
+                .Lookup(winrt::box_value(
+                    winrt::hstring(L"TextFillColorSecondaryBrush")))
+                .as<winrt::Windows::UI::Xaml::Media::Brush>());
+        }
+        catch (...)
+        {
+            // 样式缺失时使用默认前景
+        }
+        return hint;
     }
 
     void CompressDialogPage::BuildCheckField(
@@ -673,7 +760,70 @@ namespace winrt::NanaZip::Modern::implementation
             IdPassword2Edit, IdShowPasswordCheck,
             m_Password2Label, m_Password2Box, m_Password2Plain);
 
+        this->UpdateFormatHint();
+
         m_Suppress = false;
+    }
+
+    void CompressDialogPage::UpdateFormatHint()
+    {
+        // P1-7:格式说明行(模仿 Bandizip 的格式指引)。文本来自
+        // 引擎同步后的当前选中项;无法识别时隐藏,不显示误导内容。
+        if (!m_FormatHint)
+            return;
+
+        std::wstring format;
+        for (ComboEntry const& entry : m_Combos)
+        {
+            if (entry.Id != IdFormatCombo || !entry.Control)
+                continue;
+            format = std::wstring(entry.Control.Text());
+            break;
+        }
+
+        std::wstring lowered;
+        lowered.reserve(format.size());
+        for (wchar_t ch : format)
+        {
+            lowered.push_back(static_cast<wchar_t>(::towlower(ch)));
+        }
+
+        auto contains = [&lowered](wchar_t const* token)
+        {
+            return lowered.find(token) != std::wstring::npos;
+        };
+
+        std::wstring_view key;
+        std::wstring_view fallback;
+        bool matched = false;
+        if (contains(L"7z"))
+        {
+            key = L"CompressDialogPage/FormatHint7z.Text";
+            fallback = L"Smallest size. Opens with CuinZip, 7-Zip, and compatible tools.";
+            matched = true;
+        }
+        else if (contains(L"zip"))
+        {
+            key = L"CompressDialogPage/FormatHintZip.Text";
+            fallback = L"Best compatibility. Opens on Windows and most devices \u2014 ideal for sharing.";
+            matched = true;
+        }
+        else if (contains(L"tar") || contains(L"gz") || contains(L"bz2")
+            || contains(L"xz") || contains(L"zst") || contains(L"lz"))
+        {
+            key = L"CompressDialogPage/FormatHintTar.Text";
+            fallback = L"Common on Linux and in developer workflows.";
+            matched = true;
+        }
+
+        if (!matched || format.empty())
+        {
+            m_FormatHint.Visibility(winrt::Visibility::Collapsed);
+            return;
+        }
+
+        m_FormatHint.Text(winrt::NanaZip::Modern::GetUiString(key, fallback));
+        m_FormatHint.Visibility(winrt::Visibility::Visible);
     }
 
     void CompressDialogPage::SyncCombos()

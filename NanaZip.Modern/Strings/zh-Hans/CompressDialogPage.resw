@@ -88,4 +88,19 @@
   <data name="CreateButtonText.Text" xml:space="preserve">
     <value>创建</value>
   </data>
+  <!--
+    CuinZip P1-7: format guidance + password hint.
+  -->
+  <data name="FormatHint7z.Text" xml:space="preserve">
+    <value>体积最小；可用 CuinZip、7-Zip 及兼容工具打开。</value>
+  </data>
+  <data name="FormatHintZip.Text" xml:space="preserve">
+    <value>兼容性最好；Windows 等大多数设备可直接打开，适合分享。</value>
+  </data>
+  <data name="FormatHintTar.Text" xml:space="preserve">
+    <value>常用于 Linux 系统与开发场景。</value>
+  </data>
+  <data name="PasswordHint.Text" xml:space="preserve">
+    <value>可选。设置后打开此压缩包需要输入密码。</value>
+  </data>
 </root>

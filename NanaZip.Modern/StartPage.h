@@ -64,6 +64,9 @@ namespace winrt::NanaZip::Modern::implementation
             bool semiBold,
             bool secondary);
 
+        // 次要文本前景画刷(TextFillColorSecondaryBrush,缺失返回空)
+        winrt::Windows::UI::Xaml::Media::Brush GetSecondaryBrush();
+
         // ---- 交互 ----
 
         void OpenArchiveCardClick(

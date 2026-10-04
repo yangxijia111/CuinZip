@@ -57,6 +57,27 @@ namespace winrt::NanaZip::Modern::implementation
             UINT comboId,
             bool editable);
 
+        // 构造镜像组合框本体并登记(与 BuildComboField/
+        // BuildComboWithButtonField 共用)
+        winrt::Windows::UI::Xaml::Controls::ComboBox CreateComboControl(
+            UINT comboId,
+            bool editable);
+
+        // 建立带旁挂按钮的镜像组合框(组合框占满剩余宽度,按钮在其
+        // 右侧同一行);按钮行为由调用方给定,用于 Browse 等场景
+        void BuildComboWithButtonField(
+            winrt::Windows::UI::Xaml::Controls::Panel const& parent,
+            UINT labelId,
+            UINT comboId,
+            bool editable,
+            winrt::hstring const& buttonText,
+            winrt::Windows::UI::Xaml::RoutedEventHandler const& buttonClick);
+
+        // 建立说明文字(Caption 样式 + 次要前景;resw key + 兜底)
+        winrt::Windows::UI::Xaml::Controls::TextBlock BuildHintText(
+            std::wstring_view key,
+            std::wstring_view fallback);
+
         // 建立镜像复选框
         void BuildCheckField(
             winrt::Windows::UI::Xaml::Controls::Panel const& parent,
@@ -89,6 +110,9 @@ namespace winrt::NanaZip::Modern::implementation
         void SyncStaticText(
             winrt::Windows::UI::Xaml::Controls::TextBlock& target,
             UINT sourceId);
+
+        // 按当前格式刷新格式说明行(7z/zip/常用打包格式)
+        void UpdateFormatHint();
 
         // 把可编辑组合框/密码/参数的当前文本写回引擎,
         // 必须在任何触发原对话框逻辑的操作前调用
@@ -141,6 +165,7 @@ namespace winrt::NanaZip::Modern::implementation
 
         // ---- 专项控件 ----
         winrt::Windows::UI::Xaml::Controls::TextBlock m_FolderText{ nullptr };
+        winrt::Windows::UI::Xaml::Controls::TextBlock m_FormatHint{ nullptr };
         winrt::Windows::UI::Xaml::Controls::TextBlock m_MemoryText{ nullptr };
         winrt::Windows::UI::Xaml::Controls::TextBlock m_MemoryDeLabel{ nullptr };
         winrt::Windows::UI::Xaml::Controls::TextBlock m_MemoryDeText{ nullptr };

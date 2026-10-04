@@ -54,6 +54,20 @@ namespace winrt::NanaZip::Modern::implementation
             UINT comboId,
             bool editable);
 
+        // 组合框 + 旁挂按钮同行(解压目标路径与 Browse)
+        void BuildComboWithButtonField(
+            winrt::Windows::UI::Xaml::Controls::Panel const& parent,
+            UINT labelId,
+            UINT comboId,
+            bool editable,
+            winrt::hstring const& buttonText,
+            winrt::Windows::UI::Xaml::RoutedEventHandler const& buttonClick);
+
+        // 说明文字(Caption 样式 + 次要前景)
+        winrt::Windows::UI::Xaml::Controls::TextBlock BuildHintText(
+            std::wstring_view key,
+            std::wstring_view fallback);
+
         void BuildCheckField(
             winrt::Windows::UI::Xaml::Controls::Panel const& parent,
             UINT checkId);

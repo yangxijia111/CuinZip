@@ -88,4 +88,16 @@
   <data name="CreateButtonText.Text" xml:space="preserve">
     <value>Create</value>
   </data>
+  <data name="FormatHint7z.Text" xml:space="preserve">
+    <value>Smallest size. Opens with CuinZip, 7-Zip, and compatible tools.</value>
+  </data>
+  <data name="FormatHintZip.Text" xml:space="preserve">
+    <value>Best compatibility. Opens on Windows and most devices — ideal for sharing.</value>
+  </data>
+  <data name="FormatHintTar.Text" xml:space="preserve">
+    <value>Common on Linux and in developer workflows.</value>
+  </data>
+  <data name="PasswordHint.Text" xml:space="preserve">
+    <value>Optional. A password will be required to open this archive.</value>
+  </data>
 </root>

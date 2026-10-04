@@ -88,4 +88,10 @@
   <data name="MoreOptionsSection.Text" xml:space="preserve">
     <value>更多选项</value>
   </data>
+  <!--
+    CuinZip P1-7: password hint.
+  -->
+  <data name="PasswordHint.Text" xml:space="preserve">
+    <value>若此压缩包设有密码，请在此输入。</value>
+  </data>
 </root>
